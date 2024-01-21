@@ -5,9 +5,9 @@ optimizer:
 
 train:
   epoch: 30
-  batch_size: 512
+  batch_size: 256
   save_model: true
-  log_loss: false
+  log_loss: true
   test_step: 1
   reproducible: true
   seed: 2023
@@ -15,11 +15,11 @@ train:
 test:
   metrics: [recall, ndcg]
   k: [5, 10, 20]
-  batch_size: 512
+  batch_size: 256
 
 data:
   type: sequential
-  name: ml-20m
+  name: carsii
   seq_aug: true
 
 model:
@@ -28,7 +28,7 @@ model:
   n_layers: 2
   embedding_size: 64
   n_heads: 2
-  max_seq_len: 50
+  max_seq_len: 120
   lmd: 0.1
   tau: 1
 
