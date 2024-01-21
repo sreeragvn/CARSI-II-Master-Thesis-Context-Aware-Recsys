@@ -131,7 +131,6 @@ class CL4SRec(BaseModel):
         # aug_seq2 = torch.tensor(
         #     aug_seq2, dtype=torch.long, device=batch_seqs.device)
         # return aug_seq1, aug_seq2
-        # Assuming aug_seq1 and aug_seq2 are lists of numpy.ndarrays
         aug_seq1 = torch.tensor(np.array(aug_seq1), dtype=torch.long, device=batch_seqs.device)
         aug_seq2 = torch.tensor(np.array(aug_seq2), dtype=torch.long, device=batch_seqs.device)
 
