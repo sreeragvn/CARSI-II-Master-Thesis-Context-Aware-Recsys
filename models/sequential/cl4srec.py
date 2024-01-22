@@ -83,16 +83,21 @@ class CL4SRec(BaseModel):
             reordered_item_seq[-(reorder_begin + 1 + num_reorder):-(reorder_begin+1)] = reordered_item_seq[shuffle_index]
             return reordered_item_seq.tolist(), length
 
+        # convert each batch into a list of list
         seqs = batch_seqs.tolist()
+        ## a list of number of non zero elements in each sequence
         lengths = batch_seqs.count_nonzero(dim=1).tolist()
 
         aug_seq1 = []
         aug_len1 = []
         aug_seq2 = []
         aug_len2 = []
+        #iterating through each sequence with in a batch
         for seq, length in zip(seqs, lengths):
             seq = np.asarray(seq.copy(), dtype=np.int64)
             if length > 1:
+                # range(3): Generates a sequence of integers from 0 to 2 ([0, 1, 2]).
+                # random.sample(range(3), k=2): Randomly selects 2 unique elements from the provided sequence.
                 switch = random.sample(range(3), k=2)
             else:
                 switch = [3, 3]
@@ -146,52 +151,79 @@ class CL4SRec(BaseModel):
         return mask
 
     def info_nce(self, z_i, z_j, temp, batch_size):
+        # The method computes the InfoNCE loss for pairs of embeddings (z_i and z_j) by comparing the positive sample similarities with negative sample similarities, where negative samples are selected based on a mask to ensure they are uncorrelated. The final loss is calculated using a contrastive loss function.
         N = 2 * batch_size
-
+        # Combine Embeddings:
+        # Concatenates the embeddings z_i and z_j along dimension 0 to create a single tensor z. This tensor represents the combined embeddings of positive sample pairs.
         z = torch.cat((z_i, z_j), dim=0)
-
+        #Compute Similarity Matrix:
+        #Computes the similarity matrix by performing matrix multiplication of z with its transpose. The division by temp is a temperature parameter that scales the similarity values.
         sim = torch.mm(z, z.T) / temp
-
+        # Extract Diagonal Elements:
+        # Extracts the diagonal elements of the similarity matrix with a stride of batch_size. These represent the similarities between positive sample pairs.
         sim_i_j = torch.diag(sim, batch_size)
         sim_j_i = torch.diag(sim, -batch_size)
-
+        # Concatenate Positive Samples:
+        # Concatenates the positive similarity scores along dimension 0 and reshapes the tensor to have a shape of (N, 1).
         positive_samples = torch.cat((sim_i_j, sim_j_i), dim=0).reshape(N, 1)
+        # Generate Negative Samples Using Mask:
+        # Depending on whether batch_size matches self.batch_size, it either uses a predefined mask (self.mask_default) or generates a new correlated samples mask using self.mask_correlated_samples(batch_size). This mask is then used to extract negative samples from the similarity matrix.
         if batch_size != self.batch_size:
             mask = self.mask_correlated_samples(batch_size)
         else:
             mask = self.mask_default
         negative_samples = sim[mask].reshape(N, -1)
-
+        # Prepare Labels and Logits:
+        # Creates label tensor with zeros for positive samples.
+        # Concatenates positive and negative samples to form the logits tensor.
         labels = torch.zeros(N).to(positive_samples.device).long()
         logits = torch.cat((positive_samples, negative_samples), dim=1)
+        # Compute InfoNCE Loss:
+        # Computes the InfoNCE loss using a contrastive loss function (self.cl_loss_func), comparing the logits with the labels.
         info_nce_loss = self.cl_loss_func(logits, labels)
         return info_nce_loss
 
     def forward(self, batch_seqs):
+        # method processes input sequences through an embedding layer and a stack of transformer layers, and the final output is the representation of the sequence, typically extracted from the last position. The mask is used to prevent the model from attending to padding elements during the transformer layers' computations.
+
+        # batch_seqs > 0 creates a boolean tensor indicating non-padding elements.
+        # .unsqueeze(1) adds a singleton dimension to the tensor to make it compatible for broadcasting.
+        # .repeat(1, batch_seqs.size(1), 1) replicates the tensor along the sequence dimension, essentially creating a 3D mask with the same shape as batch_seqs.
+        # .unsqueeze(1) adds another singleton dimension at the beginning of the tensor. This is often used for compatibility with transformer models that expect a mask with dimensions [batch_size, 1, sequence_length, sequence_length].
         mask = (batch_seqs > 0).unsqueeze(1).repeat(
             1, batch_seqs.size(1), 1).unsqueeze(1)
+        # Embedding Layer:
+        # Passes the input sequence batch_seqs through an embedding layer (self.emb_layer). This layer converts integer indices into dense vectors.
         x = self.emb_layer(batch_seqs)
+        # Transformer Layers:
+        # Iterates through a series of transformer layers (self.transformer_layers) and applies each one to the input tensor x. The transformer layers are expected to take the input tensor and the mask as arguments.
         for transformer in self.transformer_layers:
             x = transformer(x, mask)
+        # Extracts the output from the last position of the sequence (-1). This is a common practice in transformer-based models, where the output corresponding to the last position is often used as a representation of the entire sequence.
         output = x[:, -1, :]
         return output  # [B H]
 
     def cal_loss(self, batch_data):
-        batch_user, batch_seqs, batch_last_items = batch_data
-        seq_output = self.forward(batch_seqs)
+        # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
 
+        # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
+        batch_user, batch_seqs, batch_last_items = batch_data
+        # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
+        seq_output = self.forward(batch_seqs)
+        # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
         test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
+        # Compute Recommendation Loss:Computes the recommendation loss using a specified loss function (self.loss_func). This loss measures the discrepancy between the predicted logits and the actual last items in the sequences.
         loss = self.loss_func(logits, batch_last_items)
-
+        # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).
         # NCE
         aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs)
         seq_output1 = self.forward(aug_seq1)
         seq_output2 = self.forward(aug_seq2)
-
+        # Compute InfoNCE Loss (Contrastive Loss):Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. The temperature parameter (temp) and batch size are specified.
         cl_loss = self.lmd * self.info_nce(
             seq_output1, seq_output2, temp=self.tau, batch_size=aug_seq1.shape[0])
-
+        # Aggregate Losses and Return: Aggregates the recommendation loss and contrastive loss into a total loss. Returns the total loss along with a dictionary containing individual loss components (rec_loss and cl_loss).
         loss_dict = {
             'rec_loss': loss.item(),
             'cl_loss': cl_loss.item(),
@@ -199,8 +231,14 @@ class CL4SRec(BaseModel):
         return loss + cl_loss, loss_dict
 
     def full_predict(self, batch_data):
+        # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
+
+        # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
         batch_user, batch_seqs, _ = batch_data
+        # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
         logits = self.forward(batch_seqs)
+        # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
         test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
+        # Return Predicted Scores:Returns the computed scores, which represent the predicted relevance or preference scores for each item in the vocabulary for the given batch of users and sequences.
         scores = torch.matmul(logits, test_item_emb.transpose(0, 1))
         return scores

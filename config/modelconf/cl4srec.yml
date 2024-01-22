@@ -4,7 +4,7 @@ optimizer:
   weight_decay: 0
 
 train:
-  epoch: 30
+  epoch: 10
   batch_size: 256
   save_model: true
   log_loss: true
@@ -14,13 +14,13 @@ train:
 
 test:
   metrics: [recall, ndcg]
-  k: [5, 10, 20]
+  k: [2, 3,5]
   batch_size: 256
 
 data:
   type: sequential
   name: carsii
-  seq_aug: true
+  seq_aug: false
 
 model:
   name: cl4srec
