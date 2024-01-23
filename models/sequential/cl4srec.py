@@ -72,33 +72,16 @@ class CL4SRec(BaseModel):
             masked_item_seq[mask_index] = self.mask_token
             return masked_item_seq.tolist(), length
 
-        def item_reorder(seq, length, available_index, beta=0.6):
+        def item_reorder(seq, length, selected_elements, beta=0.6):
             #TODO
-            print('reorder')
             # Find a better logic for item reorder
             # Think of the repetition of the same item for the available index
             # Think of randomness
-            # print(available_index)
-            if len(available_index) == 1:
-                reorder_begin = available_index[0] -1
-                num_reorder = available_index 
-                reordered_item_seq = seq.copy()
-                reordered_item_seq[reorder_begin] = seq[num_reorder]
-                reordered_item_seq[num_reorder] = seq[reorder_begin]
-            else:
-                print('you mf i am')
-                consecutive_sequences = np.split(available_index, np.where(np.diff(available_index) != 1)[0] + 1)
-                consecutive_sequences = [sequence.tolist() for sequence in consecutive_sequences]
 
-                longest_sequence = max(consecutive_sequences, key=len, default=[])
-                reorder_begin = min(longest_sequence) - 1
-                num_reorder = max(longest_sequence)
-                reordered_item_seq = seq.copy()
-                sublist = reordered_item_seq[reorder_begin:num_reorder]
-                print(reordered_item_seq[reorder_begin:num_reorder])
-                random.shuffle(sublist)
-                reordered_item_seq[reorder_begin:num_reorder] = sublist
-                print(reordered_item_seq[reorder_begin:num_reorder])
+            reordered_item_seq = seq.copy()
+            random.shuffle(selected_elements)
+            for i, index in enumerate(longest_sequence):
+                reordered_item_seq[index] = selected_elements[i]
 
             return reordered_item_seq, length
         
@@ -133,16 +116,20 @@ class CL4SRec(BaseModel):
             if length > 1:
                 # range(3): Generates a sequence of integers from 0 to 2 ([0, 1, 2]).
                 # random.sample(range(3), k=2): Randomly selects 2 unique elements from the provided sequence.
-                #finding if we have any interactions that happened within min_time_reorder
-                # print(time_delta_seq)
-                # print(np.where((time_delta_seq != 0) & (time_delta_seq < min_time_reorder)))
+                # finding if we have any interactions that happened within min_time_reorder
                 available_index = np.where((time_delta_seq != 0) & (time_delta_seq < min_time_reorder))[0].tolist()
-                # print(available_index)
-                if len(available_index) == 0:
-                    # print('check1')
+                interaction_equality = False
+                if len(available_index) != 0:
+                    consecutive_sequences = np.split(available_index, np.where(np.diff(available_index) != 1)[0] + 1)
+                    consecutive_sequences = [sequence.tolist() for sequence in consecutive_sequences]
+                    longest_sequence = max(consecutive_sequences, key=len, default=[])
+                    longest_sequence.insert(0, min(longest_sequence)-1)
+                    selected_elements = [seq[i] for i in longest_sequence]
+                    interaction_equality = all(x == selected_elements[0] for x in selected_elements)
+
+                if len(available_index) == 0 or interaction_equality:
                     switch = random.sample(range(2), k=2)
                 else:
-                    # print('check2')
                     switch = random.sample(range(3), k=2)
             else:
                 switch = [3, 3]
@@ -153,7 +140,7 @@ class CL4SRec(BaseModel):
             elif switch[0] == 1:
                 aug_seq, aug_len = item_mask(seq, length)
             elif switch[0] == 2:
-                aug_seq, aug_len = item_reorder(seq, length, available_index)
+                aug_seq, aug_len = item_reorder(seq, length, selected_elements)
 
             if aug_len > 0:
                 aug_seq1.append(aug_seq)
@@ -167,7 +154,7 @@ class CL4SRec(BaseModel):
             elif switch[1] == 1:
                 aug_seq, aug_len = item_mask(seq, length)
             elif switch[1] == 2:
-                aug_seq, aug_len = item_reorder(seq, length, available_index)
+                aug_seq, aug_len = item_reorder(seq, length, selected_elements)
 
             if aug_len > 0:
                 aug_seq2.append(aug_seq)

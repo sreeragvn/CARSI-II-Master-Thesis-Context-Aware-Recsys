@@ -2,8 +2,7 @@ This is a PyTorch-based open-source deep learning framework for recommender syst
 It's user-friendly and contains commonly-used datasets, code scripts for data processing, training, testing, evaluation, and state-of-the-art research models. 
 
 ### General Collaborative Filtering
-| AutoCF| WWW'23 | [Automated Self-Supervised Learning for Recommendation](https://arxiv.org/pdf/2303.07797.pdf)|
-| DCCF| SIGIR'23 | [Disentangled Contrastive Collaborative Filtering](https://arxiv.org/pdf/2305.02759.pdf)|
+[Automated Self-Supervised Learning for Recommendation](https://arxiv.org/pdf/2303.07797.pdf) | [Disentangled Contrastive Collaborative Filtering](https://arxiv.org/pdf/2305.02759.pdf)|
 
 
 ### Sequential Recommendation
