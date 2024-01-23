@@ -52,7 +52,7 @@ class CL4SRec(BaseModel):
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
 
-    def _cl4srec_aug(self, batch_seqs):
+    def _cl4srec_aug(self, batch_seqs, batch_time_deltas_seqs):
         def item_crop(seq, length, eta=0.6):
             num_left = math.floor(length * eta)
             crop_begin = random.randint(0, length - num_left)
@@ -72,33 +72,60 @@ class CL4SRec(BaseModel):
             masked_item_seq[mask_index] = self.mask_token
             return masked_item_seq.tolist(), length
 
-        def item_reorder(seq, length, beta=0.6):
-            num_reorder = math.floor(length * beta)
-            reorder_begin = random.randint(0, length - num_reorder)
-            reordered_item_seq = seq[:]
-            shuffle_index = list(
-                range(reorder_begin, reorder_begin + num_reorder))
-            random.shuffle(shuffle_index)
-            shuffle_index = [-i for i in shuffle_index]
-            reordered_item_seq[-(reorder_begin + 1 + num_reorder):-(reorder_begin+1)] = reordered_item_seq[shuffle_index]
-            return reordered_item_seq.tolist(), length
+        def item_reorder(seq, length, selected_elements, beta=0.6):
+            reordered_item_seq = seq.copy()
+            random.shuffle(selected_elements)
+            for i, index in enumerate(longest_sequence):
+                reordered_item_seq[index] = selected_elements[i]
+
+            return reordered_item_seq, length
+        
+            # num_reorder = math.floor(length * beta)
+            # reorder_begin = random.randint(0, length - num_reorder)
+            # reordered_item_seq = seq[:]
+            # shuffle_index = list(
+            #     range(reorder_begin, reorder_begin + num_reorder))
+            # random.shuffle(shuffle_index)
+            # shuffle_index = [-i for i in shuffle_index]
+            # reordered_item_seq[-(reorder_begin + 1 + num_reorder):-(reorder_begin+1)] = reordered_item_seq[shuffle_index]
+            # return reordered_item_seq.tolist(), length
 
         # convert each batch into a list of list
         seqs = batch_seqs.tolist()
+        time_delta_seqs = batch_time_deltas_seqs.tolist()
         ## a list of number of non zero elements in each sequence
         lengths = batch_seqs.count_nonzero(dim=1).tolist()
+
+        ## TODO
+        # set the following parameter as a param loaded from yaml file
+        min_time_reorder = 3 #min
 
         aug_seq1 = []
         aug_len1 = []
         aug_seq2 = []
         aug_len2 = []
         #iterating through each sequence with in a batch
-        for seq, length in zip(seqs, lengths):
+        for seq, length, time_delta_seq in zip(seqs, lengths, time_delta_seqs):
             seq = np.asarray(seq.copy(), dtype=np.int64)
+            time_delta_seq = np.asarray(time_delta_seq.copy(), dtype=np.float64)
             if length > 1:
                 # range(3): Generates a sequence of integers from 0 to 2 ([0, 1, 2]).
                 # random.sample(range(3), k=2): Randomly selects 2 unique elements from the provided sequence.
-                switch = random.sample(range(3), k=2)
+                # finding if we have any interactions that happened within min_time_reorder
+                available_index = np.where((time_delta_seq != 0) & (time_delta_seq < min_time_reorder))[0].tolist()
+                interaction_equality = False
+                if len(available_index) != 0:
+                    consecutive_sequences = np.split(available_index, np.where(np.diff(available_index) != 1)[0] + 1)
+                    consecutive_sequences = [sequence.tolist() for sequence in consecutive_sequences]
+                    longest_sequence = max(consecutive_sequences, key=len, default=[])
+                    longest_sequence.insert(0, min(longest_sequence)-1)
+                    selected_elements = [seq[i] for i in longest_sequence]
+                    interaction_equality = all(x == selected_elements[0] for x in selected_elements)
+
+                if len(available_index) == 0 or interaction_equality:
+                    switch = random.sample(range(2), k=2)
+                else:
+                    switch = random.sample(range(3), k=2)
             else:
                 switch = [3, 3]
                 aug_seq = seq
@@ -108,7 +135,7 @@ class CL4SRec(BaseModel):
             elif switch[0] == 1:
                 aug_seq, aug_len = item_mask(seq, length)
             elif switch[0] == 2:
-                aug_seq, aug_len = item_reorder(seq, length)
+                aug_seq, aug_len = item_reorder(seq, length, selected_elements)
 
             if aug_len > 0:
                 aug_seq1.append(aug_seq)
@@ -122,7 +149,7 @@ class CL4SRec(BaseModel):
             elif switch[1] == 1:
                 aug_seq, aug_len = item_mask(seq, length)
             elif switch[1] == 2:
-                aug_seq, aug_len = item_reorder(seq, length)
+                aug_seq, aug_len = item_reorder(seq, length, selected_elements)
 
             if aug_len > 0:
                 aug_seq2.append(aug_seq)
@@ -207,8 +234,10 @@ class CL4SRec(BaseModel):
         # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
 
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
-        batch_user, batch_seqs, batch_last_items = batch_data
-        print(batch_seqs)
+        batch_user, batch_seqs, batch_last_items, batch_time_deltas = batch_data
+        # print(batch_seqs.size())
+        # max_values, _ = torch.max(batch_seqs, dim=1)
+        # print(max_values)
         # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
         seq_output = self.forward(batch_seqs)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
@@ -218,7 +247,7 @@ class CL4SRec(BaseModel):
         loss = self.loss_func(logits, batch_last_items)
         # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).
         # NCE
-        aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs)
+        aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
         seq_output1 = self.forward(aug_seq1)
         seq_output2 = self.forward(aug_seq2)
         # Compute InfoNCE Loss (Contrastive Loss):Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. The temperature parameter (temp) and batch size are specified.
@@ -235,7 +264,7 @@ class CL4SRec(BaseModel):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
 
         # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
-        batch_user, batch_seqs, _ = batch_data
+        batch_user, batch_seqs, _, _ = batch_data
         # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
         logits = self.forward(batch_seqs)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
