@@ -52,7 +52,7 @@ class CL4SRec(BaseModel):
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
 
-    def _cl4srec_aug(self, batch_seqs):
+    def _cl4srec_aug(self, batch_seqs, batch_time_deltas_seqs):
         def item_crop(seq, length, eta=0.6):
             num_left = math.floor(length * eta)
             crop_begin = random.randint(0, length - num_left)
@@ -72,33 +72,78 @@ class CL4SRec(BaseModel):
             masked_item_seq[mask_index] = self.mask_token
             return masked_item_seq.tolist(), length
 
-        def item_reorder(seq, length, beta=0.6):
-            num_reorder = math.floor(length * beta)
-            reorder_begin = random.randint(0, length - num_reorder)
-            reordered_item_seq = seq[:]
-            shuffle_index = list(
-                range(reorder_begin, reorder_begin + num_reorder))
-            random.shuffle(shuffle_index)
-            shuffle_index = [-i for i in shuffle_index]
-            reordered_item_seq[-(reorder_begin + 1 + num_reorder):-(reorder_begin+1)] = reordered_item_seq[shuffle_index]
-            return reordered_item_seq.tolist(), length
+        def item_reorder(seq, length, available_index, beta=0.6):
+            #TODO
+            print('reorder')
+            # Find a better logic for item reorder
+            # Think of the repetition of the same item for the available index
+            # Think of randomness
+            # print(available_index)
+            if len(available_index) == 1:
+                reorder_begin = available_index[0] -1
+                num_reorder = available_index 
+                reordered_item_seq = seq.copy()
+                reordered_item_seq[reorder_begin] = seq[num_reorder]
+                reordered_item_seq[num_reorder] = seq[reorder_begin]
+            else:
+                print('you mf i am')
+                consecutive_sequences = np.split(available_index, np.where(np.diff(available_index) != 1)[0] + 1)
+                consecutive_sequences = [sequence.tolist() for sequence in consecutive_sequences]
+
+                longest_sequence = max(consecutive_sequences, key=len, default=[])
+                reorder_begin = min(longest_sequence) - 1
+                num_reorder = max(longest_sequence)
+                reordered_item_seq = seq.copy()
+                sublist = reordered_item_seq[reorder_begin:num_reorder]
+                print(reordered_item_seq[reorder_begin:num_reorder])
+                random.shuffle(sublist)
+                reordered_item_seq[reorder_begin:num_reorder] = sublist
+                print(reordered_item_seq[reorder_begin:num_reorder])
+
+            return reordered_item_seq, length
+        
+            # num_reorder = math.floor(length * beta)
+            # reorder_begin = random.randint(0, length - num_reorder)
+            # reordered_item_seq = seq[:]
+            # shuffle_index = list(
+            #     range(reorder_begin, reorder_begin + num_reorder))
+            # random.shuffle(shuffle_index)
+            # shuffle_index = [-i for i in shuffle_index]
+            # reordered_item_seq[-(reorder_begin + 1 + num_reorder):-(reorder_begin+1)] = reordered_item_seq[shuffle_index]
+            # return reordered_item_seq.tolist(), length
 
         # convert each batch into a list of list
         seqs = batch_seqs.tolist()
+        time_delta_seqs = batch_time_deltas_seqs.tolist()
         ## a list of number of non zero elements in each sequence
         lengths = batch_seqs.count_nonzero(dim=1).tolist()
+
+        ## TODO
+        # set the following parameter as a param loaded from yaml file
+        min_time_reorder = 3 #min
 
         aug_seq1 = []
         aug_len1 = []
         aug_seq2 = []
         aug_len2 = []
         #iterating through each sequence with in a batch
-        for seq, length in zip(seqs, lengths):
+        for seq, length, time_delta_seq in zip(seqs, lengths, time_delta_seqs):
             seq = np.asarray(seq.copy(), dtype=np.int64)
+            time_delta_seq = np.asarray(time_delta_seq.copy(), dtype=np.float64)
             if length > 1:
                 # range(3): Generates a sequence of integers from 0 to 2 ([0, 1, 2]).
                 # random.sample(range(3), k=2): Randomly selects 2 unique elements from the provided sequence.
-                switch = random.sample(range(3), k=2)
+                #finding if we have any interactions that happened within min_time_reorder
+                # print(time_delta_seq)
+                # print(np.where((time_delta_seq != 0) & (time_delta_seq < min_time_reorder)))
+                available_index = np.where((time_delta_seq != 0) & (time_delta_seq < min_time_reorder))[0].tolist()
+                # print(available_index)
+                if len(available_index) == 0:
+                    # print('check1')
+                    switch = random.sample(range(2), k=2)
+                else:
+                    # print('check2')
+                    switch = random.sample(range(3), k=2)
             else:
                 switch = [3, 3]
                 aug_seq = seq
@@ -108,7 +153,7 @@ class CL4SRec(BaseModel):
             elif switch[0] == 1:
                 aug_seq, aug_len = item_mask(seq, length)
             elif switch[0] == 2:
-                aug_seq, aug_len = item_reorder(seq, length)
+                aug_seq, aug_len = item_reorder(seq, length, available_index)
 
             if aug_len > 0:
                 aug_seq1.append(aug_seq)
@@ -122,7 +167,7 @@ class CL4SRec(BaseModel):
             elif switch[1] == 1:
                 aug_seq, aug_len = item_mask(seq, length)
             elif switch[1] == 2:
-                aug_seq, aug_len = item_reorder(seq, length)
+                aug_seq, aug_len = item_reorder(seq, length, available_index)
 
             if aug_len > 0:
                 aug_seq2.append(aug_seq)
@@ -220,7 +265,7 @@ class CL4SRec(BaseModel):
         loss = self.loss_func(logits, batch_last_items)
         # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).
         # NCE
-        aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs)
+        aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
         seq_output1 = self.forward(aug_seq1)
         seq_output2 = self.forward(aug_seq2)
         # Compute InfoNCE Loss (Contrastive Loss):Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. The temperature parameter (temp) and batch size are specified.
