@@ -49,25 +49,35 @@ class Trainer(object):
             ), lr=optim_config['lr'], weight_decay=optim_config['weight_decay'])
 
     def train_epoch(self, model, epoch_idx):
+        # This method encapsulates the training logic for one epoch of a recommender system. It involves iterating over batches, computing and backpropagating the loss, and logging relevant information. The specifics may vary based on the model and data handling mechanisms used in the recommender system.
+
         # prepare training data
+        # Retrieves the training data loader from the data_handler.
+        # Calls the sample_negs method on the training dataset, which might be related to negative sampling in recommendation systems.
         train_dataloader = self.data_handler.train_dataloader
         train_dataloader.dataset.sample_negs()
-
+        # Initializes dictionaries for tracking loss values (loss_log_dict) and the cumulative epoch loss (ep_loss).
+        # steps calculates the number of steps (batches) in the training dataset.
         # for recording loss
         loss_log_dict = {}
         ep_loss = 0
         steps = len(train_dataloader.dataset) // configs['train']['batch_size']
         # start this epoch
+        # Sets the model in training mode.
         model.train()
+        # Training Loop:
         for _, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
+            # Iterates over batches in the training data using the train_dataloader.
             self.optimizer.zero_grad()
             batch_data = list(map(lambda x: x.long().to(configs['device']), tem))
             loss, loss_dict = model.cal_loss(batch_data)
             ep_loss += loss.item()
             loss.backward()
             self.optimizer.step()
+            # Zeroes the gradients, moves batch data to the device specified in the configuration, computes loss, backpropagates, and performs an optimizer step.
 
             # record loss
+            # Records loss values in loss_log_dict. The loss values are normalized by the length of the training dataloader.
             for loss_name in loss_dict:
                 _loss_val = float(loss_dict[loss_name]) / len(train_dataloader)
                 if loss_name not in loss_log_dict:
@@ -76,6 +86,7 @@ class Trainer(object):
                     loss_log_dict[loss_name] += _loss_val
 
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
+        # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
 
         # log loss
         if configs['train']['log_loss']:
@@ -85,10 +96,16 @@ class Trainer(object):
 
     @log_exceptions
     def train(self, model):
+        # The method orchestrates the training process for a recommender system, including the training loop, evaluation, and potential early stopping based on validation metrics. This method is responsible for training a recommender system model. The training process includes multiple epochs, evaluation steps, and potentially early stopping based on a specified patience criteria.
+
+        # Initializes the optimizer for the model.
         self.create_optimizer(model)
         train_config = configs['train']
 
         if not train_config['early_stop']:
+            # Iterates over the specified number of epochs (train_config['epoch']).
+            # Calls train_epoch method to train the model for each epoch.
+            # Calls evaluate method at specified intervals during training.
             for epoch_idx in range(train_config['epoch']):
                 # train
                 self.train_epoch(model, epoch_idx)
@@ -98,7 +115,9 @@ class Trainer(object):
             self.test(model)
             self.save_model(model)
             return model
-
+        # If early stopping is enabled (train_config['early_stop'] is True), the training loop includes logic for early stopping.
+        # Keeps track of the patience counter (now_patience) and the best epoch, metric, and model state during the training process.
+        # Breaks out of the loop if the patience criteria are met.
         elif train_config['early_stop']:
             now_patience = 0
             best_epoch = 0
@@ -126,6 +145,9 @@ class Trainer(object):
                         break
 
             # re-initialize the model and load the best parameter
+            # Re-initializes the model and loads the parameters of the best model based on the early stopping criteria.
+            # Evaluates and tests the model on the best epoch.
+            # Saves the best model.
             self.logger.log("Best Epoch {}".format(best_epoch))
             model = build_model(self.data_handler).to(configs['device'])
             model.load_state_dict(best_state_dict)
@@ -138,6 +160,11 @@ class Trainer(object):
 
     @log_exceptions
     def evaluate(self, model, epoch_idx=None):
+        # This method encapsulates the logic for evaluating the recommender system model on either the validation set or the test set. It computes evaluation metrics, logs the results, and can be used during the training process to monitor the model's performance on held-out data.
+
+        # The provided code defines an evaluate method within a class. This method is used to evaluate the performance of a recommender system model on either a validation set or a test set, depending on the availability of the corresponding dataloaders.
+
+        # Sets the model to evaluation mode.
         model.eval()
         if hasattr(self.data_handler, 'valid_dataloader'):
             eval_result = self.metric.eval(model, self.data_handler.valid_dataloader)
@@ -149,11 +176,25 @@ class Trainer(object):
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set', epoch_idx=epoch_idx)
         else:
             raise NotImplemented
+        # Checks if a validation dataloader (valid_dataloader) is available in the data_handler.
+        # If available, evaluates the model on the validation set using the metric.eval method.
+        # If not, checks if a test dataloader (test_dataloader) is available.
+        # If available, evaluates the model on the test set using the metric.eval method.
+        # Logs evaluation results and scalar values to TensorBoard (writer).
         return eval_result
 
     @log_exceptions
     def test(self, model):
+        # This method serves the purpose of assessing the performance of the recommender system model on the test set. It evaluates the model using the specified metrics, logs the evaluation results, and can be used to understand how well the model generalizes to unseen data. The test method is typically called after training the model to assess its final performance.
+
+        # The provided code defines a test method within a class. This method is responsible for testing the performance of a recommender system model on a test set
+
+        # Sets the model to evaluation mode.
         model.eval()
+
+        # Checks if a test dataloader (test_dataloader) is available in the data_handler.
+        # If available, evaluates the model on the test set using the metric.eval method.
+        # Logs evaluation results using the logger.
         if hasattr(self.data_handler, 'test_dataloader'):
             eval_result = self.metric.eval(model, self.data_handler.test_dataloader)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set')
@@ -162,6 +203,7 @@ class Trainer(object):
         return eval_result
 
     def save_model(self, model):
+        # The provided code defines a save_model method within a class. This method is responsible for saving the parameters of a trained recommender system model to a file. 
         if configs['train']['save_model']:
             model_state_dict = model.state_dict()
             model_name = configs['model']['name']
@@ -195,57 +237,57 @@ class Trainer(object):
         else:
             raise KeyError("No pretrain_path in configs['train']")
 
-"""
-Special Trainer for Sequential Recommendation methods (ICLRec, MAERec, ...)
-"""
-class ICLRecTrainer(Trainer):
-    def __init__(self, data_handler, logger):
-        super(ICLRecTrainer, self).__init__(data_handler, logger)
-        self.cluster_dataloader = copy.deepcopy(self.data_handler.train_dataloader)
+# """
+# Special Trainer for Sequential Recommendation methods (ICLRec, MAERec, ...)
+# """
+# class ICLRecTrainer(Trainer):
+#     def __init__(self, data_handler, logger):
+#         super(ICLRecTrainer, self).__init__(data_handler, logger)
+#         self.cluster_dataloader = copy.deepcopy(self.data_handler.train_dataloader)
 
-    def train_epoch(self, model, epoch_idx):
-        """ prepare clustering in eval mode """
-        model.eval()
-        kmeans_training_data = []
-        cluster_dataloader = self.cluster_dataloader
-        cluster_dataloader.dataset.sample_negs()
-        for _, tem in tqdm(enumerate(cluster_dataloader), desc='Training Clustering', total=len(cluster_dataloader)):
-            batch_data = list(
-                map(lambda x: x.long().to(configs['device']), tem))
-            # feed batch_seqs into model.forward()
-            sequence_output = model(batch_data[1], return_mean=True)
-            kmeans_training_data.append(sequence_output.detach().cpu().numpy())
-        kmeans_training_data = np.concatenate(kmeans_training_data, axis=0)
-        model.cluster.train(kmeans_training_data)
-        del kmeans_training_data
-        gc.collect()
+#     def train_epoch(self, model, epoch_idx):
+#         """ prepare clustering in eval mode """
+#         model.eval()
+#         kmeans_training_data = []
+#         cluster_dataloader = self.cluster_dataloader
+#         cluster_dataloader.dataset.sample_negs()
+#         for _, tem in tqdm(enumerate(cluster_dataloader), desc='Training Clustering', total=len(cluster_dataloader)):
+#             batch_data = list(
+#                 map(lambda x: x.long().to(configs['device']), tem))
+#             # feed batch_seqs into model.forward()
+#             sequence_output = model(batch_data[1], return_mean=True)
+#             kmeans_training_data.append(sequence_output.detach().cpu().numpy())
+#         kmeans_training_data = np.concatenate(kmeans_training_data, axis=0)
+#         model.cluster.train(kmeans_training_data)
+#         del kmeans_training_data
+#         gc.collect()
 
-        """ train in train mode """
-        model.train()
-        train_dataloader = self.data_handler.train_dataloader
-        train_dataloader.dataset.sample_negs()
-        # for recording loss
-        loss_log_dict = {}
-        # start this epoch
-        model.train()
-        for _, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
-            self.optimizer.zero_grad()
-            batch_data = list(
-                map(lambda x: x.long().to(configs['device']), tem))
-            loss, loss_dict = model.cal_loss(batch_data)
-            loss.backward()
-            self.optimizer.step()
+#         """ train in train mode """
+#         model.train()
+#         train_dataloader = self.data_handler.train_dataloader
+#         train_dataloader.dataset.sample_negs()
+#         # for recording loss
+#         loss_log_dict = {}
+#         # start this epoch
+#         model.train()
+#         for _, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
+#             self.optimizer.zero_grad()
+#             batch_data = list(
+#                 map(lambda x: x.long().to(configs['device']), tem))
+#             loss, loss_dict = model.cal_loss(batch_data)
+#             loss.backward()
+#             self.optimizer.step()
 
-            # record loss
-            for loss_name in loss_dict:
-                _loss_val = float(loss_dict[loss_name]) / len(train_dataloader)
-                if loss_name not in loss_log_dict:
-                    loss_log_dict[loss_name] = _loss_val
-                else:
-                    loss_log_dict[loss_name] += _loss_val
+#             # record loss
+#             for loss_name in loss_dict:
+#                 _loss_val = float(loss_dict[loss_name]) / len(train_dataloader)
+#                 if loss_name not in loss_log_dict:
+#                     loss_log_dict[loss_name] = _loss_val
+#                 else:
+#                     loss_log_dict[loss_name] += _loss_val
 
-        # log loss
-        if configs['train']['log_loss']:
-            self.logger.log_loss(epoch_idx, loss_log_dict)
-        else:
-            self.logger.log_loss(epoch_idx, loss_log_dict, save_to_log=False)
+#         # log loss
+#         if configs['train']['log_loss']:
+#             self.logger.log_loss(epoch_idx, loss_log_dict)
+#         else:
+#             self.logger.log_loss(epoch_idx, loss_log_dict, save_to_log=False)

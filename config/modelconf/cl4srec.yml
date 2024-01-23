@@ -11,6 +11,7 @@ train:
   test_step: 1
   reproducible: true
   seed: 2023
+  tensorboard: true
 
 test:
   metrics: [recall, ndcg]
