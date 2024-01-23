@@ -29,6 +29,38 @@ class DataHandlerSequential:
         self.max_item_id = 0
 
     def _read_tsv_to_user_seqs(self, tsv_file):
+        user_seqs = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
+        with open(tsv_file, 'r') as f:
+            line = f.readline()
+            # skip header
+            line = f.readline()
+            while line:
+                uid, seq, last_item, time_delta_seq = line.strip().split('\t')
+                seq = seq.split(' ')
+                seq = [int(item) for item in seq]
+                # print(len(seq))
+                time_delta_seq = time_delta_seq.split(' ')
+                time_delta_seq = [float(time_delta) for time_delta in time_delta_seq]
+                # print(len(time_delta_seq))
+                # assert len(seq) == len(time_delta_seq)
+                user_seqs["uid"].append(int(uid))
+                user_seqs["item_seq"].append(seq)
+                user_seqs["item_id"].append(int(last_item))
+                user_seqs["time_delta"].append(time_delta_seq)
+
+                self.max_item_id = max(
+                    self.max_item_id, max(max(seq), int(last_item)))
+                line = f.readline()
+            # list1 = user_seqs["item_seq"]
+            # list2 = user_seqs["time_delta"]
+            # for i in range(len(list1)):
+            #     if len(list1[i]) != len(list2[i]):
+            #         print('mismatch')
+            #     else:
+            #         print('ALL GOOD')
+        return user_seqs
+    
+    def _read_tsv_to_user_seqs_test(self, tsv_file):
         user_seqs = {"uid": [], "item_seq": [], "item_id": []}
         with open(tsv_file, 'r') as f:
             line = f.readline()
@@ -38,6 +70,7 @@ class DataHandlerSequential:
                 uid, seq, last_item = line.strip().split('\t')
                 seq = seq.split(' ')
                 seq = [int(item) for item in seq]
+
                 user_seqs["uid"].append(int(uid))
                 user_seqs["item_seq"].append(seq)
                 user_seqs["item_id"].append(int(last_item))
@@ -55,15 +88,17 @@ class DataHandlerSequential:
         configs['data']['item_num'] = self.max_item_id
 
     def _seq_aug(self, user_seqs):
-        user_seqs_aug = {"uid": [], "item_seq": [], "item_id": []}
-        for uid, seq, last_item in zip(user_seqs["uid"], user_seqs["item_seq"], user_seqs["item_id"]):
+        user_seqs_aug = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
+        for uid, seq, last_item, time_delta in zip(user_seqs["uid"], user_seqs["item_seq"], user_seqs["item_id"], user_seqs["time_delta"]):
             user_seqs_aug["uid"].append(uid)
             user_seqs_aug["item_seq"].append(seq)
             user_seqs_aug["item_id"].append(last_item)
+            user_seqs_aug["time_delta"].append(time_delta)
             for i in range(1, len(seq)-1):
                 user_seqs_aug["uid"].append(uid)
                 user_seqs_aug["item_seq"].append(seq[:i])
                 user_seqs_aug["item_id"].append(seq[i])
+                user_seqs_aug["time_delta"].append(time_delta[:i])
         return user_seqs_aug
 
     def load_data(self):
