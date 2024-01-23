@@ -73,11 +73,7 @@ class CL4SRec(BaseModel):
             return masked_item_seq.tolist(), length
 
         def item_reorder(seq, length, selected_elements, beta=0.6):
-            #TODO
-            # Find a better logic for item reorder
-            # Think of the repetition of the same item for the available index
-            # Think of randomness
-
+            
             reordered_item_seq = seq.copy()
             random.shuffle(selected_elements)
             for i, index in enumerate(longest_sequence):
