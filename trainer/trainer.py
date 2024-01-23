@@ -66,6 +66,21 @@ class Trainer(object):
         # Sets the model in training mode.
         model.train()
         # Training Loop:
+    #     for batch in train_dataloader:
+    # # Unpack the batch
+    #         uids, padded_seqs, last_items, time_delta = batch
+
+    #         # Check if all elements in the batch have the same size
+    #         sizes_1 = [len(seq) for seq in padded_seqs]
+    #         sizes_2 = [len(seq) for seq in time_delta]
+    #         if sizes_1 !=sizes_2:
+    #             print("Inconsistent sizes in the current batch:")
+    #             # You can raise an exception or handle it based on your needs
+    #             raise RuntimeError("Inconsistent sizes in the batch.")
+
+    #     # If the loop completes without raising an exception, the sizes are consistent.
+    #     print("All batches have equal-sized elements.")
+
         for _, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
             # Iterates over batches in the training data using the train_dataloader.
             self.optimizer.zero_grad()

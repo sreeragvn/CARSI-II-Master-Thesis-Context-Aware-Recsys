@@ -20,7 +20,7 @@ test:
 
 data:
   type: sequential
-  name: carsii
+  name: carsii_delta
   seq_aug: false
 
 model:
