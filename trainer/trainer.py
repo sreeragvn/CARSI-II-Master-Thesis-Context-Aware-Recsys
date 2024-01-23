@@ -70,6 +70,10 @@ class Trainer(object):
             # Iterates over batches in the training data using the train_dataloader.
             self.optimizer.zero_grad()
             batch_data = list(map(lambda x: x.long().to(configs['device']), tem))
+            batch_user, batch_seqs, batch_last_items = batch_data
+            print(batch_seqs.size())
+            max_values, _ = torch.max(batch_seqs, dim=1)
+            print(max_values)
             loss, loss_dict = model.cal_loss(batch_data)
             ep_loss += loss.item()
             loss.backward()

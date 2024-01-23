@@ -208,6 +208,7 @@ class CL4SRec(BaseModel):
 
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
         batch_user, batch_seqs, batch_last_items = batch_data
+        print(batch_seqs)
         # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
         seq_output = self.forward(batch_seqs)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.

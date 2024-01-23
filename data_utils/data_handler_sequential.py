@@ -19,6 +19,9 @@ class DataHandlerSequential:
         elif configs['data']['name'] == 'carsii':
             predir = './datasets/sequential/carsii_seq/'
             configs['data']['dir'] = predir
+        elif configs['data']['name'] == 'carsii_delta':
+            predir = './datasets/sequential/carsii_timedelta_seq/'
+            configs['data']['dir'] = predir
             
         self.trn_file = path.join(predir, 'train.tsv')
         self.val_file = path.join(predir, 'test.tsv')
