@@ -126,6 +126,10 @@ class CL4SRec(BaseModel):
                     switch = random.sample(range(2), k=2)
                 else:
                     switch = random.sample(range(3), k=2)
+                    if switch[0] == switch[1] == 2:
+                        coin  =  random.sample(range(2), k=1)
+                        value = random.sample(range(2), k=1)
+                        switch[coin[0]] = value[0]
             else:
                 switch = [3, 3]
                 aug_seq = seq
