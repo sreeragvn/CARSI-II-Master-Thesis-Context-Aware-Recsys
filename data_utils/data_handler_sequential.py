@@ -22,6 +22,9 @@ class DataHandlerSequential:
         elif configs['data']['name'] == 'carsii_delta':
             predir = './datasets/sequential/carsii_timedelta_seq/'
             configs['data']['dir'] = predir
+        elif configs['data']['name'] == 'carsii_random_delta':
+            predir = './datasets/sequential/carsii_timedelta_rand_seq/'
+            configs['data']['dir'] = predir
             
         self.trn_file = path.join(predir, 'train.tsv')
         self.val_file = path.join(predir, 'test.tsv')
@@ -58,26 +61,6 @@ class DataHandlerSequential:
             #         print('mismatch')
             #     else:
             #         print('ALL GOOD')
-        return user_seqs
-    
-    def _read_tsv_to_user_seqs_test(self, tsv_file):
-        user_seqs = {"uid": [], "item_seq": [], "item_id": []}
-        with open(tsv_file, 'r') as f:
-            line = f.readline()
-            # skip header
-            line = f.readline()
-            while line:
-                uid, seq, last_item = line.strip().split('\t')
-                seq = seq.split(' ')
-                seq = [int(item) for item in seq]
-
-                user_seqs["uid"].append(int(uid))
-                user_seqs["item_seq"].append(seq)
-                user_seqs["item_id"].append(int(last_item))
-
-                self.max_item_id = max(
-                    self.max_item_id, max(max(seq), int(last_item)))
-                line = f.readline()
         return user_seqs
 
     def _set_statistics(self, user_seqs_train, user_seqs_test):
