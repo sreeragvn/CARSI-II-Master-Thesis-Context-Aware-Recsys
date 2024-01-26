@@ -20,8 +20,8 @@ test:
 
 data:
   type: sequential
-  name: carsii_delta
-  seq_aug: false
+  name: carsii_random_delta
+  seq_aug: true
 
 model:
   name: cl4srec
