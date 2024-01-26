@@ -54,13 +54,6 @@ class DataHandlerSequential:
                 self.max_item_id = max(
                     self.max_item_id, max(max(seq), int(last_item)))
                 line = f.readline()
-            # list1 = user_seqs["item_seq"]
-            # list2 = user_seqs["time_delta"]
-            # for i in range(len(list1)):
-            #     if len(list1[i]) != len(list2[i]):
-            #         print('mismatch')
-            #     else:
-            #         print('ALL GOOD')
         return user_seqs
 
     def _set_statistics(self, user_seqs_train, user_seqs_test):

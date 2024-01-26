@@ -9,6 +9,15 @@ from config.configurator import configs
 
 
 class CL4SRec(BaseModel):
+    r"""
+    SASRec is the first sequential recommender based on self-attentive mechanism.
+
+    NOTE:
+        In the author's implementation, the Point-Wise Feed-Forward Network (PFFN) is implemented
+        by CNN with 1x1 kernel. In this implementation, we follows the original BERT implementation
+        using Fully Connected Layer to implement the PFFN.
+    """
+
     def __init__(self, data_handler):
         super(CL4SRec, self).__init__(data_handler)
         self.item_num = configs['data']['item_num']
@@ -109,8 +118,6 @@ class CL4SRec(BaseModel):
             seq = np.asarray(seq.copy(), dtype=np.int64)
             time_delta_seq = np.asarray(time_delta_seq.copy(), dtype=np.float64)
             if length > 1:
-                # range(3): Generates a sequence of integers from 0 to 2 ([0, 1, 2]).
-                # random.sample(range(3), k=2): Randomly selects 2 unique elements from the provided sequence.
                 # finding if we have any interactions that happened within min_time_reorder
                 available_index = np.where((time_delta_seq != 0) & (time_delta_seq < min_time_reorder))[0].tolist()
                 interaction_equality = False
