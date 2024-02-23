@@ -6,6 +6,8 @@ from data_utils.datasets_sequential import SequentialDataset
 import torch as t
 import torch.utils.data as data
 from os import path
+import pandas as pd 
+import os
 
 
 class DataHandlerSequential:
@@ -29,6 +31,10 @@ class DataHandlerSequential:
         self.trn_file = path.join(predir, 'train.tsv')
         self.val_file = path.join(predir, 'test.tsv')
         self.tst_file = path.join(predir, 'test.tsv')
+
+        self.trn_context_file = path.join(predir, 'context/train.tsv')
+        self.val_context_file = path.join(predir, 'context/test.tsv')
+        self.tst_context_file = path.join(predir, 'context/test.tsv')
         self.max_item_id = 0
 
     def _read_tsv_to_user_seqs(self, tsv_file):
@@ -41,11 +47,8 @@ class DataHandlerSequential:
                 uid, seq, last_item, time_delta_seq = line.strip().split('\t')
                 seq = seq.split(' ')
                 seq = [int(item) for item in seq]
-                # print(len(seq))
                 time_delta_seq = time_delta_seq.split(' ')
                 time_delta_seq = [float(time_delta) for time_delta in time_delta_seq]
-                # print(len(time_delta_seq))
-                # assert len(seq) == len(time_delta_seq)
                 user_seqs["uid"].append(int(uid))
                 user_seqs["item_seq"].append(seq)
                 user_seqs["item_id"].append(int(last_item))
@@ -78,6 +81,13 @@ class DataHandlerSequential:
         return user_seqs_aug
 
     def load_data(self):
+        sequence_split = False
+        # if not sequence_split:
+        #     random_split = True
+        random_split = False
+        session_dict_generation = False
+        vehicle_ident = True
+
         user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
         user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
         self._set_statistics(user_seqs_train, user_seqs_test)
