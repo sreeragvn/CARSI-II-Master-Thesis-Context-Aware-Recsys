@@ -11,11 +11,6 @@ from config.configurator import configs
 class CL4SRec(BaseModel):
     r"""
     SASRec is the first sequential recommender based on self-attentive mechanism.
-
-    NOTE:
-        In the author's implementation, the Point-Wise Feed-Forward Network (PFFN) is implemented
-        by CNN with 1x1 kernel. In this implementation, we follows the original BERT implementation
-        using Fully Connected Layer to implement the PFFN.
     """
 
     def __init__(self, data_handler):
