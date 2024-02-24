@@ -32,10 +32,11 @@ class DataHandlerSequential:
         self.val_file = path.join(predir, 'test.tsv')
         self.tst_file = path.join(predir, 'test.tsv')
 
-        self.trn_context_file = path.join(predir, 'context/train.tsv')
-        self.val_context_file = path.join(predir, 'context/test.tsv')
-        self.tst_context_file = path.join(predir, 'context/test.tsv')
+        self.trn_context_file = path.join(predir, 'context/train.csv')
+        self.val_context_file = path.join(predir, 'context/test.csv')
+        self.tst_context_file = path.join(predir, 'context/test.csv')
         self.max_item_id = 0
+        self.max_context_length = 0
 
     def _read_tsv_to_user_seqs(self, tsv_file):
         user_seqs = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
@@ -58,6 +59,40 @@ class DataHandlerSequential:
                     self.max_item_id, max(max(seq), int(last_item)))
                 line = f.readline()
         return user_seqs
+    
+    # def _read_csv_context(self, csv_file):
+    #     context = pd.read_csv(csv_file, parse_dates=['datetime'])
+    #     max_length = int(context.groupby('session_id')['datetime'].agg(lambda x: (x.max() - x.min()).total_seconds()).max())
+    #     self.max_context_length = max(self.max_context_length, max_length)
+    #     #converting it into a dict with each column as key. value will be a list with in a list. each list will have all the values grouped together
+    #     #as another list.
+    #     context = context.drop(['datetime'], axis=1)
+    #     # context_dict = {'session_id': context['session_id'].unique().tolist()}
+    #     # for column in context.columns.difference(['session_id']):
+    #     #     context_dict[column] = context.groupby('session_id')[column].agg(list).tolist()
+    #     context_dict = {}
+    #     for session_id, group in context.groupby('session_id'):
+    #         context_dict[session_id] = {
+    #             column: group[column].tolist() for column in context.columns.difference(['session_id'])
+    #         }
+    #     return context_dict
+
+    def _read_csv_context(self, csv_file):
+        try:
+            context = pd.read_csv(csv_file, parse_dates=['datetime'])
+            max_length = int(context.groupby('session_id')['datetime'].apply(lambda x: (x.max() - x.min()).total_seconds()).max())
+            self.max_context_length = max(self.max_context_length, max_length)
+            context = context.drop(['datetime'], axis=1)
+            context_dict = {}
+            for session_id, group in context.groupby('session_id'):
+                context_dict[session_id] = {
+                    column: group[column].tolist() for column in context.columns.difference(['session_id'])
+                }
+            return context_dict
+        except Exception as e:
+            print(f"Error reading CSV file: {e}")
+            return None
+
 
     def _set_statistics(self, user_seqs_train, user_seqs_test):
         user_num = max(max(user_seqs_train["uid"]), max(
@@ -65,6 +100,7 @@ class DataHandlerSequential:
         configs['data']['user_num'] = user_num
         # item originally starts with 1
         configs['data']['item_num'] = self.max_item_id
+        configs['data']['max_context_length'] = self.max_context_length
 
     def _seq_aug(self, user_seqs):
         user_seqs_aug = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
@@ -81,24 +117,22 @@ class DataHandlerSequential:
         return user_seqs_aug
 
     def load_data(self):
-        sequence_split = False
-        # if not sequence_split:
-        #     random_split = True
-        random_split = False
-        session_dict_generation = False
-        vehicle_ident = True
-
         user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
         user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
+        context_train =  self._read_csv_context(self.trn_context_file)
+        context_test =  self._read_csv_context(self.tst_context_file)
         self._set_statistics(user_seqs_train, user_seqs_test)
 
-        # seqeuntial augmentation: [1, 2, 3,] -> [1,2], [3]
-        if 'seq_aug' in configs['data'] and configs['data']['seq_aug']:
-            user_seqs_aug = self._seq_aug(user_seqs_train)
-            trn_data = SequentialDataset(user_seqs_train, user_seqs_aug=user_seqs_aug)
-        else:
-            trn_data = SequentialDataset(user_seqs_train)
-        tst_data = SequentialDataset(user_seqs_test, mode='test')
+        # # seqeuntial augmentation: [1, 2, 3,] -> [1,2], [3]
+        # if 'seq_aug' in configs['data'] and configs['data']['seq_aug']:
+        #     user_seqs_aug = self._seq_aug(user_seqs_train)
+        #     trn_data = SequentialDataset(user_seqs_train, user_seqs_aug=user_seqs_aug)
+        # else:
+        #     trn_data = SequentialDataset(user_seqs_train)
+
+        #Only implementing the case of no sequence augmentations _seq_aug
+        trn_data = SequentialDataset(user_seqs_train, context_train)
+        tst_data = SequentialDataset(user_seqs_test, context_test, mode='test')
         self.test_dataloader = data.DataLoader(
             tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
         self.train_dataloader = data.DataLoader(
