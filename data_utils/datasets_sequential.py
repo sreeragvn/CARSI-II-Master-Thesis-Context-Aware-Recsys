@@ -13,13 +13,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class SequentialDataset(data.Dataset):
-    def __init__(self, user_seqs, mode='train', user_seqs_aug=None):
+    def __init__(self, user_seqs, context, mode='train', user_seqs_aug=None):
         self.mode = mode
+
+        self.max_context_length = configs['data']['max_context_length']
         self.max_seq_len = configs['model']['max_seq_len']
         self.user_history_lists = {user: seq for user,
                                    seq in zip(user_seqs["uid"], user_seqs["item_seq"])}
         self.user_history_time_delta_lists = {user: time_delta for user,
                                    time_delta in zip(user_seqs["uid"], user_seqs["time_delta"])}
+        self.context = context
         if user_seqs_aug is not None:
             self.uids = user_seqs_aug["uid"]
             self.seqs = user_seqs_aug["item_seq"]
@@ -51,6 +54,26 @@ class SequentialDataset(data.Dataset):
             # pad at the head
             time_delta = [0] * (self.max_seq_len - len(seq)) + time_delta
         return time_delta
+    
+    # def _pad_context(self, lst):
+    #     if len(lst) < configs['data']['max_context_length']:
+    #         zeros_before = zeros_after = (configs['data']['max_context_length'] - len(lst)) // 2
+    #         if len(lst) % 2 == 1:
+    #             # If the length is odd, add an extra zero after the middle element
+    #             zeros_after += 1
+    #         return [0] * zeros_before + lst + [0] * zeros_after
+    #     else:
+    #         return lst
+
+    def _pad_context(self, lst):
+        if len(lst) < self.max_context_length:
+            zeros_before = zeros_after = (self.max_context_length - len(lst)) // 2
+            if len(lst) % 2 == 1:
+                # If the length is odd, add an extra zero after the middle element
+                zeros_after += 1
+            return [0] * zeros_before + lst + [0] * zeros_after
+        else:
+            return lst
 
     def sample_negs(self):
         if 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
@@ -70,10 +93,81 @@ class SequentialDataset(data.Dataset):
     def __len__(self):
         return len(self.uids)
 
+    # def __getitem__(self, idx):
+    #     try:
+    #         seq_i = self.seqs[idx]
+    #         time_delta_i = self.time_delta[idx]
+    #         context_i = self.context[idx]
+
+    #         context_keys = context_i.keys()
+    #         context_values = [context_i[key] for key in context_keys]
+
+    #         # Apply the padding to each inner list
+    #         padded_context = [self._pad_context(inner_list) for inner_list in context_values]
+
+    #         if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
+    #             result = (
+    #                 self.uids[idx],
+    #                 torch.LongTensor(self._pad_seq(seq_i)),
+    #                 self.last_items[idx],
+    #                 torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
+    #                 torch.LongTensor(padded_context),
+    #                 self.negs[idx]
+    #             )
+    #         else:
+    #             result = (
+    #                 self.uids[idx],
+    #                 torch.LongTensor(self._pad_seq(seq_i)),
+    #                 self.last_items[idx],
+    #                 torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
+    #                 torch.LongTensor(padded_context)
+    #             )
+            
+            
+    #         return result
+    #     except Exception as e:
+    #         print("Error:", e)
+    #         # Add more detailed error handling if needed
+    #         raise
+
     def __getitem__(self, idx):
-        seq_i = self.seqs[idx]
-        time_delta_i = self.time_delta[idx]
-        if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
-            return self.uids[idx], torch.LongTensor(self._pad_seq(seq_i)), self.last_items[idx], torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)), self.negs[idx]
-        else:
-            return self.uids[idx], torch.LongTensor(self._pad_seq(seq_i)), self.last_items[idx], torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i))
+        try:
+            seq_i = self.seqs[idx]
+            time_delta_i = self.time_delta[idx]
+            context_i = self.context[idx]
+
+            context_keys = context_i.keys()
+            context_values = [context_i[key] for key in context_keys]
+
+            # Apply the padding to each inner list
+            padded_context = [self._pad_context(inner_list) for inner_list in context_values]
+
+            if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
+                result = (
+                    self.uids[idx],
+                    torch.LongTensor(self._pad_seq(seq_i)),
+                    self.last_items[idx],
+                    torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
+                    torch.LongTensor(padded_context),
+                    self.negs[idx]
+                )
+            else:
+                result = (
+                    self.uids[idx],
+                    torch.LongTensor(self._pad_seq(seq_i)),
+                    self.last_items[idx],
+                    torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
+                    torch.LongTensor(padded_context)
+                )
+            
+            # # Print information about the tensors
+            # print("uid:", result[0])
+            # print("padded_seq shape:", result[1].shape)
+            # print("last_item:", result[2])
+            # print("padded_time_delta shape:", result[3].shape)
+            # print("context_values shape:", result[4].shape if len(result) > 4 else None)
+
+            return result
+        except Exception as e:
+            print("Error:", e)
+            raise
