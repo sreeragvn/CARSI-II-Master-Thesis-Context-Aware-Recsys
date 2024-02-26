@@ -1,7 +1,7 @@
 import math
 import random
 from models.base_model import BaseModel
-from models.model_utils import TransformerLayer, TransformerEmbedding
+from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -31,6 +31,11 @@ class CL4SRec(BaseModel):
         self.lmd = configs['model']['lmd']
         self.tau = configs['model']['tau']
 
+        self.lstm_input_size = configs['lstm']['input_size']
+        self.lstm_hidden_size = configs['lstm']['hidden_size']
+        self.lstm_num_layers = configs['lstm']['num_layers']
+        # self.lstm_output_size = configs['lstm']['output_size']
+
         self.emb_layer = TransformerEmbedding(
             self.item_num + 2, self.emb_size, self.max_len)
 
@@ -38,6 +43,8 @@ class CL4SRec(BaseModel):
             self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])
 
         self.loss_func = nn.CrossEntropyLoss()
+
+        self.lstm = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers, self.batch_size)
 
         self.mask_default = self.mask_correlated_samples(
             batch_size=self.batch_size)
@@ -216,13 +223,17 @@ class CL4SRec(BaseModel):
         info_nce_loss = self.cl_loss_func(logits, labels)
         return info_nce_loss
 
-    def forward(self, batch_seqs):
+    def forward(self, batch_seqs,batch_context):
+        # print("Input Shapes:")
+        # print("batch_seqs:", batch_seqs.shape)
+        # print("batch_context:", batch_context.shape)
         # method processes input sequences through an embedding layer and a stack of transformer layers, and the final output is the representation of the sequence, typically extracted from the last position. The mask is used to prevent the model from attending to padding elements during the transformer layers' computations.
 
         # batch_seqs > 0 creates a boolean tensor indicating non-padding elements.
         # .unsqueeze(1) adds a singleton dimension to the tensor to make it compatible for broadcasting.
         # .repeat(1, batch_seqs.size(1), 1) replicates the tensor along the sequence dimension, essentially creating a 3D mask with the same shape as batch_seqs.
         # .unsqueeze(1) adds another singleton dimension at the beginning of the tensor. This is often used for compatibility with transformer models that expect a mask with dimensions [batch_size, 1, sequence_length, sequence_length].
+        # Todo - This has to be done for the context as well. Ensure the padding is done with a negative number. not zero. since zero speed itself is relevant.
         mask = (batch_seqs > 0).unsqueeze(1).repeat(
             1, batch_seqs.size(1), 1).unsqueeze(1)
         # Embedding Layer:
@@ -233,19 +244,35 @@ class CL4SRec(BaseModel):
         for transformer in self.transformer_layers:
             x = transformer(x, mask)
         # Extracts the output from the last position of the sequence (-1). This is a common practice in transformer-based models, where the output corresponding to the last position is often used as a representation of the entire sequence.
-        output = x[:, -1, :]
-        return output  # [B H]
+        sasrec_out = x[:, -1, :]
+
+        batch_context = batch_context.to(sasrec_out.dtype)
+        batch_context = batch_context.transpose(1, 2)
+        context_output = self.lstm(batch_context)
+
+        # print("sasrec_out Rank:", context_output.dim(), context_output.ndim)
+        # print("context_output Rank:",  sasrec_out.dim(), sasrec_out.ndim)
+
+        # print("sasrec_out size:", sasrec_out.size())
+        # print("context_output size:", context_output.size())
+        out = torch.cat((sasrec_out, context_output), dim=1)
+
+        # Concatenate along the feature dimension (axis=1)
+        # final_out = torch.cat((sasrec_out, context_output), dim=1)
+        # print("Final Output Shape:", final_out.shape)
+
+        return sasrec_out  # [B H]
 
     def cal_loss(self, batch_data):
         # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
 
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
-        batch_user, batch_seqs, batch_last_items, batch_time_deltas, _ = batch_data
+        batch_user, batch_seqs, batch_last_items, batch_time_deltas, batch_context = batch_data
         # print(batch_seqs.size())
         # max_values, _ = torch.max(batch_seqs, dim=1)
         # print(max_values)
         # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
-        seq_output = self.forward(batch_seqs)
+        seq_output = self.forward(batch_seqs, batch_context)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
         test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
@@ -254,8 +281,8 @@ class CL4SRec(BaseModel):
         # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).
         # NCE
         aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
-        seq_output1 = self.forward(aug_seq1)
-        seq_output2 = self.forward(aug_seq2)
+        seq_output1 = self.forward(aug_seq1, batch_context)
+        seq_output2 = self.forward(aug_seq2, batch_context)
         # Compute InfoNCE Loss (Contrastive Loss):Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. The temperature parameter (temp) and batch size are specified.
         cl_loss = self.lmd * self.info_nce(
             seq_output1, seq_output2, temp=self.tau, batch_size=aug_seq1.shape[0])
@@ -270,9 +297,9 @@ class CL4SRec(BaseModel):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
 
         # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
-        batch_user, batch_seqs, _, _, _ = batch_data
+        batch_user, batch_seqs, _, _, batch_context = batch_data
         # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
-        logits = self.forward(batch_seqs)
+        logits = self.forward(batch_seqs, batch_context)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
         test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         # Return Predicted Scores:Returns the computed scores, which represent the predicted relevance or preference scores for each item in the vocabulary for the given batch of users and sequences.

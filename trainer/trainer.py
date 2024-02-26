@@ -67,6 +67,7 @@ class Trainer(object):
         model.train()
 
         for _, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
+        # for _, tem in enumerate(train_dataloader):
             # Iterates over batches in the training data using the train_dataloader.
             self.optimizer.zero_grad()
             batch_data = list(map(lambda x: x.long().to(configs['device']), tem))

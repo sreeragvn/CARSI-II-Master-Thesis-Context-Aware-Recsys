@@ -5,7 +5,7 @@ optimizer:
 
 train:
   epoch: 10
-  batch_size: 256
+  batch_size: 128
   save_model: true
   log_loss: true
   test_step: 1
@@ -16,7 +16,7 @@ train:
 test:
   metrics: [recall, ndcg]
   k: [2, 3,5]
-  batch_size: 256
+  batch_size: 128
 
 data:
   type: sequential
@@ -25,6 +25,7 @@ data:
 
 model:
   name: cl4srec
+  context_encoder: lstm
   dropout_rate: 0.1
   n_layers: 2
   embedding_size: 64
@@ -32,6 +33,12 @@ model:
   max_seq_len: 120
   lmd: 0.1
   tau: 1
+
+lstm:
+  input_size: 2
+  hidden_size: 64
+  num_layers: 2
+  output_size: 256
 
 tune:
   enable: false

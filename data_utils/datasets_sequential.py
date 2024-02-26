@@ -141,7 +141,7 @@ class SequentialDataset(data.Dataset):
 
             # Apply the padding to each inner list
             padded_context = [self._pad_context(inner_list) for inner_list in context_values]
-
+            
             if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
                 result = (
                     self.uids[idx],

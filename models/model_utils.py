@@ -104,6 +104,110 @@ class TransformerEmbedding(nn.Module):
         pos_emb = self.position_emb.weight.unsqueeze(0).repeat(batch_size, 1, 1)
         x = self.token_emb(batch_seqs) + pos_emb
         return self.dropout(x)
+    
+class LSTM_contextEncoder(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, batch_size):
+        super(LSTM_contextEncoder, self).__init__()
+        self.lstm = nn.LSTM(input_size=input_size,
+                            hidden_size=hidden_size,
+                            num_layers=num_layers,
+                            batch_first=True)
+    def forward(self, x):
+        _, (h_n, _) = self.lstm(x)
+        return h_n[-1]
+
+class CARSI_contextEncoder(nn.Module):
+    def __init__(
+            self, 
+            input_size_cont, # num_features_continuous
+            input_size_cat,
+            output_size,
+            seq_len,
+            num_embedding,
+            hidden_dim=512, # d_model
+            num_heads=8,
+    ):
+        super(CARSI_contextEncoder, self).__init__()
+
+        feed_forward_size = 1024
+
+        self.seq_len = seq_len
+        self.hidden_dim = hidden_dim
+
+        # Use linear layer instead of embedding 
+        self.input_embedding = nn.Linear(input_size_cont, hidden_dim)
+        self.pos_enc = self.positional_encoding()
+
+        # Multi-Head Attention
+        self.multihead = nn.MultiheadAttention(embed_dim=hidden_dim, num_heads=num_heads)
+        self.dropout_1 = nn.Dropout(0.1)
+        self.dropout_2 = nn.Dropout(0.1)
+        self.layer_norm_1 = nn.LayerNorm(hidden_dim)
+        self.layer_norm_2 = nn.LayerNorm(hidden_dim)
+
+        # position-wise Feed Forward
+        self.feed_forward = nn.Sequential(
+            nn.Linear(hidden_dim, feed_forward_size),
+            nn.ReLU(),
+            nn.Linear(feed_forward_size, hidden_dim)
+        )
+
+        self.fc_out1 = nn.Linear(hidden_dim, 64)
+
+        # Embedding for static
+        out_emb = 64
+        self.emb = nn.Embedding(num_embedding, out_emb)
+
+        self.fc1 = nn.Linear(64*seq_len + out_emb*input_size_cat, 128)
+        self.fc2 = nn.Linear(128, output_size)
+        self.relu = nn.ReLU()
+        self.softmax = nn.LogSoftmax(dim=1)
+
+
+    def positional_encoding(self):
+        pe = t.zeros(self.seq_len, self.hidden_dim) # positional encoding 
+        pos = t.arange(0, self.seq_len, dtype=t.float32).unsqueeze(1)
+        _2i = t.arange(0, self.hidden_dim, step=2).float()
+        pe[:, 0::2] = t.sin(pos / (10000 ** (_2i / self.hidden_dim)))
+        pe[:, 1::2] = t.cos(pos / (10000 ** (_2i / self.hidden_dim)))
+        return pe
+
+    def forward(self, x_cont, x_static):
+
+        # Static variables
+        out_emb = self.emb(x_static)
+        out_emb = out_emb.view(x_static.size(0), -1)
+        
+        # Embedding + Positional
+        x = self.input_embedding(x_cont)
+        x += self.pos_enc
+
+        # Multi-Head Attention
+        x_, _ = self.multihead(x,x,x)
+        x_ = self.dropout_1(x_)
+
+        # Add and Norm 1
+        x = self.layer_norm_1(x_ + x)
+
+        # Feed Forward
+        x_ = self.feed_forward(x)
+        x_ = self.dropout_2(x_)
+
+        # Add and Norm 2
+        x = self.layer_norm_2(x_ + x)
+
+        # Output (customized flatten)
+        x = self.fc_out1(x)
+        # shape: N, num_features, 64
+        x = t.flatten(x, start_dim=1)
+        
+        # Combine static and continupus
+        out = t.cat((x, out_emb), dim=1)
+        out = self.relu(self.fc1(out))
+        out = self.fc2(out)
+        out = self.softmax(out)
+        
+        return out
 
 # class SpAdjEdgeDrop(nn.Module):
 #     def __init__(self, resize_val=False):
