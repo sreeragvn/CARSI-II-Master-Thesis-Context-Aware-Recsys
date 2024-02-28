@@ -35,7 +35,7 @@ model:
   tau: 1
 
 lstm:
-  input_size: 2
+  input_size: 1
   hidden_size: 64
   num_layers: 2
   output_size: 256

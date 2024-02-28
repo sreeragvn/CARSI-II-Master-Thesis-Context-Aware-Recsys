@@ -67,11 +67,14 @@ class SequentialDataset(data.Dataset):
 
     def _pad_context(self, lst):
         if len(lst) < self.max_context_length:
-            zeros_before = zeros_after = (self.max_context_length - len(lst)) // 2
-            if len(lst) % 2 == 1:
-                # If the length is odd, add an extra zero after the middle element
-                zeros_after += 1
-            return [0] * zeros_before + lst + [0] * zeros_after
+            # print(self.max_context_length)
+            # zeros_before = zeros_after = (self.max_context_length - len(lst)) // 2
+            # if len(lst) % 2 == 1:
+            #     # If the length is odd, add an extra zero after the middle element
+            #     zeros_after += 1
+            # return [0] * zeros_before + lst + [0] * zeros_after
+            zeros_before = (self.max_context_length - len(lst))
+            return [0] * zeros_before + lst
         else:
             return lst
 
@@ -93,43 +96,6 @@ class SequentialDataset(data.Dataset):
     def __len__(self):
         return len(self.uids)
 
-    # def __getitem__(self, idx):
-    #     try:
-    #         seq_i = self.seqs[idx]
-    #         time_delta_i = self.time_delta[idx]
-    #         context_i = self.context[idx]
-
-    #         context_keys = context_i.keys()
-    #         context_values = [context_i[key] for key in context_keys]
-
-    #         # Apply the padding to each inner list
-    #         padded_context = [self._pad_context(inner_list) for inner_list in context_values]
-
-    #         if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
-    #             result = (
-    #                 self.uids[idx],
-    #                 torch.LongTensor(self._pad_seq(seq_i)),
-    #                 self.last_items[idx],
-    #                 torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
-    #                 torch.LongTensor(padded_context),
-    #                 self.negs[idx]
-    #             )
-    #         else:
-    #             result = (
-    #                 self.uids[idx],
-    #                 torch.LongTensor(self._pad_seq(seq_i)),
-    #                 self.last_items[idx],
-    #                 torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
-    #                 torch.LongTensor(padded_context)
-    #             )
-            
-            
-    #         return result
-    #     except Exception as e:
-    #         print("Error:", e)
-    #         # Add more detailed error handling if needed
-    #         raise
-
     def __getitem__(self, idx):
         try:
             seq_i = self.seqs[idx]
@@ -141,6 +107,10 @@ class SequentialDataset(data.Dataset):
 
             # Apply the padding to each inner list
             padded_context = [self._pad_context(inner_list) for inner_list in context_values]
+
+
+            # context_length = set([len(con) for con in padded_context])
+            # print(context_length)
             
             if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
                 result = (

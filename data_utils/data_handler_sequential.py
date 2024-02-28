@@ -32,9 +32,9 @@ class DataHandlerSequential:
         self.val_file = path.join(predir, 'test.tsv')
         self.tst_file = path.join(predir, 'test.tsv')
 
-        self.trn_context_file = path.join(predir, 'context/train.csv')
-        self.val_context_file = path.join(predir, 'context/test.csv')
-        self.tst_context_file = path.join(predir, 'context/test.csv')
+        self.trn_dynamic_context_file = path.join(predir, 'dynamic_context/train.csv')
+        self.val_dynamic_context_file = path.join(predir, 'dynamic_context/test.csv')
+        self.tst_dynamic_context_file = path.join(predir, 'dynamic_context/test.csv')
         self.max_item_id = 0
         self.max_context_length = 0
 
@@ -64,16 +64,17 @@ class DataHandlerSequential:
         # Todo currently the context have data that is past the last elements in the sequence. This has to be removed.
         try:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
-            max_length = int(context.groupby('session_id')['datetime'].apply(lambda x: (x.max() - x.min()).total_seconds()).max())
+            # max_length = int(context.groupby('session_id')['datetime'].apply(lambda x: (x.max() - x.min()).total_seconds()).max())
+            max_length = context['session_id'].value_counts().max()
             self.max_context_length = max(self.max_context_length, max_length)
 
             # Downsampling to every minute
-            selected_context = ['KBI_speed', 'car_id']
+            selected_context = ['KBI_speed']
             # context['hour_minute'] = context['datetime'].dt.strftime('%Y-%m-%d %H:%M')
-            context['hour_minute'] = context['datetime'].dt.strftime('%Y-%m-%d %H')
+            # context['hour_minute'] = context['datetime'].dt.strftime('%Y-%m-%d %H')
             context = context.drop(['datetime'], axis=1)
-            context = context.groupby(['session_id', 'hour_minute'])[selected_context].mean().reset_index()
-            context = context.drop(['hour_minute'], axis=1)
+            # context = context.groupby(['session_id', 'hour_minute'])[selected_context].mean().reset_index()
+            # context = context.drop(['hour_minute'], axis=1)
             context['KBI_speed'] = context['KBI_speed'].round(1)
 
             context_dict = {}
@@ -112,9 +113,10 @@ class DataHandlerSequential:
     def load_data(self):
         user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
         user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
-        context_train =  self._read_csv_context(self.trn_context_file)
-        context_test =  self._read_csv_context(self.tst_context_file)
+        context_train =  self._read_csv_context(self.trn_dynamic_context_file)
+        context_test =  self._read_csv_context(self.tst_dynamic_context_file)
         self._set_statistics(user_seqs_train, user_seqs_test)
+        # print(context_train)
 
         # # seqeuntial augmentation: [1, 2, 3,] -> [1,2], [3]
         # if 'seq_aug' in configs['data'] and configs['data']['seq_aug']:
