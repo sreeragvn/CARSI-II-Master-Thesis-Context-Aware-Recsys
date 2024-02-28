@@ -44,7 +44,8 @@ class CL4SRec(BaseModel):
 
         self.loss_func = nn.CrossEntropyLoss()
 
-        self.lstm = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers, self.batch_size)
+        if configs['model']['context_encoder'] == 'lstm':
+            self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers, self.batch_size)
 
         self.mask_default = self.mask_correlated_samples(
             batch_size=self.batch_size)
@@ -248,7 +249,7 @@ class CL4SRec(BaseModel):
 
         batch_context = batch_context.to(sasrec_out.dtype)
         batch_context = batch_context.transpose(1, 2)
-        context_output = self.lstm(batch_context)
+        context_output = self.context_encoder(batch_context)
 
         # print("sasrec_out Rank:", context_output.dim(), context_output.ndim)
         # print("context_output Rank:",  sasrec_out.dim(), sasrec_out.ndim)
@@ -267,7 +268,7 @@ class CL4SRec(BaseModel):
         # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
 
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
-        batch_user, batch_seqs, batch_last_items, batch_time_deltas, batch_context = batch_data
+        _, batch_seqs, batch_last_items, batch_time_deltas, batch_context = batch_data
         # print(batch_seqs.size())
         # max_values, _ = torch.max(batch_seqs, dim=1)
         # print(max_values)
@@ -297,7 +298,7 @@ class CL4SRec(BaseModel):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
 
         # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
-        batch_user, batch_seqs, _, _, batch_context = batch_data
+        _, batch_seqs, _, _, batch_context = batch_data
         # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
         logits = self.forward(batch_seqs, batch_context)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
