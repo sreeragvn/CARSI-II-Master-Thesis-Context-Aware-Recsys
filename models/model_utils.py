@@ -159,9 +159,9 @@ class CARSI_contextEncoder(nn.Module):
         self.emb = nn.Embedding(num_embedding, out_emb)
 
         self.fc1 = nn.Linear(64*seq_len + out_emb*input_size_cat, 128)
-        self.fc2 = nn.Linear(128, output_size)
+        self.fc2 = nn.Linear(128, 64)
         self.relu = nn.ReLU()
-        self.softmax = nn.LogSoftmax(dim=1)
+        # self.softmax = nn.LogSoftmax(dim=1)
 
 
     def positional_encoding(self):

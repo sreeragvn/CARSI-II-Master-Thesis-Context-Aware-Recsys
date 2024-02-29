@@ -13,16 +13,17 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class SequentialDataset(data.Dataset):
-    def __init__(self, user_seqs, context, mode='train', user_seqs_aug=None):
+    def __init__(self, user_seqs, dynamic_context, static_context, mode='train', user_seqs_aug=None):
         self.mode = mode
 
-        self.max_context_length = configs['data']['max_context_length']
+        self.max_dynamic_context_length = configs['data']['max_context_length']
         self.max_seq_len = configs['model']['max_seq_len']
         self.user_history_lists = {user: seq for user,
                                    seq in zip(user_seqs["uid"], user_seqs["item_seq"])}
         self.user_history_time_delta_lists = {user: time_delta for user,
                                    time_delta in zip(user_seqs["uid"], user_seqs["time_delta"])}
-        self.context = context
+        self.static_context = static_context
+        self.dynamic_context = dynamic_context
         if user_seqs_aug is not None:
             self.uids = user_seqs_aug["uid"]
             self.seqs = user_seqs_aug["item_seq"]
@@ -66,14 +67,14 @@ class SequentialDataset(data.Dataset):
     #         return lst
 
     def _pad_context(self, lst):
-        if len(lst) < self.max_context_length:
+        if len(lst) < self.max_dynamic_context_length:
             # print(self.max_context_length)
             # zeros_before = zeros_after = (self.max_context_length - len(lst)) // 2
             # if len(lst) % 2 == 1:
             #     # If the length is odd, add an extra zero after the middle element
             #     zeros_after += 1
             # return [0] * zeros_before + lst + [0] * zeros_after
-            zeros_before = (self.max_context_length - len(lst))
+            zeros_before = (self.max_dynamic_context_length - len(lst))
             return [0] * zeros_before + lst
         else:
             return lst
@@ -93,6 +94,15 @@ class SequentialDataset(data.Dataset):
         else:
             pass
 
+    def _process_context(self, context_i, context_type = 'static'):
+        context_keys = context_i.keys()
+        context_values = [context_i[key] for key in context_keys]
+        if context_type == 'dynamic':
+            context = [self._pad_context(inner_list) for inner_list in context_values]
+            return context
+        else:   
+            return context_values
+
     def __len__(self):
         return len(self.uids)
 
@@ -100,17 +110,8 @@ class SequentialDataset(data.Dataset):
         try:
             seq_i = self.seqs[idx]
             time_delta_i = self.time_delta[idx]
-            context_i = self.context[idx]
-
-            context_keys = context_i.keys()
-            context_values = [context_i[key] for key in context_keys]
-
-            # Apply the padding to each inner list
-            padded_context = [self._pad_context(inner_list) for inner_list in context_values]
-
-
-            # context_length = set([len(con) for con in padded_context])
-            # print(context_length)
+            padded_dynamic_context = self._process_context(self.dynamic_context[idx], context_type='dynamic')
+            static_context = [self.static_context [key]['car_id'] for key in list(self.static_context .keys())]
             
             if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
                 result = (
@@ -118,7 +119,8 @@ class SequentialDataset(data.Dataset):
                     torch.LongTensor(self._pad_seq(seq_i)),
                     self.last_items[idx],
                     torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
-                    torch.LongTensor(padded_context),
+                    torch.LongTensor(padded_dynamic_context),
+                    static_context[idx],
                     self.negs[idx]
                 )
             else:
@@ -127,7 +129,8 @@ class SequentialDataset(data.Dataset):
                     torch.LongTensor(self._pad_seq(seq_i)),
                     self.last_items[idx],
                     torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
-                    torch.LongTensor(padded_context)
+                    torch.LongTensor(padded_dynamic_context),
+                    static_context[idx]
                 )
             
             # # Print information about the tensors
