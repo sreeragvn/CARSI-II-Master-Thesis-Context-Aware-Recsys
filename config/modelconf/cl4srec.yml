@@ -4,7 +4,7 @@ optimizer:
   weight_decay: 0
 
 train:
-  epoch: 200
+  epoch: 10
   batch_size: 4
   save_model: true
   log_loss: true
@@ -20,7 +20,7 @@ test:
 
 data:
   type: sequential
-  name: carsii_random_delta
+  name: non_aug
   seq_aug: false
 
 model:
