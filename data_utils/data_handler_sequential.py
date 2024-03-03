@@ -12,25 +12,27 @@ import os
 
 class DataHandlerSequential:
     def __init__(self):
-        if configs['data']['name'] == 'ml-20m':
-            predir = './datasets/sequential/ml-20m_seq/'
-            configs['data']['dir'] = predir
-        elif configs['data']['name'] == 'sports':
-            predir = './datasets/sequential/sports_seq/'
-            configs['data']['dir'] = predir
-        elif configs['data']['name'] == 'carsii':
-            predir = './datasets/sequential/carsii_seq/'
-            configs['data']['dir'] = predir
-        elif configs['data']['name'] == 'carsii_delta':
-            predir = './datasets/sequential/carsii_timedelta_seq/'
-            configs['data']['dir'] = predir
-        elif configs['data']['name'] == 'carsii_random_delta':
-            predir = './datasets/sequential/carsii_timedelta_rand_seq/'
-            configs['data']['dir'] = predir
+        # if configs['data']['name'] == 'ml-20m':
+        #     predir = './datasets/sequential/ml-20m_seq/'
+        #     configs['data']['dir'] = predir
+        # elif configs['data']['name'] == 'sports':
+        #     predir = './datasets/sequential/sports_seq/'
+        #     configs['data']['dir'] = predir
+        # elif configs['data']['name'] == 'carsii':
+        #     predir = './datasets/sequential/carsii_seq/'
+        #     configs['data']['dir'] = predir
+        # elif configs['data']['name'] == 'carsii_delta':
+        #     predir = './datasets/sequential/carsii_timedelta_seq/'
+        #     configs['data']['dir'] = predir
+        # elif configs['data']['name'] == 'carsii_random_delta':
+        #     predir = './datasets/sequential/carsii_timedelta_rand_seq/'
+        #     configs['data']['dir'] = predir
+        data_name = configs['data']['name']
+        predir = f'./datasets/sequential/{data_name}'
             
-        self.trn_file = path.join(predir, 'train.tsv')
-        self.val_file = path.join(predir, 'test.tsv')
-        self.tst_file = path.join(predir, 'test.tsv')
+        self.trn_file = path.join(predir, 'seq/train.tsv')
+        self.val_file = path.join(predir, 'seq/test.tsv')
+        self.tst_file = path.join(predir, 'seq/test.tsv')
 
         self.trn_dynamic_context_file = path.join(predir, 'dynamic_context/train.csv')
         self.val_dynamic_context_file = path.join(predir, 'dynamic_context/test.csv')

@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from torch import nn
 from config.configurator import configs
+import pickle
 
 
 class CL4SRec(BaseModel):
@@ -31,6 +32,9 @@ class CL4SRec(BaseModel):
         self.lmd = configs['model']['lmd']
         self.tau = configs['model']['tau']
 
+        with open('./datasets/sequential/non_aug/param.pkl', 'rb') as f:
+            _class_w = pickle.load(f)
+
         self.lstm_input_size = configs['lstm']['input_size']
         self.lstm_hidden_size = configs['lstm']['hidden_size']
         self.lstm_num_layers = configs['lstm']['num_layers']
@@ -54,7 +58,7 @@ class CL4SRec(BaseModel):
         self.transformer_layers = nn.ModuleList([TransformerLayer(
             self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])
 
-        self.loss_func = nn.CrossEntropyLoss()
+        self.loss_func = nn.CrossEntropyLoss(weight =_class_w)
 
         if configs['model']['context_encoder'] == 'lstm':
             self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers, self.batch_size)
@@ -69,7 +73,7 @@ class CL4SRec(BaseModel):
         #                                                     num_heads=8)
                                                         
         self.fc1 = nn.Linear(192, 128) # number of static and dynamic context variables
-        self.fc2 = nn.Linear(128, 64)
+        self.fc2 = nn.Linear(128, self.emb_size)
         self.relu = nn.ReLU()
 
         self.mask_default = self.mask_correlated_samples(
@@ -307,14 +311,13 @@ class CL4SRec(BaseModel):
 
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
         _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context = batch_data
-        # print(batch_seqs.size())
-        # max_values, _ = torch.max(batch_seqs, dim=1)
-        # print(max_values)
         # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
+        # Todo why you are adding + 1 to  item_num when slicing
         test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
+        print(batch_last_items.size(), seq_output.size(), test_item_emb.size(), logits.size())
         # Compute Recommendation Loss:Computes the recommendation loss using a specified loss function (self.loss_func). This loss measures the discrepancy between the predicted logits and the actual last items in the sequences.
         loss = self.loss_func(logits, batch_last_items)
         # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).
