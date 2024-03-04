@@ -12,6 +12,7 @@ train:
   reproducible: true
   seed: 2023
   tensorboard: true
+  ssl: false
 
 test:
   metrics: [recall, ndcg, precision]
