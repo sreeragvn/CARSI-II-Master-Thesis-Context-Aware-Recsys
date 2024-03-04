@@ -100,9 +100,6 @@ class Trainer(object):
             self.logger.log_loss(epoch_idx, loss_log_dict)
         else:
             self.logger.log_loss(epoch_idx, loss_log_dict, save_to_log=False)
-        
-        current_lr = self.optimizer.param_groups[0]['lr']
-        print(f"Epoch {epoch_idx + 1}, Learning Rate: {current_lr}")
 
     @log_exceptions
     def train(self, model):
@@ -122,6 +119,8 @@ class Trainer(object):
                 # evaluate
                 if epoch_idx % train_config['test_step'] == 0:
                     self.evaluate(model, epoch_idx)
+                current_lr = self.optimizer.param_groups[0]['lr']
+                print(f"Epoch {epoch_idx + 1}, Learning Rate: {current_lr}")
             self.test(model)
             self.save_model(model)
             return model

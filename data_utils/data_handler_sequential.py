@@ -82,7 +82,7 @@ class DataHandlerSequential:
             context = context.drop(['datetime'], axis=1)
             # context = context.groupby(['session_id', 'hour_minute'])[selected_context].mean().reset_index()
             # context = context.drop(['hour_minute'], axis=1)
-            context['KBI_speed'] = context['KBI_speed'].round(1)
+            # context['KBI_speed'] = context['KBI_speed'].round(1)
 
             context_dict = {}
             for session_id, group in context.groupby('session_id'):
@@ -91,7 +91,7 @@ class DataHandlerSequential:
                 }
             return context_dict
         except Exception as e:
-            print(f"Error reading CSV file: {e}")
+            print(f"Error reading dynamic CSV file: {e}")
             return None
         
     def _read_csv_static_context(self, csv_file):

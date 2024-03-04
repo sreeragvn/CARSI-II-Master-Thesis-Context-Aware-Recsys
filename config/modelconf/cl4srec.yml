@@ -1,10 +1,10 @@
 optimizer:
   name: adam
-  lr: 1.0e-2
+  lr: 1.0e-3
   weight_decay: 0
 
 train:
-  epoch: 10
+  epoch: 300
   batch_size: 4
   save_model: true
   log_loss: true
@@ -12,7 +12,8 @@ train:
   reproducible: true
   seed: 2023
   tensorboard: true
-  ssl: false
+  ssl: true
+  parameter_path: './datasets/sequential/aug/parameters/param.pkl'
 
 test:
   metrics: [recall, ndcg, precision]
@@ -21,7 +22,7 @@ test:
 
 data:
   type: sequential
-  name: non_aug
+  name: aug
   seq_aug: false
 
 model:
