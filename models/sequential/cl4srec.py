@@ -32,7 +32,7 @@ class CL4SRec(BaseModel):
         self.lmd = configs['model']['lmd']
         self.tau = configs['model']['tau']
 
-        with open('./datasets/sequential/non_aug/param.pkl', 'rb') as f:
+        with open(configs['train']['parameter_path'], 'rb') as f:
             _class_w = pickle.load(f)
 
         self.lstm_input_size = configs['lstm']['input_size']
