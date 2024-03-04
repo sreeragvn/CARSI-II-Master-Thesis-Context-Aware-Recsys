@@ -317,22 +317,30 @@ class CL4SRec(BaseModel):
         # Todo why you are adding + 1 to  item_num when slicing
         test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
-        print(batch_last_items.size(), seq_output.size(), test_item_emb.size(), logits.size())
+        # print(batch_last_items.size(), seq_output.size(), test_item_emb.size(), logits.size())
         # Compute Recommendation Loss:Computes the recommendation loss using a specified loss function (self.loss_func). This loss measures the discrepancy between the predicted logits and the actual last items in the sequences.
         loss = self.loss_func(logits, batch_last_items)
         # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).
         # NCE
-        aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
-        seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context)
-        seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context)
-        # Compute InfoNCE Loss (Contrastive Loss):Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. The temperature parameter (temp) and batch size are specified.
-        cl_loss = self.lmd * self.info_nce(
-            seq_output1, seq_output2, temp=self.tau, batch_size=aug_seq1.shape[0])
-        # Aggregate Losses and Return: Aggregates the recommendation loss and contrastive loss into a total loss. Returns the total loss along with a dictionary containing individual loss components (rec_loss and cl_loss).
-        loss_dict = {
-            'rec_loss': loss.item(),
-            'cl_loss': cl_loss.item(),
-        }
+        if configs['train']['ssl']:
+            aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
+            seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context)
+            seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context)
+            # Compute InfoNCE Loss (Contrastive Loss):Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. The temperature parameter (temp) and batch size are specified.
+            cl_loss = self.lmd * self.info_nce(
+                seq_output1, seq_output2, temp=self.tau, batch_size=aug_seq1.shape[0])
+            # Aggregate Losses and Return: Aggregates the recommendation loss and contrastive loss into a total loss. Returns the total loss along with a dictionary containing individual loss components (rec_loss and cl_loss).
+            loss_dict = {
+                'rec_loss': loss.item(),
+                'cl_loss': cl_loss.item(),
+            }
+        else:
+            cl_loss = 0
+            loss_dict = {
+                'rec_loss': loss.item(),
+                'cl_loss': cl_loss,
+            }
+
         return loss + cl_loss, loss_dict
 
     def full_predict(self, batch_data):
