@@ -48,7 +48,7 @@ class Trainer(object):
         if optim_config['name'] == 'adam':
             self.optimizer = optim.Adam(model.parameters(
             ), lr=optim_config['lr'], weight_decay=optim_config['weight_decay'])
-            scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=3, factor=0.1, verbose=True)
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=3, factor=0.1, verbose=True)
 
 
     def train_epoch(self, model, epoch_idx):
