@@ -16,6 +16,7 @@ from config.configurator import configs
 from models.bulid_model import build_model
 from torch.utils.tensorboard import SummaryWriter
 from .utils import DisabledSummaryWriter, log_exceptions
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
     writer = SummaryWriter(log_dir='runs')
@@ -47,6 +48,8 @@ class Trainer(object):
         if optim_config['name'] == 'adam':
             self.optimizer = optim.Adam(model.parameters(
             ), lr=optim_config['lr'], weight_decay=optim_config['weight_decay'])
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=3, factor=0.1, verbose=True)
+
 
     def train_epoch(self, model, epoch_idx):
         # This method encapsulates the training logic for one epoch of a recommender system. It involves iterating over batches, computing and backpropagating the loss, and logging relevant information. The specifics may vary based on the model and data handling mechanisms used in the recommender system.
@@ -86,6 +89,9 @@ class Trainer(object):
                 else:
                     loss_log_dict[loss_name] += _loss_val
 
+        validation_loss = ep_loss / steps  # You might replace this with your actual validation loss
+        self.scheduler.step(validation_loss)
+
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
 
@@ -94,6 +100,9 @@ class Trainer(object):
             self.logger.log_loss(epoch_idx, loss_log_dict)
         else:
             self.logger.log_loss(epoch_idx, loss_log_dict, save_to_log=False)
+        
+        current_lr = self.optimizer.param_groups[0]['lr']
+        print(f"Epoch {epoch_idx + 1}, Learning Rate: {current_lr}")
 
     @log_exceptions
     def train(self, model):
