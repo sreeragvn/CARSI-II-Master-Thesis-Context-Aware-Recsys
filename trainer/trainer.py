@@ -48,7 +48,7 @@ class Trainer(object):
         if optim_config['name'] == 'adam':
             self.optimizer = optim.Adam(model.parameters(
             ), lr=optim_config['lr'], weight_decay=optim_config['weight_decay'])
-            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=3, factor=0.2, min_lr=0.00000001, verbose=True)
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.2, min_lr=0.00000001, verbose=True)
 
 
     def train_epoch(self, model, epoch_idx):
@@ -245,58 +245,3 @@ class Trainer(object):
             return model
         else:
             raise KeyError("No pretrain_path in configs['train']")
-
-# """
-# Special Trainer for Sequential Recommendation methods (ICLRec, MAERec, ...)
-# """
-# class ICLRecTrainer(Trainer):
-#     def __init__(self, data_handler, logger):
-#         super(ICLRecTrainer, self).__init__(data_handler, logger)
-#         self.cluster_dataloader = copy.deepcopy(self.data_handler.train_dataloader)
-
-#     def train_epoch(self, model, epoch_idx):
-#         """ prepare clustering in eval mode """
-#         model.eval()
-#         kmeans_training_data = []
-#         cluster_dataloader = self.cluster_dataloader
-#         cluster_dataloader.dataset.sample_negs()
-#         for _, tem in tqdm(enumerate(cluster_dataloader), desc='Training Clustering', total=len(cluster_dataloader)):
-#             batch_data = list(
-#                 map(lambda x: x.long().to(configs['device']), tem))
-#             # feed batch_seqs into model.forward()
-#             sequence_output = model(batch_data[1], return_mean=True)
-#             kmeans_training_data.append(sequence_output.detach().cpu().numpy())
-#         kmeans_training_data = np.concatenate(kmeans_training_data, axis=0)
-#         model.cluster.train(kmeans_training_data)
-#         del kmeans_training_data
-#         gc.collect()
-
-#         """ train in train mode """
-#         model.train()
-#         train_dataloader = self.data_handler.train_dataloader
-#         train_dataloader.dataset.sample_negs()
-#         # for recording loss
-#         loss_log_dict = {}
-#         # start this epoch
-#         model.train()
-#         for _, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
-#             self.optimizer.zero_grad()
-#             batch_data = list(
-#                 map(lambda x: x.long().to(configs['device']), tem))
-#             loss, loss_dict = model.cal_loss(batch_data)
-#             loss.backward()
-#             self.optimizer.step()
-
-#             # record loss
-#             for loss_name in loss_dict:
-#                 _loss_val = float(loss_dict[loss_name]) / len(train_dataloader)
-#                 if loss_name not in loss_log_dict:
-#                     loss_log_dict[loss_name] = _loss_val
-#                 else:
-#                     loss_log_dict[loss_name] += _loss_val
-
-#         # log loss
-#         if configs['train']['log_loss']:
-#             self.logger.log_loss(epoch_idx, loss_log_dict)
-#         else:
-#             self.logger.log_loss(epoch_idx, loss_log_dict, save_to_log=False)

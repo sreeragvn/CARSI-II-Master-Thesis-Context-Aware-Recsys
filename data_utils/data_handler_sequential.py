@@ -71,18 +71,9 @@ class DataHandlerSequential:
         # Todo currently the context have data that is past the last elements in the sequence. This has to be removed.
         try:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
-            # max_length = int(context.groupby('session_id')['datetime'].apply(lambda x: (x.max() - x.min()).total_seconds()).max())
             max_length = context['session_id'].value_counts().max()
             self.max_dynamic_context_length = max(self.max_dynamic_context_length, max_length)
-
-            # Downsampling to every minute
-            # selected_context = ['KBI_speed']
-            # context['hour_minute'] = context['datetime'].dt.strftime('%Y-%m-%d %H:%M')
-            # context['hour_minute'] = context['datetime'].dt.strftime('%Y-%m-%d %H')
             context = context.drop(['datetime'], axis=1)
-            # context = context.groupby(['session_id', 'hour_minute'])[selected_context].mean().reset_index()
-            # context = context.drop(['hour_minute'], axis=1)
-            # context['KBI_speed'] = context['KBI_speed'].round(1)
 
             context_dict = {}
             for session_id, group in context.groupby('session_id'):
