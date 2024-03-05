@@ -35,7 +35,8 @@ class CL4SRec(BaseModel):
         with open(configs['train']['parameter_path'], 'rb') as f:
             _class_w = pickle.load(f)
 
-        self.lstm_input_size = configs['lstm']['input_size']
+        print(configs['data']['dynamic_context_feat_num'])
+        self.lstm_input_size = configs['data']['dynamic_context_feat_num']
         self.lstm_hidden_size = configs['lstm']['hidden_size']
         self.lstm_num_layers = configs['lstm']['num_layers']
         # self.lstm_output_size = configs['lstm']['output_size']
