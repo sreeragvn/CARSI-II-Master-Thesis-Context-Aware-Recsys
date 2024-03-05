@@ -55,13 +55,40 @@ class CL4SRec(BaseModel):
         if configs['model']['context_encoder'] == 'lstm':
             self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers, self.batch_size)
                                                         
-        self.fc1 = nn.Linear(192, 128) # number of static and dynamic context variables
-        self.fc2 = nn.Linear(128, self.emb_size)
-        self.fc2 = nn.Linear(128, self.emb_size)
-        self.fc2 = nn.Linear(128, self.emb_size)
-        self.fc2 = nn.Linear(128, self.emb_size)
-        self.fc2 = nn.Linear(128, self.emb_size)
-        self.fc2 = nn.Linear(128, self.emb_size)
+        self.fc_layers = nn.Sequential(
+            nn.Linear(192, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, self.emb_size),
+            nn.ReLU()
+        )
         self.relu = nn.ReLU()
 
         self.mask_default = self.mask_correlated_samples(
@@ -285,9 +312,10 @@ class CL4SRec(BaseModel):
         # print("Final Output Shape:", final_out.shape)
         # print("output size:", out.size())
         # out = torch.flatten(out, start_dim=1)
-        out = self.fc1(out)
-        out = self.relu(out)
-        out = self.fc2(out)
+        # out = self.fc1(out)
+        # out = self.relu(out)
+        # out = self.fc2(out)
+        out = self.fc_layers(out)
         output = self.relu(out)
         # print("output size:", output.size())
 
