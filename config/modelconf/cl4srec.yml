@@ -4,7 +4,7 @@ optimizer:
   weight_decay: 0
 
 train:
-  model_test_run: true
+  model_test_run: false
   epoch: 300
   batch_size: 4
   save_model: true
