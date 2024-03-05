@@ -4,15 +4,16 @@ optimizer:
   weight_decay: 0
 
 train:
-  epoch: 300
+  model_test_run: true
+  epoch: 100
   batch_size: 4
   save_model: true
   log_loss: true
-  test_step: 10
+  test_step: 1
   reproducible: true
   seed: 2023
   tensorboard: true
-  ssl: true
+  ssl: false
   parameter_path: './datasets/sequential/aug/parameters/param.pkl'
 
 test:
@@ -37,7 +38,6 @@ model:
   tau: 1
 
 lstm:
-  input_size: 18
   hidden_size: 64
   num_layers: 2
   output_size: 256

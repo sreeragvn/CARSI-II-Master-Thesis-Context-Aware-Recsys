@@ -109,13 +109,15 @@ class DataHandlerSequential:
             return None
         
 
-    def _set_statistics(self, user_seqs_train, user_seqs_test):
+    def _set_statistics(self, user_seqs_train, user_seqs_test, dynamic_context_data, static_context_data):
         user_num = max(max(user_seqs_train["uid"]), max(
             user_seqs_test["uid"])) + 1
         configs['data']['user_num'] = user_num
         # item originally starts with 1
         configs['data']['item_num'] = self.max_item_id
         configs['data']['max_context_length'] = self.max_dynamic_context_length
+        configs['data']['dynamic_context_feat_num'] = len(list(dynamic_context_data[list(dynamic_context_data.keys())[0]].keys()))
+        configs['data']['static_context_feat_num'] = len(list(static_context_data[list(static_context_data.keys())[0]].keys()))
 
     def _seq_aug(self, user_seqs):
         user_seqs_aug = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
@@ -132,13 +134,21 @@ class DataHandlerSequential:
         return user_seqs_aug
 
     def load_data(self):
-        user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
-        user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
-        dynamic_context_train =  self._read_csv_dynamic_context(self.trn_dynamic_context_file)
-        dynamic_context_test =  self._read_csv_dynamic_context(self.tst_dynamic_context_file)
-        static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
-        static_context_test =  self._read_csv_static_context(self.tst_static_context_file)
-        self._set_statistics(user_seqs_train, user_seqs_test)
+        if configs['train']['model_test_run']:
+            user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
+            user_seqs_test = self._read_tsv_to_user_seqs(self.trn_file)
+            dynamic_context_train =  self._read_csv_dynamic_context(self.trn_dynamic_context_file)
+            dynamic_context_test =  self._read_csv_dynamic_context(self.trn_dynamic_context_file)
+            static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
+            static_context_test =  self._read_csv_static_context(self.trn_static_context_file)
+        else:
+            user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
+            user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
+            dynamic_context_train =  self._read_csv_dynamic_context(self.trn_dynamic_context_file)
+            dynamic_context_test =  self._read_csv_dynamic_context(self.tst_dynamic_context_file)
+            static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
+            static_context_test =  self._read_csv_static_context(self.tst_static_context_file)
+        self._set_statistics(user_seqs_train, user_seqs_test, dynamic_context_test, static_context_test)
 
         # # seqeuntial augmentation: [1, 2, 3,] -> [1,2], [3]
         # if 'seq_aug' in configs['data'] and configs['data']['seq_aug']:
