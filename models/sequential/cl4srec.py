@@ -1,7 +1,7 @@
 import math
 import random
 from models.base_model import BaseModel
-from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder, CARSI_contextEncoder
+from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -39,19 +39,10 @@ class CL4SRec(BaseModel):
         self.lstm_input_size = configs['data']['dynamic_context_feat_num']
         self.lstm_hidden_size = configs['lstm']['hidden_size']
         self.lstm_num_layers = configs['lstm']['num_layers']
-        # self.lstm_output_size = configs['lstm']['output_size']
 
         # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
         out_emb = 64
         self.static_embedding = nn.Embedding(self.emb_size, out_emb)
-
-        # input_size_cont = configs['data']['input_size']# num_features_continuous
-        # input_size_cat = configs['data']['input_size']
-        # output_size = configs['carsii']['input_size']
-        # seq_len = configs['lstm']['input_size']
-        # num_embedding = configs['model']['embedding_size']
-        # hidden_dim=512, # d_model
-        # num_heads=8
 
         self.emb_layer = TransformerEmbedding(
             self.item_num + 2, self.emb_size, self.max_len)
@@ -63,17 +54,13 @@ class CL4SRec(BaseModel):
 
         if configs['model']['context_encoder'] == 'lstm':
             self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers, self.batch_size)
-        
-        # if configs['model']['context_encoder'] == 'carsi_context_encoder':
-        #     self.context_encoder = CARSI_contextEncoder(input_size_cont, # num_features_continuous
-        #                                                     input_size_cat,
-        #                                                     output_size,
-        #                                                     seq_len,
-        #                                                     num_embedding,
-        #                                                     hidden_dim=512, # d_model
-        #                                                     num_heads=8)
                                                         
         self.fc1 = nn.Linear(192, 128) # number of static and dynamic context variables
+        self.fc2 = nn.Linear(128, self.emb_size)
+        self.fc2 = nn.Linear(128, self.emb_size)
+        self.fc2 = nn.Linear(128, self.emb_size)
+        self.fc2 = nn.Linear(128, self.emb_size)
+        self.fc2 = nn.Linear(128, self.emb_size)
         self.fc2 = nn.Linear(128, self.emb_size)
         self.relu = nn.ReLU()
 
@@ -256,9 +243,6 @@ class CL4SRec(BaseModel):
         return info_nce_loss
 
     def forward(self, batch_seqs,batch_context, batch_static_context):
-        # print("Input Shapes:")
-        # print("batch_seqs:", batch_seqs.shape)
-        # print("batch_context:", batch_context.shape)
         # method processes input sequences through an embedding layer and a stack of transformer layers, and the final output is the representation of the sequence, typically extracted from the last position. The mask is used to prevent the model from attending to padding elements during the transformer layers' computations.
 
         # batch_seqs > 0 creates a boolean tensor indicating non-padding elements.
@@ -278,9 +262,11 @@ class CL4SRec(BaseModel):
             x = transformer(x, mask)
         # Extracts the output from the last position of the sequence (-1). This is a common practice in transformer-based models, where the output corresponding to the last position is often used as a representation of the entire sequence.
         sasrec_out = x[:, -1, :]
-
+        # print(batch_context.size())
         batch_context = batch_context.to(sasrec_out.dtype)
+        # print(batch_context.size())
         batch_context = batch_context.transpose(1, 2)
+        # print(batch_context.size())
         context_output = self.context_encoder(batch_context)
         
         static_context = self.static_embedding(batch_static_context)
@@ -290,8 +276,8 @@ class CL4SRec(BaseModel):
         # print("context_output Rank:",  sasrec_out.dim(), sasrec_out.ndim)
 
         # print("sasrec_out size:", sasrec_out.size())
-        # print("context_output size:", context_output.size())
-        # print("context_output size:", static_context.size())
+        # print("dynamic context_output size:", context_output.size())
+        # print("static context_output size:", static_context.size())
         out = torch.cat((sasrec_out, context_output, static_context), dim=1)
 
         # Concatenate along the feature dimension (axis=1)
@@ -319,6 +305,8 @@ class CL4SRec(BaseModel):
         test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
         # print(batch_last_items.size(), seq_output.size(), test_item_emb.size(), logits.size())
+        # print('true label',batch_last_items)
+        # batch_last_items = batch_last_items - 1
         # Compute Recommendation Loss:Computes the recommendation loss using a specified loss function (self.loss_func). This loss measures the discrepancy between the predicted logits and the actual last items in the sequences.
         loss = self.loss_func(logits, batch_last_items)
         # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).

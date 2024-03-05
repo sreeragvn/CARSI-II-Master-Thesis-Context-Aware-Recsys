@@ -5,7 +5,7 @@ optimizer:
 
 train:
   model_test_run: true
-  epoch: 100
+  epoch: 300
   batch_size: 4
   save_model: true
   log_loss: true
@@ -18,7 +18,7 @@ train:
 
 test:
   metrics: [recall, ndcg, precision]
-  k: [2, 3]
+  k: [1, 2, 3]
   batch_size: 4
 
 data:
@@ -33,7 +33,7 @@ model:
   n_layers: 2
   embedding_size: 64
   n_heads: 2
-  max_seq_len: 120
+  max_seq_len: 50
   lmd: 0.1
   tau: 1
 
