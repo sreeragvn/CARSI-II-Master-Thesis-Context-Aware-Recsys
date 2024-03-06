@@ -35,7 +35,7 @@ class CL4SRec(BaseModel):
         with open(configs['train']['parameter_path'], 'rb') as f:
             _class_w = pickle.load(f)
 
-        print(configs['data']['dynamic_context_feat_num'])
+        # print(configs['data']['dynamic_context_feat_num'])
         self.lstm_input_size = configs['data']['dynamic_context_feat_num']
         self.lstm_hidden_size = configs['lstm']['hidden_size']
         self.lstm_num_layers = configs['lstm']['num_layers']
@@ -44,13 +44,15 @@ class CL4SRec(BaseModel):
         out_emb = 64
         self.static_embedding = nn.Embedding(self.emb_size, out_emb)
 
+        # print(self.item_num)
         self.emb_layer = TransformerEmbedding(
             self.item_num + 2, self.emb_size, self.max_len)
 
         self.transformer_layers = nn.ModuleList([TransformerLayer(
             self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])
 
-        self.loss_func = nn.CrossEntropyLoss(weight =_class_w)
+        # self.loss_func = nn.CrossEntropyLoss(weight =_class_w)
+        self.loss_func = nn.CrossEntropyLoss()
 
         if configs['model']['context_encoder'] == 'lstm':
             self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers, self.batch_size)
@@ -86,8 +88,7 @@ class CL4SRec(BaseModel):
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(128, self.emb_size),
-            nn.ReLU()
+            nn.Linear(128, self.emb_size)
         )
         self.relu = nn.ReLU()
 
@@ -155,7 +156,7 @@ class CL4SRec(BaseModel):
 
         ## TODO
         # set the following parameter as a param loaded from yaml file
-        min_time_reorder = 3 #min
+        min_time_reorder = 0.5 #min
 
         aug_seq1 = []
         aug_len1 = []
@@ -281,6 +282,7 @@ class CL4SRec(BaseModel):
             1, batch_seqs.size(1), 1).unsqueeze(1)
         # Embedding Layer:
         # Passes the input sequence batch_seqs through an embedding layer (self.emb_layer). This layer converts integer indices into dense vectors.
+        # print(batch_seqs)
         x = self.emb_layer(batch_seqs)
 
         # Transformer Layers:
@@ -330,7 +332,8 @@ class CL4SRec(BaseModel):
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
         # Todo why you are adding + 1 to  item_num when slicing
-        test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
+        test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
+        # print( self.emb_layer.token_emb.weight.size())
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
         # print(batch_last_items.size(), seq_output.size(), test_item_emb.size(), logits.size())
         # print('true label',batch_last_items)

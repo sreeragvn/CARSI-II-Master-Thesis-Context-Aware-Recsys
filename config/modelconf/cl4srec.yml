@@ -4,7 +4,7 @@ optimizer:
   weight_decay: 0
 
 train:
-  model_test_run: false
+  model_test_run: true
   epoch: 300
   batch_size: 4
   save_model: true
@@ -33,13 +33,13 @@ model:
   n_layers: 2
   embedding_size: 64
   n_heads: 2
-  max_seq_len: 50
+  max_seq_len: 10
   lmd: 0.1
   tau: 1
 
 lstm:
   hidden_size: 64
-  num_layers: 2
+  num_layers: 30
   output_size: 256
 
 tune:
