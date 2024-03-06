@@ -106,7 +106,7 @@ class TransformerEmbedding(nn.Module):
         return self.dropout(x)
     
 class LSTM_contextEncoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, batch_size):
+    def __init__(self, input_size, hidden_size, num_layers):
         super(LSTM_contextEncoder, self).__init__()
         self.lstm = nn.LSTM(input_size=input_size,
                             hidden_size=hidden_size,
@@ -116,203 +116,15 @@ class LSTM_contextEncoder(nn.Module):
         _, (h_n, _) = self.lstm(x)
         return h_n[-1]
 
-
-# class SpAdjEdgeDrop(nn.Module):
-#     def __init__(self, resize_val=False):
-#         super(SpAdjEdgeDrop, self).__init__()
-#         self.resize_val = resize_val
-
-#     def forward(self, adj, keep_rate):
-#         if keep_rate == 1.0:
-#             return adj
-#         vals = adj._values()
-#         idxs = adj._indices()
-#         edgeNum = vals.size()
-#         mask = (t.rand(edgeNum) + keep_rate).floor().type(t.bool)
-#         newVals = vals[mask] / (keep_rate if self.resize_val else 1.0)
-#         newIdxs = idxs[:, mask]
-#         return t.sparse.FloatTensor(newIdxs, newVals, adj.shape)
-
-
-# class NodeDrop(nn.Module):
-#     def __init__(self):
-#         super(NodeDrop, self).__init__()
-
-#     def forward(self, embeds, keep_rate):
-#         if keep_rate == 1.0:
-#             return embeds
-#         data_config = configs['data']
-#         node_num = data_config['user_num'] + data_config['item_num']
-#         mask = (t.rand(node_num) + keep_rate).floor().view([-1, 1])
-#         return embeds * mask
-
-# class GraphConv(nn.Module):
-#     pass
-#     # def __init__(self,
-#     #              in_feats,
-#     #              out_feats,
-#     #              weight=False,
-#     #              activation=None):
-#     #     super(GraphConv, self).__init__()
-#     #     self._in_feats = in_feats
-#     #     self._out_feats = out_feats
-#     #     self._norm = "both"
-#     #     if weight:
-#     #         self.weight = nn.Parameter(t.Tensor(in_feats, out_feats))
-#     #     else:
-#     #         self.register_parameter('weight', None)
-
-#     #     self.reset_parameters()
-
-#     #     self._activation = activation
-
-#     # def reset_parameters(self):
-#     #     """Reinitialize learnable parameters."""
-#     #     if self.weight is not None:
-#     #         init.xavier_uniform_(self.weight)
-
-#     # def forward(self, graph, feat, weight=None):
-#     #     graph = graph.local_var()
-
-#     #     if self._norm == 'both':
-#     #         degs = graph.out_degrees().to(feat.device).float().clamp(min=1)  # outdegree of nodes
-#     #         norm = t.pow(degs, -0.5)
-#     #         shp = norm.shape + (1,) * (feat.dim() - 1)  # (n, 1)
-#     #         norm = t.reshape(norm, shp)  # (n, 1)
-#     #         # feat = feat * norm
-
-#     #     if weight is not None:
-#     #         if self.weight is not None:
-#     #             raise DGLError('External weight is provided while at the same time the'
-#     #                            ' module has defined its own weight parameter. Please'
-#     #                            ' create the module with flag weight=False.')
-#     #     else:
-#     #         weight = self.weight
-
-#     #     if self._in_feats > self._out_feats:
-#     #         # mult W first to reduce the feature size for aggregation.
-#     #         if weight is not None:
-#     #             feat = t.matmul(feat, weight)
-#     #         feat = feat * norm
-#     #         graph.srcdata['h'] = feat
-#     #         graph.update_all(fn.copy_u(u='h', out='m'),
-#     #                          fn.sum(msg='m', out='h'))
-#     #         rst = graph.dstdata['h']
-#     #     else:
-#     #         # aggregate first then mult W
-#     #         graph.srcdata['h'] = feat
-#     #         graph.update_all(fn.copy_u(u='h', out='m'),
-#     #                          fn.sum(msg='m', out='h'))
-#     #         rst = graph.dstdata['h']
-#     #         if weight is not None:
-#     #             rst = t.matmul(rst, weight)
-
-#     #     if self._norm != 'none':
-#     #         degs = graph.in_degrees().to(feat.device).float().clamp(min=1)
-#     #         if self._norm == 'both':
-#     #             norm = t.pow(degs, -0.5)
-#     #         else:
-#     #             norm = 1.0 / degs
-#     #         shp = norm.shape + (1,) * (feat.dim() - 1)
-#     #         norm = t.reshape(norm, shp)
-#     #         rst = rst * norm
-#     #     if self._activation is not None:
-#     #         rst = self._activation(rst)
-
-#     #     return rst
-
-
-# class GCN(nn.Module):
-#     def __init__(self,
-#                  g,
-#                  in_feats,
-#                  n_hidden,
-#                  activation):
-#         super(GCN, self).__init__()
-#         self.g = g
-#         self.layer = GraphConv(in_feats, n_hidden, weight=False, activation=activation)
-
-#     def forward(self, features):
-#         h = features
-#         h = self.layer(self.g, h)
-#         return h
-
-
-# def message_func(edges):
-#     return {'m': edges.src['n_f'] + edges.data['e_f']}
-
-# class GCNLayer(nn.Module):
-#     def __init__(self,
-#                  in_feats,
-#                  out_feats,
-#                  weight=True,
-#                  bias=False,
-#                  activation=None):
-#         super(GCNLayer, self).__init__()
-#         self.bias = bias
-#         self._in_feats = in_feats
-#         self._out_feats = out_feats
-#         self.weight = weight
-#         if self.weight:
-#             self.u_w = nn.Parameter(t.Tensor(in_feats, out_feats))
-#             self.v_w = nn.Parameter(t.Tensor(in_feats, out_feats))
-#             init.xavier_uniform_(self.u_w)
-#             init.xavier_uniform_(self.v_w)
-#         self._activation = activation
-
-#     def forward(self, graph, u_f, v_f, e_f):
-#         pass
-#         # with graph.local_scope():
-#         #     if self.weight:
-#         #         u_f = t.mm(u_f, self.u_w)
-#         #         v_f = t.mm(v_f, self.v_w)
-#         #     node_f = t.cat([u_f, v_f], dim=0)
-#         #     degs = graph.out_degrees().to(u_f.device).float().clamp(min=1)
-#         #     norm = t.pow(degs, -0.5).view(-1, 1)
-
-#         #     node_f = node_f * norm
-
-#         #     graph.ndata['n_f'] = node_f
-#         #     graph.edata['e_f'] = e_f
-#         #     graph.update_all(message_func=message_func, reduce_func=fn.sum(msg='m', out='n_f'))
-
-#         #     rst = graph.ndata['n_f']
-
-#         #     degs = graph.in_degrees().to(u_f.device).float().clamp(min=1)
-#         #     norm = t.pow(degs, -0.5).view(-1, 1)
-#         #     rst = rst * norm
-
-#         #     if self._activation is not None:
-#         #         rst = self._activation(rst)
-
-#         #     return rst
-
-
-# class DGIEncoder(nn.Module):
-#     def __init__(self, g, in_feats, n_hidden, activation):
-#         super(DGIEncoder, self).__init__()
-#         self.g = g
-#         self.conv = GCN(g, in_feats, n_hidden, activation)
-
-#     def forward(self, features, corrupt=False):
-#         if corrupt:
-#             perm = t.randperm(self.g.number_of_nodes())
-#             features = features[perm]
-#         features = self.conv(features)
-#         return features
-
-
-# class DGIDiscriminator(nn.Module):
-#     def __init__(self, n_hidden):
-#         super(DGIDiscriminator, self).__init__()
-#         self.weight = nn.Parameter(nn.init.xavier_uniform_(t.empty(n_hidden, n_hidden)))
-#         self.loss = nn.BCEWithLogitsLoss(reduction='none')  # combines a Sigmoid layer and the BCELoss
-
-#     def forward(self, node_embedding, graph_embedding, corrupt=False):
-#         score = t.sum(node_embedding * graph_embedding, dim=1)
-
-#         if corrupt:
-#             res = self.loss(score, t.zeros_like(score))
-#         else:
-#             res = self.loss(score, t.ones_like(score))
-#         return res
+class LSTM_clickEncoder(nn.Module):
+    def __init__(self, num_items, embedding_dim, lstm_hidden_dim, num_layers):
+        super(LSTM_clickEncoder, self).__init__()        
+        
+        self.lstm = nn.LSTM(embedding_dim, lstm_hidden_dim, num_layers, batch_first=True)
+        self.output_layer = nn.Linear(lstm_hidden_dim, num_items)
+    def forward(self, item_embedded):
+        lstm_output, _ = self.lstm(item_embedded)
+        last_hidden_state = lstm_output[:, -1, :]
+        # _, (last_hidden_state, _) = self.lstm(lstm_output)
+        output = self.output_layer(last_hidden_state)
+        return output
