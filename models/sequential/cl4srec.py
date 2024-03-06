@@ -99,6 +99,10 @@ class CL4SRec(BaseModel):
         # parameters initialization
         self.apply(self._init_weights)
 
+    def count_parameters(self):
+        # Count the total number of parameters in the model
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
 
     def _init_weights(self, module):
         """ Initialize the weights """
