@@ -19,6 +19,7 @@ from .utils import DisabledSummaryWriter, log_exceptions
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import torch.optim.lr_scheduler as lr_scheduler
 from torch.optim.lr_scheduler import ExponentialLR
+from torch.optim.lr_scheduler import LambdaLR
 
 if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
     writer = SummaryWriter(log_dir='runs')
@@ -47,16 +48,21 @@ class Trainer(object):
 
     def create_optimizer(self, model):
         optim_config = configs['optimizer']
+        initial_lr = optim_config['lr']
+        # final_lr = optim_config['final_lr']
+        # total_epochs = configs['train']['epoch']
+        # gamma = (final_lr / initial_lr) ** (1 / total_epochs)
+        gamma = 0.999
+
         if optim_config['name'] == 'adam':
             self.optimizer = optim.Adam(model.parameters(
-            ), lr=optim_config['lr'], weight_decay=optim_config['weight_decay'])
+            ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
             # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.2, min_lr=0.00000001, verbose=True)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
-            self.scheduler = ExponentialLR(self.optimizer, gamma=0.999)
+            self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
 
 
-    def train_epoch(self, model, epoch_idx, epochs):
-        print(epoch_idx, epochs)
+    def train_epoch(self, model, epoch_idx):
         # This method encapsulates the training logic for one epoch of a recommender system. It involves iterating over batches, computing and backpropagating the loss, and logging relevant information. The specifics may vary based on the model and data handling mechanisms used in the recommender system.
 
         # prepare training data
@@ -83,8 +89,7 @@ class Trainer(object):
             ep_loss += loss.item()
             loss.backward()
             self.optimizer.step()
-            if epoch_idx/epochs > 0.3:
-                self.scheduler.step()
+            # if epoch_idx/epochs > 0.3:
             # Zeroes the gradients, moves batch data to the device specified in the configuration, computes loss, backpropagates, and performs an optimizer step.
 
             # record loss
@@ -96,6 +101,7 @@ class Trainer(object):
                 else:
                     loss_log_dict[loss_name] += _loss_val
 
+        self.scheduler.step()
         # validation_loss = ep_loss / steps  # You might replace this with your actual validation loss
         # self.scheduler.step(validation_loss)
 
@@ -122,7 +128,7 @@ class Trainer(object):
             # Calls evaluate method at specified intervals during training.
             for epoch_idx in range(train_config['epoch']):
                 # train
-                self.train_epoch(model, epoch_idx, train_config['epoch'])
+                self.train_epoch(model, epoch_idx)
                 # evaluate
                 if epoch_idx % train_config['test_step'] == 0:
                     self.evaluate(model, epoch_idx)
