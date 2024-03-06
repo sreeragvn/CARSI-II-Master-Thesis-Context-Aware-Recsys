@@ -17,6 +17,8 @@ from models.bulid_model import build_model
 from torch.utils.tensorboard import SummaryWriter
 from .utils import DisabledSummaryWriter, log_exceptions
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+import torch.optim.lr_scheduler as lr_scheduler
+from torch.optim.lr_scheduler import ExponentialLR
 
 if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
     writer = SummaryWriter(log_dir='runs')
@@ -48,17 +50,20 @@ class Trainer(object):
         if optim_config['name'] == 'adam':
             self.optimizer = optim.Adam(model.parameters(
             ), lr=optim_config['lr'], weight_decay=optim_config['weight_decay'])
-            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.2, min_lr=0.00000001, verbose=True)
+            # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.2, min_lr=0.00000001, verbose=True)
+            # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
+            self.scheduler = ExponentialLR(self.optimizer, gamma=0.999)
 
 
-    def train_epoch(self, model, epoch_idx):
+    def train_epoch(self, model, epoch_idx, epochs):
+        print(epoch_idx, epochs)
         # This method encapsulates the training logic for one epoch of a recommender system. It involves iterating over batches, computing and backpropagating the loss, and logging relevant information. The specifics may vary based on the model and data handling mechanisms used in the recommender system.
 
         # prepare training data
         # Retrieves the training data loader from the data_handler.
         # Calls the sample_negs method on the training dataset, which might be related to negative sampling in recommendation systems.
         train_dataloader = self.data_handler.train_dataloader
-        train_dataloader.dataset.sample_negs()
+        # train_dataloader.dataset.sample_negs()
         # Initializes dictionaries for tracking loss values (loss_log_dict) and the cumulative epoch loss (ep_loss).
         # steps calculates the number of steps (batches) in the training dataset.
         # for recording loss
@@ -78,6 +83,8 @@ class Trainer(object):
             ep_loss += loss.item()
             loss.backward()
             self.optimizer.step()
+            if epoch_idx/epochs > 0.3:
+                self.scheduler.step()
             # Zeroes the gradients, moves batch data to the device specified in the configuration, computes loss, backpropagates, and performs an optimizer step.
 
             # record loss
@@ -89,8 +96,8 @@ class Trainer(object):
                 else:
                     loss_log_dict[loss_name] += _loss_val
 
-        validation_loss = ep_loss / steps  # You might replace this with your actual validation loss
-        self.scheduler.step(validation_loss)
+        # validation_loss = ep_loss / steps  # You might replace this with your actual validation loss
+        # self.scheduler.step(validation_loss)
 
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
@@ -115,7 +122,7 @@ class Trainer(object):
             # Calls evaluate method at specified intervals during training.
             for epoch_idx in range(train_config['epoch']):
                 # train
-                self.train_epoch(model, epoch_idx)
+                self.train_epoch(model, epoch_idx, train_config['epoch'])
                 # evaluate
                 if epoch_idx % train_config['test_step'] == 0:
                     self.evaluate(model, epoch_idx)

@@ -12,23 +12,13 @@ import os
 
 class DataHandlerSequential:
     def __init__(self):
-        # if configs['data']['name'] == 'ml-20m':
-        #     predir = './datasets/sequential/ml-20m_seq/'
-        #     configs['data']['dir'] = predir
-        # elif configs['data']['name'] == 'sports':
-        #     predir = './datasets/sequential/sports_seq/'
-        #     configs['data']['dir'] = predir
-        # elif configs['data']['name'] == 'carsii':
-        #     predir = './datasets/sequential/carsii_seq/'
-        #     configs['data']['dir'] = predir
-        # elif configs['data']['name'] == 'carsii_delta':
-        #     predir = './datasets/sequential/carsii_timedelta_seq/'
-        #     configs['data']['dir'] = predir
-        # elif configs['data']['name'] == 'carsii_random_delta':
-        #     predir = './datasets/sequential/carsii_timedelta_rand_seq/'
-        #     configs['data']['dir'] = predir
         data_name = configs['data']['name']
-        predir = f'./datasets/sequential/{data_name}'
+
+        if configs['train']['model_test_run']:
+            print('fuck u')
+            predir = f'./datasets/sequential/test/{data_name}'
+        else:
+            predir = f'./datasets/sequential/{data_name}'
             
         self.trn_file = path.join(predir, 'seq/train.tsv')
         self.val_file = path.join(predir, 'seq/test.tsv')
@@ -140,6 +130,7 @@ class DataHandlerSequential:
             static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
             static_context_test =  self._read_csv_static_context(self.tst_static_context_file)
         self._set_statistics(user_seqs_train, user_seqs_test, dynamic_context_test, static_context_test)
+        print(self.max_item_id)
 
         # # seqeuntial augmentation: [1, 2, 3,] -> [1,2], [3]
         # if 'seq_aug' in configs['data'] and configs['data']['seq_aug']:
