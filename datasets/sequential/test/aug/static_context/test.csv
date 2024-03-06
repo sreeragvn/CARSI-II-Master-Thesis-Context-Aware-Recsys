@@ -1,0 +1,3 @@
+car_id,month,weekday,seatbelt_codriver,seatbelt_rear_l,seatbelt_rear_r,session
+26.0,12.0,4.0,1.0,1.0,1.0,0
+26.0,12.0,4.0,1.0,1.0,1.0,1

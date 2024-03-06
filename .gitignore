@@ -1,6 +1,7 @@
 # folders
 data/
-datasets/
+datasets/sequential/aug
+datasets/sequential/non_aug
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
