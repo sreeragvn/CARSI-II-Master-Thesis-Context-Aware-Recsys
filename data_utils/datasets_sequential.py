@@ -94,7 +94,7 @@ class SequentialDataset(data.Dataset):
         else:
             pass
 
-    def _process_context(self, context_i, context_type = 'static'):
+    def _process_context(self, context_i, context_type):
         context_keys = context_i.keys()
         context_values = [context_i[key] for key in context_keys]
         if context_type == 'dynamic':
@@ -111,7 +111,7 @@ class SequentialDataset(data.Dataset):
             seq_i = self.seqs[idx]
             time_delta_i = self.time_delta[idx]
             padded_dynamic_context = self._process_context(self.dynamic_context[idx], context_type='dynamic')
-            static_context = [self.static_context [key]['car_id'] for key in list(self.static_context .keys())]
+            static_context= self._process_context(self.static_context[idx], context_type='static')
             
             if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
                 result = (
@@ -120,7 +120,7 @@ class SequentialDataset(data.Dataset):
                     self.last_items[idx],
                     torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
                     torch.LongTensor(padded_dynamic_context),
-                    static_context[idx],
+                    torch.LongTensor(static_context),
                     self.negs[idx]
                 )
             else:
@@ -130,7 +130,7 @@ class SequentialDataset(data.Dataset):
                     self.last_items[idx],
                     torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
                     torch.LongTensor(padded_dynamic_context),
-                    static_context[idx]
+                    torch.LongTensor(static_context)
                 )
             
             # # Print information about the tensors

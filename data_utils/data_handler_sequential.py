@@ -33,6 +33,7 @@ class DataHandlerSequential:
 
         self.max_item_id = 0
         self.max_dynamic_context_length = 0
+        self.static_context_embedding_size = 0
 
     def _read_tsv_to_user_seqs(self, tsv_file):
         user_seqs = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
@@ -57,7 +58,6 @@ class DataHandlerSequential:
         return user_seqs
     
     def _read_csv_dynamic_context(self, csv_file):
-        # Todo currently the context have data that is past the last elements in the sequence. This has to be removed.
         try:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
             max_length = context['session_id'].value_counts().max()
@@ -75,9 +75,11 @@ class DataHandlerSequential:
             return None
         
     def _read_csv_static_context(self, csv_file):
-        # Todo currently the context have data that is past the last elements in the sequence. This has to be removed.
         try:
             context = pd.read_csv(csv_file)
+            context = context.astype(int)
+            self.static_context_embedding_size = context.drop(columns='session').max().tolist()
+            # print(self.static_context_embedding_size)
             context_dict = {}
             for session_id, group in context.groupby('session'):
                 context_dict[session_id] = {
@@ -98,6 +100,7 @@ class DataHandlerSequential:
         configs['data']['max_context_length'] = self.max_dynamic_context_length
         configs['data']['dynamic_context_feat_num'] = len(list(dynamic_context_data[list(dynamic_context_data.keys())[0]].keys()))
         configs['data']['static_context_feat_num'] = len(list(static_context_data[list(static_context_data.keys())[0]].keys()))
+        configs['data']['static_context_max']  = self.static_context_embedding_size
 
     def _seq_aug(self, user_seqs):
         user_seqs_aug = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
@@ -129,8 +132,6 @@ class DataHandlerSequential:
             static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
             static_context_test =  self._read_csv_static_context(self.tst_static_context_file)
         self._set_statistics(user_seqs_train, user_seqs_test, dynamic_context_test, static_context_test)
-        print(self.max_item_id)
-
         # # seqeuntial augmentation: [1, 2, 3,] -> [1,2], [3]
         # if 'seq_aug' in configs['data'] and configs['data']['seq_aug']:
         #     user_seqs_aug = self._seq_aug(user_seqs_train)

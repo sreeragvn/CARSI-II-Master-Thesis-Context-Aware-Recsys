@@ -41,8 +41,9 @@ class CL4SRec(BaseModel):
         self.lstm_num_layers = configs['lstm']['num_layers']
 
         # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
-        out_emb = 64
-        self.static_embedding = nn.Embedding(self.emb_size, out_emb)
+        print(configs['data']['static_context_feat_num'])
+        # self.static_embedding = nn.Embedding(configs['data']['static_context_feat_num'], self.emb_size)
+        self.static_embedding = nn.ModuleList([nn.Embedding(num_embeddings=static_context_max, embedding_dim=self.emb_size) for static_context_max, _ in zip(configs['data']['static_context_max'], range(configs['data']['static_context_feat_num']))])
 
         if configs['model']['click_encoder'] == 'lstm':
             self.emb_layer = nn.Embedding(self.item_num + 2,  self.emb_size)
@@ -303,16 +304,18 @@ class CL4SRec(BaseModel):
                 x = transformer(x, mask)
             # Extracts the output from the last position of the sequence (-1). This is a common practice in transformer-based models, where the output corresponding to the last position is often used as a representation of the entire sequence.
             sasrec_out = x[:, -1, :]
-            print(sasrec_out.size())
+            # print(sasrec_out.size())
         # print(batch_context.size())
         batch_context = batch_context.to(sasrec_out.dtype)
         # print(batch_context.size())
         batch_context = batch_context.transpose(1, 2)
         # print(batch_context.size())
         context_output = self.context_encoder(batch_context)
-        
-        static_context = self.static_embedding(batch_static_context)
-        static_context = static_context.view(batch_static_context.size(0), -1)
+        # print(batch_static_context.size())
+        # static_context = self.static_embedding(batch_static_context)
+        # static_context = static_context.view(batch_static_context.size(0), -1)
+        static_context = [embedding_layer(batch_static_context[:, i]) for i, embedding_layer in enumerate(self.static_embedding)]
+        static_context = torch.cat(static_context, dim=2)
 
         # print("sasrec_out Rank:", context_output.dim(), context_output.ndim)
         # print("context_output Rank:",  sasrec_out.dim(), sasrec_out.ndim)
@@ -341,6 +344,7 @@ class CL4SRec(BaseModel):
 
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
         _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context = batch_data
+        # print(batch_static_context)
         # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
