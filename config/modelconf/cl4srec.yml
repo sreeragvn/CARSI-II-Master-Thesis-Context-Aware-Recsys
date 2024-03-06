@@ -6,7 +6,7 @@ optimizer:
 
 train:
   model_test_run: true
-  epoch: 300
+  epoch: 3500
   batch_size: 16
   save_model: true
   log_loss: true
@@ -44,7 +44,7 @@ lstm:
   output_size: 256
 
 tune:
-  enable: false
+  enable: true
   hyperparameters: [dropout_rate, lmb, tau]
   dropout_rate: [0.1, 0.3, 0.5]
   lmb: [0.05, 0.1, 0.2]
