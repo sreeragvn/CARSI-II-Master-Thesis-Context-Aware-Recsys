@@ -35,14 +35,11 @@ class CL4SRec(BaseModel):
         with open(configs['train']['parameter_path'], 'rb') as f:
             _class_w = pickle.load(f)
 
-        # print(configs['data']['dynamic_context_feat_num'])
         self.lstm_input_size = configs['data']['dynamic_context_feat_num']
         self.lstm_hidden_size = configs['lstm']['hidden_size']
         self.lstm_num_layers = configs['lstm']['num_layers']
 
         # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
-        # print(configs['data']['static_context_max'])
-        # self.static_embedding = nn.Embedding(configs['data']['static_context_feat_num'], self.emb_size)
         self.static_embedding = nn.ModuleList([nn.Embedding(num_embeddings=static_context_max + 1, embedding_dim=self.emb_size) for static_context_max, _ in zip(configs['data']['static_context_max'], range(configs['data']['static_context_feat_num']))])
 
         if configs['model']['click_encoder'] == 'lstm':
@@ -287,7 +284,6 @@ class CL4SRec(BaseModel):
         # .unsqueeze(1) adds another singleton dimension at the beginning of the tensor. This is often used for compatibility with transformer models that expect a mask with dimensions [batch_size, 1, sequence_length, sequence_length].
         # Todo - This has to be done for the context as well. Ensure the padding is done with a negative number. not zero. since zero speed itself is relevant.
         if configs['model']['click_encoder'] == 'lstm':
-            # print(batch_seqs.size())
             item_embedded = self.emb_layer(batch_seqs)
             sasrec_out = self.click_encoder(item_embedded) ## not sasrec. just lstm
         else:
@@ -295,7 +291,6 @@ class CL4SRec(BaseModel):
                 1, batch_seqs.size(1), 1).unsqueeze(1)
             # Embedding Layer:
             # Passes the input sequence batch_seqs through an embedding layer (self.emb_layer). This layer converts integer indices into dense vectors.
-            # print(batch_seqs)
             x = self.emb_layer(batch_seqs)
 
             # Transformer Layers:
@@ -304,12 +299,8 @@ class CL4SRec(BaseModel):
                 x = transformer(x, mask)
             # Extracts the output from the last position of the sequence (-1). This is a common practice in transformer-based models, where the output corresponding to the last position is often used as a representation of the entire sequence.
             sasrec_out = x[:, -1, :]
-            # print(sasrec_out.size())
-        # print(batch_context.size())
         batch_context = batch_context.to(sasrec_out.dtype)
-        # print(batch_context.size())
         batch_context = batch_context.transpose(1, 2)
-        # print(batch_context.size())
         context_output = self.context_encoder(batch_context)
         static_context = []
         for i, embedding_layer in enumerate(self.static_embedding):
@@ -325,7 +316,6 @@ class CL4SRec(BaseModel):
 
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
         _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context = batch_data
-        # print(batch_static_context)
         # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
@@ -335,11 +325,7 @@ class CL4SRec(BaseModel):
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
         # test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
-        # print( self.emb_layer.token_emb.weight.size())
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
-        # print(batch_last_items.size(), seq_output.size(), test_item_emb.size(), logits.size())
-        # print('true label',batch_last_items)
-        # batch_last_items = batch_last_items - 1
         # Compute Recommendation Loss:Computes the recommendation loss using a specified loss function (self.loss_func). This loss measures the discrepancy between the predicted logits and the actual last items in the sequences.
         loss = self.loss_func(logits, batch_last_items)
         # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).
