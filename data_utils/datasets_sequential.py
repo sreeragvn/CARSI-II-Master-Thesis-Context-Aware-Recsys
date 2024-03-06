@@ -55,25 +55,9 @@ class SequentialDataset(data.Dataset):
             # pad at the head
             time_delta = [0] * (self.max_seq_len - len(seq)) + time_delta
         return time_delta
-    
-    # def _pad_context(self, lst):
-    #     if len(lst) < configs['data']['max_context_length']:
-    #         zeros_before = zeros_after = (configs['data']['max_context_length'] - len(lst)) // 2
-    #         if len(lst) % 2 == 1:
-    #             # If the length is odd, add an extra zero after the middle element
-    #             zeros_after += 1
-    #         return [0] * zeros_before + lst + [0] * zeros_after
-    #     else:
-    #         return lst
 
     def _pad_context(self, lst):
         if len(lst) < self.max_dynamic_context_length:
-            # print(self.max_context_length)
-            # zeros_before = zeros_after = (self.max_context_length - len(lst)) // 2
-            # if len(lst) % 2 == 1:
-            #     # If the length is odd, add an extra zero after the middle element
-            #     zeros_after += 1
-            # return [0] * zeros_before + lst + [0] * zeros_after
             zeros_before = (self.max_dynamic_context_length - len(lst))
             return [0] * zeros_before + lst
         else:
@@ -112,7 +96,6 @@ class SequentialDataset(data.Dataset):
             time_delta_i = self.time_delta[idx]
             padded_dynamic_context = self._process_context(self.dynamic_context[idx], context_type='dynamic')
             static_context= self._process_context(self.static_context[idx], context_type='static')
-            # print(static_context)
             if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
                 result = (
                     self.uids[idx],
@@ -133,7 +116,6 @@ class SequentialDataset(data.Dataset):
                     torch.LongTensor(static_context)
                 )
             
-            # # Print information about the tensors
             # print("uid:", result[0])
             # print("padded_seq shape:", result[1].shape)
             # print("last_item:", result[2])
