@@ -1,12 +1,13 @@
 optimizer:
   name: adam
   lr: 1.0e-3
+  final_lr: 1.0e-6
   weight_decay: 0
 
 train:
   model_test_run: true
   epoch: 300
-  batch_size: 4
+  batch_size: 16
   save_model: true
   log_loss: true
   test_step: 1
@@ -17,9 +18,9 @@ train:
   parameter_path: './datasets/sequential/aug/parameters/param.pkl'
 
 test:
-  metrics: [recall, ndcg, precision]
-  k: [1, 2, 3]
-  batch_size: 4
+  metrics: [recall, precision]
+  k: [1, 2]
+  batch_size: 16
 
 data:
   type: sequential
