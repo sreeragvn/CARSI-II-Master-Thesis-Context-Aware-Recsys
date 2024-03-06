@@ -1,55 +1,23 @@
 This is a PyTorch-based open-source deep learning framework for recommender systems enhanced by self-supervised learning techniques. 
 It's user-friendly and contains commonly-used datasets, code scripts for data processing, training, testing, evaluation, and state-of-the-art research models. 
 
-### General Collaborative Filtering
-[Automated Self-Supervised Learning for Recommendation](https://arxiv.org/pdf/2303.07797.pdf) | [Disentangled Contrastive Collaborative Filtering](https://arxiv.org/pdf/2305.02759.pdf)|
-
 
 ### Sequential Recommendation
 | Model | Conference | Paper |
 | ----- | ---------- | ----- |
-|BERT4Rec|CIKM'19|[BERT4Rec: Sequential recommendation with bidirectional encoder representations from transformer](https://arxiv.org/pdf/1904.06690.pdf)|
 |CL4SRec|ICDE'22|[Contrastive learning for sequential recommendation](https://arxiv.org/pdf/2010.14395.pdf)|
 |DuoRec|WSDM'22|[Contrastive learning for representation degeneration problem in sequential recommendation](https://arxiv.org/pdf/2110.05730.pdf)|
-|ICLRec|WWW'22|[Intent contrastive learning for sequential recommendation](https://arxiv.org/pdf/2202.02519.pdf)|
-|DCRec|WWW'23|[Debiased Contrastive Learning for Sequential Recommendation](https://arxiv.org/pdf/2303.11780.pdf)|
 
 ## Get Started
 
 This is implemented under the following development environment:
 
-+ python==3.10.4
-+ numpy==1.22.3
-+ torch==1.11.0
-+ scipy==1.7.3
-+ dgl==1.1.1
++ python==3.8.18
 
-You can easily train CL4SRec using our framework by running the following script:
+You can easily train this framework by running the following script:
 ```
-python main.py --model CL4SRec
+python main.py
 ```
-This script will run the CL4SRec model on the ml datasets. 
-
-The training configuration for CL4SRec is saved in [cl4srec.yml](https://github.com/sreeragvn/carsii/blob/main/config/modelconf/cl4srec.yml). You can modify the values in this file to achieve different training effects. Furthermore, if you're interested in trying out other implemented models, you can find a list of them under [Models](./docs/Models.md), and easily replace CL4SRec with your model of choice.
-
-For users who wish to gain a deeper understanding, we recommend reading our [User Guide](https://github.com/sreeragvn/carsii/blob/main/docs/User%20Guide.md). This guide provides comprehensive explanations of SSLRec's concepts and usage, including:
-+ SSLRec framework architecture design
-+ Implementing your own model in SSLRec
-+ Deploying your own datasets in SSLRec
-+ Implementing your own training process in SSLRec
-+ Automatic hyperparameter tuning in SSLRec
-
-and so on.
-
-# User Guide😉
-The user guide contains the following content, you can quickly jump to the corresponding section.
-
-+ Architecture Design of SSLRec
-+ Create My Own Model
-+ Create My Own DataHandler and Dataset
-+ Create My Own Trainer
-+ Create My Own Configuration
-+ Tune My Model
 
 ## Architecture Design of SSLRec
 SSLRec is a unified self-supervised recommendation algorithm framework, 
