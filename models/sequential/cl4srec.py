@@ -1,7 +1,7 @@
 import math
 import random
 from models.base_model import BaseModel
-from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder, LSTM_clickEncoder
+from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder, LSTM_clickEncoder, TransformerEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -45,11 +45,35 @@ class CL4SRec(BaseModel):
         if configs['model']['click_encoder'] == 'lstm':
             self.emb_layer = nn.Embedding(self.item_num + 2,  self.emb_size)
             self.click_encoder = LSTM_clickEncoder(self.item_num + 2, self.emb_size, self.lstm_hidden_size, self.lstm_num_layers)
-        else:
-            self.emb_layer = TransformerEmbedding(
-                self.item_num + 2, self.emb_size, self.max_len)
-            self.transformer_layers = nn.ModuleList([TransformerLayer(
-                self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])
+        # elif configs['model']['click_encoder'] == 'sasrec':
+        #     self.emb_layer = TransformerEmbedding(
+        #         self.item_num + 2, self.emb_size, self.max_len)
+        #     self.transformer_layers = nn.ModuleList([TransformerLayer(
+        #         self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])    
+        ## implementation of sasrec from another source - DUORec https://github.com/RuihongQiu/DuoRec/tree/master
+        elif configs['duorec']['status']:
+            self.n_layers_1 = configs['duorec']['n_layers']
+            self.n_heads_1 = configs['duorec']['n_heads']
+            self.hidden_size_1 = configs['duorec']['hidden_size']  # same as embedding_size
+            self.inner_size_1 = configs['duorec']['inner_size']  # the dimensionality in feed-forward layer
+            self.hidden_dropout_prob_1 = configs['duorec']['hidden_dropout_prob']
+            self.attn_dropout_prob_1 = configs['duorec']['attn_dropout_prob']
+            self.hidden_act_1 = configs['duorec']['hidden_act']
+            self.layer_norm_eps_1 = configs['duorec']['layer_norm_eps']
+            self.item_embedding_1 = nn.Embedding(self.item_num + 2, self.hidden_size_1, padding_idx=0)
+            self.position_embedding_1 = nn.Embedding(self.max_len, self.hidden_size_1)
+            self.trm_encoder_1 = TransformerEncoder(
+                n_layers=self.n_layers_1,
+                n_heads=self.n_heads_1,
+                hidden_size=self.hidden_size_1,
+                inner_size=self.inner_size_1,
+                hidden_dropout_prob=self.hidden_dropout_prob_1,
+                attn_dropout_prob=self.attn_dropout_prob_1,
+                hidden_act=self.hidden_act_1,
+                layer_norm_eps=self.layer_norm_eps_1
+            )
+            self.LayerNorm_1 = nn.LayerNorm(self.hidden_size_1, eps=self.layer_norm_eps_1)
+            self.dropout_1 = nn.Dropout(self.hidden_dropout_prob_1)
 
         # self.loss_func = nn.CrossEntropyLoss(weight =_class_w)
         self.loss_func = nn.CrossEntropyLoss()
@@ -115,6 +139,28 @@ class CL4SRec(BaseModel):
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
 
+    def get_attention_mask(self, item_seq):
+        """Generate left-to-right uni-directional attention mask for multi-head attention."""
+        attention_mask = (item_seq > 0).long()
+        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)  # torch.int64
+        # mask for left-to-right unidirectional
+        max_len = attention_mask.size(-1)
+        attn_shape = (1, max_len, max_len)
+        subsequent_mask = torch.triu(torch.ones(attn_shape), diagonal=1)  # torch.uint8
+        subsequent_mask = (subsequent_mask == 0).unsqueeze(1)
+        subsequent_mask = subsequent_mask.long().to(item_seq.device)
+
+        extended_attention_mask = extended_attention_mask * subsequent_mask
+        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+        extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+        return extended_attention_mask
+    
+    def gather_indexes(self, output, gather_index):
+        """Gathers the vectors at the specific positions over a minibatch"""
+        gather_index = gather_index.view(-1, 1, 1).expand(-1, -1, output.shape[-1])
+        output_tensor = output.gather(dim=1, index=gather_index)
+        return output_tensor.squeeze(1)
+    
     def _cl4srec_aug(self, batch_seqs, batch_time_deltas_seqs):
         def item_crop(seq, length, eta=0.6):
             num_left = math.floor(length * eta)
@@ -275,7 +321,7 @@ class CL4SRec(BaseModel):
         info_nce_loss = self.cl_loss_func(logits, labels)
         return info_nce_loss
 
-    def forward(self, batch_seqs,batch_context, batch_static_context):
+    def forward(self, batch_seqs,batch_context, batch_static_context, sequence_length):
         # method processes input sequences through an embedding layer and a stack of transformer layers, and the final output is the representation of the sequence, typically extracted from the last position. The mask is used to prevent the model from attending to padding elements during the transformer layers' computations.
 
         # batch_seqs > 0 creates a boolean tensor indicating non-padding elements.
@@ -286,6 +332,21 @@ class CL4SRec(BaseModel):
         if configs['model']['click_encoder'] == 'lstm':
             item_embedded = self.emb_layer(batch_seqs)
             sasrec_out = self.click_encoder(item_embedded) ## not sasrec. just lstm
+        elif  configs['duorec']['status']:
+            position_ids = torch.arange(batch_seqs.size(1), dtype=torch.long, device=batch_seqs.device)
+            position_ids = position_ids.unsqueeze(0).expand_as(batch_seqs)
+            position_embedding = self.position_embedding_1(position_ids)
+
+            item_emb = self.item_embedding_1(batch_seqs)
+            input_emb = item_emb + position_embedding
+            input_emb = self.LayerNorm_1(input_emb)
+            input_emb = self.dropout_1(input_emb)
+
+            extended_attention_mask = self.get_attention_mask(batch_seqs)
+
+            trm_output = self.trm_encoder_1(input_emb, extended_attention_mask, output_all_encoded_layers=True)
+            output = trm_output[-1]
+            sasrec_out = self.gather_indexes(output, sequence_length - 1)
         else:
             mask = (batch_seqs > 0).unsqueeze(1).repeat(
                 1, batch_seqs.size(1), 1).unsqueeze(1)
@@ -315,13 +376,15 @@ class CL4SRec(BaseModel):
         # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
 
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
-        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context = batch_data
+        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, sequence_length = batch_data
         # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
-        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
+        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, sequence_length)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
         # Todo why you are adding + 1 to  item_num when slicing
         if configs['model']['click_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
+        elif  configs['duorec']['status']:
+            test_item_emb = self.item_embedding_1.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
         # test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
@@ -355,13 +418,15 @@ class CL4SRec(BaseModel):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
 
         # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
-        _, batch_seqs, _, _, batch_dynamic_context, batch_static_context = batch_data
+        _, batch_seqs, _, _, batch_dynamic_context, batch_static_context, seq_len  = batch_data
         # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
-        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
+        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, seq_len)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
     
         if configs['model']['click_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
+        elif  configs['duorec']['status']:
+            test_item_emb = self.item_embedding_1.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
         # test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
