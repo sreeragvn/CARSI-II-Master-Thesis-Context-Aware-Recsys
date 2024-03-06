@@ -22,7 +22,8 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.lr_scheduler import LambdaLR
 
 if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
-    writer = SummaryWriter(log_dir='runs')
+    timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+    writer = SummaryWriter(log_dir=f'runs/{timestr}')
 else:
     writer = DisabledSummaryWriter()
 

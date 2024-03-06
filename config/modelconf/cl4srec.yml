@@ -30,6 +30,7 @@ data:
 model:
   name: cl4srec
   context_encoder: lstm
+  click_encoder: lstm
   dropout_rate: 0.1
   n_layers: 2
   embedding_size: 64

@@ -2,6 +2,7 @@
 data/
 datasets/sequential/aug
 datasets/sequential/non_aug
+dump/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

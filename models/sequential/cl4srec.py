@@ -1,7 +1,7 @@
 import math
 import random
 from models.base_model import BaseModel
-from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder
+from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder, LSTM_clickEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -44,21 +44,24 @@ class CL4SRec(BaseModel):
         out_emb = 64
         self.static_embedding = nn.Embedding(self.emb_size, out_emb)
 
-        # print(self.item_num)
-        self.emb_layer = TransformerEmbedding(
-            self.item_num + 2, self.emb_size, self.max_len)
-
-        self.transformer_layers = nn.ModuleList([TransformerLayer(
-            self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])
+        if configs['model']['click_encoder'] == 'lstm':
+            self.emb_layer = nn.Embedding(self.item_num + 2,  self.emb_size)
+            self.click_encoder = LSTM_clickEncoder(self.item_num + 2, self.emb_size, self.lstm_hidden_size, self.lstm_num_layers)
+        else:
+            self.emb_layer = TransformerEmbedding(
+                self.item_num + 2, self.emb_size, self.max_len)
+            self.transformer_layers = nn.ModuleList([TransformerLayer(
+                self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])
 
         # self.loss_func = nn.CrossEntropyLoss(weight =_class_w)
         self.loss_func = nn.CrossEntropyLoss()
 
         if configs['model']['context_encoder'] == 'lstm':
-            self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers, self.batch_size)
+            self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers)
                                                         
         self.fc_layers = nn.Sequential(
-            nn.Linear(192, 128),
+            # nn.Linear(192, 128),
+            nn.Linear(138, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
@@ -282,19 +285,25 @@ class CL4SRec(BaseModel):
         # .repeat(1, batch_seqs.size(1), 1) replicates the tensor along the sequence dimension, essentially creating a 3D mask with the same shape as batch_seqs.
         # .unsqueeze(1) adds another singleton dimension at the beginning of the tensor. This is often used for compatibility with transformer models that expect a mask with dimensions [batch_size, 1, sequence_length, sequence_length].
         # Todo - This has to be done for the context as well. Ensure the padding is done with a negative number. not zero. since zero speed itself is relevant.
-        mask = (batch_seqs > 0).unsqueeze(1).repeat(
-            1, batch_seqs.size(1), 1).unsqueeze(1)
-        # Embedding Layer:
-        # Passes the input sequence batch_seqs through an embedding layer (self.emb_layer). This layer converts integer indices into dense vectors.
-        # print(batch_seqs)
-        x = self.emb_layer(batch_seqs)
+        if configs['model']['click_encoder'] == 'lstm':
+            # print(batch_seqs.size())
+            item_embedded = self.emb_layer(batch_seqs)
+            sasrec_out = self.click_encoder(item_embedded) ## not sasrec. just lstm
+        else:
+            mask = (batch_seqs > 0).unsqueeze(1).repeat(
+                1, batch_seqs.size(1), 1).unsqueeze(1)
+            # Embedding Layer:
+            # Passes the input sequence batch_seqs through an embedding layer (self.emb_layer). This layer converts integer indices into dense vectors.
+            # print(batch_seqs)
+            x = self.emb_layer(batch_seqs)
 
-        # Transformer Layers:
-        # Iterates through a series of transformer layers (self.transformer_layers) and applies each one to the input tensor x. The transformer layers are expected to take the input tensor and the mask as arguments.
-        for transformer in self.transformer_layers:
-            x = transformer(x, mask)
-        # Extracts the output from the last position of the sequence (-1). This is a common practice in transformer-based models, where the output corresponding to the last position is often used as a representation of the entire sequence.
-        sasrec_out = x[:, -1, :]
+            # Transformer Layers:
+            # Iterates through a series of transformer layers (self.transformer_layers) and applies each one to the input tensor x. The transformer layers are expected to take the input tensor and the mask as arguments.
+            for transformer in self.transformer_layers:
+                x = transformer(x, mask)
+            # Extracts the output from the last position of the sequence (-1). This is a common practice in transformer-based models, where the output corresponding to the last position is often used as a representation of the entire sequence.
+            sasrec_out = x[:, -1, :]
+            print(sasrec_out.size())
         # print(batch_context.size())
         batch_context = batch_context.to(sasrec_out.dtype)
         # print(batch_context.size())
@@ -336,7 +345,11 @@ class CL4SRec(BaseModel):
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
         # Todo why you are adding + 1 to  item_num when slicing
-        test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
+        if configs['model']['click_encoder'] == 'lstm':
+            test_item_emb = self.emb_layer.weight[:self.item_num+1]
+        else:
+            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
+        # test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         # print( self.emb_layer.token_emb.weight.size())
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
         # print(batch_last_items.size(), seq_output.size(), test_item_emb.size(), logits.size())
@@ -375,7 +388,12 @@ class CL4SRec(BaseModel):
         # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
-        test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
+    
+        if configs['model']['click_encoder'] == 'lstm':
+            test_item_emb = self.emb_layer.weight[:self.item_num+1]
+        else:
+            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
+        # test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         # Return Predicted Scores:Returns the computed scores, which represent the predicted relevance or preference scores for each item in the vocabulary for the given batch of users and sequences.
         scores = torch.matmul(logits, test_item_emb.transpose(0, 1))
         return scores

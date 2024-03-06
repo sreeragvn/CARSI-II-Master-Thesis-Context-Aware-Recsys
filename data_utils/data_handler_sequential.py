@@ -15,7 +15,6 @@ class DataHandlerSequential:
         data_name = configs['data']['name']
 
         if configs['train']['model_test_run']:
-            print('fuck u')
             predir = f'./datasets/sequential/test/{data_name}'
         else:
             predir = f'./datasets/sequential/{data_name}'
