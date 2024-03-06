@@ -44,7 +44,7 @@ lstm:
   output_size: 256
 
 tune:
-  enable: true
+  enable: false
   hyperparameters: [dropout_rate, lmb, tau]
   dropout_rate: [0.1, 0.3, 0.5]
   lmb: [0.05, 0.1, 0.2]

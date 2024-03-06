@@ -117,7 +117,8 @@ class Trainer(object):
     @log_exceptions
     def train(self, model):
         # The method orchestrates the training process for a recommender system, including the training loop, evaluation, and potential early stopping based on validation metrics. This method is responsible for training a recommender system model. The training process includes multiple epochs, evaluation steps, and potentially early stopping based on a specified patience criteria.
-
+        total_parameters = model.count_parameters()
+        print(f"Total number of parameters in the model: {total_parameters}")
         # Initializes the optimizer for the model.
         self.create_optimizer(model)
         train_config = configs['train']
