@@ -77,14 +77,15 @@ class DataHandlerSequential:
     def _read_csv_static_context(self, csv_file):
         try:
             context = pd.read_csv(csv_file)
+            # print(context)
             context = context.astype(int)
-            self.static_context_embedding_size = context.drop(columns='session').max().tolist()
-            # print(self.static_context_embedding_size)
+            
+            self.static_context_embedding_size = context.drop(columns='session').max(axis=0).tolist()
             context_dict = {}
-            for session_id, group in context.groupby('session'):
-                context_dict[session_id] = {
-                    column: group[column].tolist()[0] for column in context.columns.difference(['session'])
-                }
+            for index, row in context.iterrows():
+                session_key = row['session']
+                row_dict = row.drop('session').to_dict()
+                context_dict[session_key] = row_dict
             return context_dict
         except Exception as e:
             print(f"Error reading static context CSV file: {e}")
@@ -101,6 +102,7 @@ class DataHandlerSequential:
         configs['data']['dynamic_context_feat_num'] = len(list(dynamic_context_data[list(dynamic_context_data.keys())[0]].keys()))
         configs['data']['static_context_feat_num'] = len(list(static_context_data[list(static_context_data.keys())[0]].keys()))
         configs['data']['static_context_max']  = self.static_context_embedding_size
+        print(configs['data']['static_context_max'])
 
     def _seq_aug(self, user_seqs):
         user_seqs_aug = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}

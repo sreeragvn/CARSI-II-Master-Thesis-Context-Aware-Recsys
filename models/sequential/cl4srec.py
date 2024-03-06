@@ -41,9 +41,9 @@ class CL4SRec(BaseModel):
         self.lstm_num_layers = configs['lstm']['num_layers']
 
         # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
-        print(configs['data']['static_context_feat_num'])
+        # print(configs['data']['static_context_max'])
         # self.static_embedding = nn.Embedding(configs['data']['static_context_feat_num'], self.emb_size)
-        self.static_embedding = nn.ModuleList([nn.Embedding(num_embeddings=static_context_max, embedding_dim=self.emb_size) for static_context_max, _ in zip(configs['data']['static_context_max'], range(configs['data']['static_context_feat_num']))])
+        self.static_embedding = nn.ModuleList([nn.Embedding(num_embeddings=static_context_max + 1, embedding_dim=self.emb_size) for static_context_max, _ in zip(configs['data']['static_context_max'], range(configs['data']['static_context_feat_num']))])
 
         if configs['model']['click_encoder'] == 'lstm':
             self.emb_layer = nn.Embedding(self.item_num + 2,  self.emb_size)
@@ -62,9 +62,9 @@ class CL4SRec(BaseModel):
                                                         
         self.fc_layers = nn.Sequential(
             # nn.Linear(192, 128),
-            nn.Linear(138, 128),
+            nn.Linear(512, 256),
             nn.ReLU(),
-            nn.Linear(128, 128),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
@@ -311,33 +311,14 @@ class CL4SRec(BaseModel):
         batch_context = batch_context.transpose(1, 2)
         # print(batch_context.size())
         context_output = self.context_encoder(batch_context)
-        # print(batch_static_context.size())
-        # static_context = self.static_embedding(batch_static_context)
-        # static_context = static_context.view(batch_static_context.size(0), -1)
-        static_context = [embedding_layer(batch_static_context[:, i]) for i, embedding_layer in enumerate(self.static_embedding)]
-        static_context = torch.cat(static_context, dim=2)
-
-        # print("sasrec_out Rank:", context_output.dim(), context_output.ndim)
-        # print("context_output Rank:",  sasrec_out.dim(), sasrec_out.ndim)
-
-        # print("sasrec_out size:", sasrec_out.size())
-        # print("dynamic context_output size:", context_output.size())
-        # print("static context_output size:", static_context.size())
+        static_context = []
+        for i, embedding_layer in enumerate(self.static_embedding):
+            static_context.append(embedding_layer(batch_static_context[:, i]))
+        static_context = torch.cat(static_context, dim=1)
         out = torch.cat((sasrec_out, context_output, static_context), dim=1)
-
-        # Concatenate along the feature dimension (axis=1)
-        # final_out = torch.cat((sasrec_out, context_output), dim=1)
-        # print("Final Output Shape:", final_out.shape)
-        # print("output size:", out.size())
-        # out = torch.flatten(out, start_dim=1)
-        # out = self.fc1(out)
-        # out = self.relu(out)
-        # out = self.fc2(out)
-        out = self.fc_layers(out)
-        output = self.relu(out)
-        # print("output size:", output.size())
-
-        return output  # [B H]
+        output = self.fc_layers(out)
+        # output = self.relu(output)
+        return output
 
     def cal_loss(self, batch_data):
         # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
