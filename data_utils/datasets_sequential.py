@@ -104,6 +104,7 @@ class SequentialDataset(data.Dataset):
                     torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
                     torch.LongTensor(padded_dynamic_context),
                     torch.LongTensor(static_context),
+                    len(seq_i),
                     self.negs[idx]
                 )
             else:
@@ -113,7 +114,8 @@ class SequentialDataset(data.Dataset):
                     self.last_items[idx],
                     torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
                     torch.LongTensor(padded_dynamic_context),
-                    torch.LongTensor(static_context)
+                    torch.LongTensor(static_context),
+                    len(seq_i)
                 )
             
             # print("uid:", result[0])
