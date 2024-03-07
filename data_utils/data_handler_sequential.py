@@ -18,6 +18,9 @@ class DataHandlerSequential:
             predir = f'./datasets/sequential/test/{data_name}'
         else:
             predir = f'./datasets/sequential/{data_name}'
+
+        configs['train']['parameter_class_weights_path']  = path.join(predir, 'parameters/param.pkl')
+        configs['train']['parameter_label_mapping_path']  = path.join(predir, 'parameters/label_mapping.pkl')
             
         self.trn_file = path.join(predir, 'seq/train.tsv')
         self.val_file = path.join(predir, 'seq/test.tsv')

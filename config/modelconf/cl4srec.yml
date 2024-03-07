@@ -5,7 +5,7 @@ optimizer:
   weight_decay: 0
 
 train:
-  model_test_run: false
+  model_test_run: true
   epoch: 3500
   batch_size: 16
   save_model: true
@@ -15,8 +15,6 @@ train:
   seed: 2023
   tensorboard: true
   ssl: false
-  parameter_class_weights_path: './datasets/sequential/aug/parameters/param.pkl'
-  parameter_label_mapping_path: './datasets/sequential/test/aug/parameters/label_mapping.pkl'
 
 test:
   metrics: [recall, precision]
