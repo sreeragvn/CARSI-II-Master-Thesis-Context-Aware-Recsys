@@ -15,7 +15,8 @@ train:
   seed: 2023
   tensorboard: true
   ssl: false
-  parameter_path: './datasets/sequential/aug/parameters/param.pkl'
+  parameter_class_weights_path: './datasets/sequential/aug/parameters/param.pkl'
+  parameter_label_mapping_path: './datasets/sequential/test/aug/parameters/label_mapping.pkl'
 
 test:
   metrics: [recall, precision]
