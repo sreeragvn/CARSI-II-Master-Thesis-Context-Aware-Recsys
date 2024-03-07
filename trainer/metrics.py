@@ -10,6 +10,12 @@ class Metric(object):
     def __init__(self):
         self.metrics = configs['test']['metrics']
         self.k = configs['test']['k']
+
+    def precision_at_k(output, target, k=3):
+        _, indices = torch.topk(output, k, dim=1)
+        correct = torch.sum(indices == target.view(-1, 1))
+        precision = correct.float() / (k * target.size(0))
+        return precision.item()
     
     def metric_call(self, true_labels, predicted_labels):
 
@@ -44,6 +50,122 @@ class Metric(object):
         # cm_df.to_csv(os.path.join(path_to_metrics, "confusion_matrix.csv"))
         return results
 
+    def metrics_calc(self, target, output):
+
+        ks=self.k 
+        metrics = {'precision': [],
+               'recall': [],
+               'f1score': [],
+               'accuracy': []}
+
+        for k in ks:
+            _, indices = torch.topk(output, k)
+            correct = torch.sum(indices == target.view(-1, 1))
+
+            # Precision at k
+            precision = correct.float() / (k * target.size(0))
+            metrics['precision'].append(round(precision.item(), 2))
+
+            # Recall at k
+            relevant_items = target.view(-1, 1).expand_as(indices)
+            true_positives = torch.sum(indices == relevant_items)
+            recall = true_positives.float() / target.size(0)
+            metrics['recall'].append(round(recall.item(), 2))
+
+            # F1 score at k
+            f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+            metrics['f1score'].append(round(f1_score.item(), 2))
+
+            # Accuracy at k
+            accuracy = correct.float() / target.size(0)
+            metrics['accuracy'].append(round(accuracy.item(), 2))
+
+        for metric in metrics:
+            metrics[metric] = np.array(metrics[metric])
+        # print(metrics)
+        return metrics
+    
+    def eval_new(self, model, test_dataloader):
+        true_labels = torch.empty(0).to(configs['device'])
+        pred_labels = torch.empty(0).to(configs['device'])
+        pred_scores = torch.empty(0).to(configs['device'])
+
+        for _, tem in enumerate(test_dataloader):
+            if not isinstance(tem, list):
+                tem = [tem]
+            batch_data = list(
+                map(lambda x: x.long().to(configs['device']), tem))
+            _, _, batch_last_items, _, _, _, _  = batch_data
+            # predict result
+            with torch.no_grad():
+                batch_pred = model.full_predict(batch_data)
+            predicted_labels = batch_pred.max(1)[1]
+            true_labels = torch.cat((true_labels, batch_last_items), dim=0).to(configs['device'])
+            pred_labels = torch.cat((pred_labels, predicted_labels), dim=0).to(configs['device'])
+            pred_scores = torch.cat((pred_scores, batch_pred), dim=0).to(configs['device'])
+        # print(pred_scores)
+        metrics_data = self.metrics_calc(true_labels, pred_scores)
+
+        # Accuracy based on top three
+        # _, top_indices = torch.topk(pred_scores, 3)
+        # correct_top = 0
+        # for i, true_label in enumerate(true_labels):
+        #     if true_label.item() in top_indices[i].cpu().numpy():
+        #         correct_top += 1
+        # accuracy_top_three.append(correct_top / len(pred_labels))
+        # metrics_data['AccTopThree'] = np.mean(accuracy_top_three)
+        return metrics_data
+
+    def eval(self, model, test_dataloader):
+        # for most GNN models, you can have all embeddings ready at one forward
+        if 'eval_at_one_forward' in configs['test'] and configs['test']['eval_at_one_forward']:
+            return self.eval_at_one_forward(model, test_dataloader)
+        
+        metrics_data = self.eval_new(model, test_dataloader)
+
+        result = {}
+        for metric in self.metrics:
+            result[metric] = np.zeros(len(self.k))
+
+        batch_ratings = []
+        ground_truths = []
+        test_user_count = 0
+        test_user_num = len(test_dataloader.dataset.test_users)
+        for _, tem in enumerate(test_dataloader):
+            if not isinstance(tem, list):
+                tem = [tem]
+            test_user = tem[0].numpy().tolist()
+            batch_data = list(
+                map(lambda x: x.long().to(configs['device']), tem))
+            # predict result
+            with torch.no_grad():
+                batch_pred = model.full_predict(batch_data)
+            test_user_count += batch_pred.shape[0]
+            # filter out history items
+            batch_pred = self._mask_history_pos(
+                batch_pred, test_user, test_dataloader)
+            _, batch_rate = torch.topk(batch_pred, k=max(self.k))
+            batch_ratings.append(batch_rate.cpu())
+            # ground truth
+            ground_truth = []
+            for user_idx in test_user:
+                ground_truth.append(
+                    list(test_dataloader.dataset.user_pos_lists[user_idx]))
+            ground_truths.append(ground_truth)
+        assert test_user_count == test_user_num
+
+        # calculate metrics
+        data_pair = zip(batch_ratings, ground_truths)
+        eval_results = []
+        for _data in data_pair:
+            eval_results.append(self.eval_batch(_data, self.k))
+        for batch_result in eval_results:
+            for metric in self.metrics:
+                result[metric] += batch_result[metric] / test_user_num
+        # print(metrics_data)
+        # print(result)
+        return metrics_data
+    
     def recall(self, test_data, r, k):
         right_pred = r[:, :k].sum(1)
         recall_n = np.array([len(test_data[i]) for i in range(len(test_data))])
@@ -113,87 +235,6 @@ class Metric(object):
         for metric in result:
             result[metric] = np.array(result[metric])
 
-        return result
-    
-    def eval_new(self, model, test_dataloader):
-
-        accuracy_top_three = []
-        true_labels = torch.empty(0).to(configs['device'])
-        pred_labels = torch.empty(0).to(configs['device'])
-        pred_scores = torch.empty(0).to(configs['device'])
-
-        for _, tem in enumerate(test_dataloader):
-            if not isinstance(tem, list):
-                tem = [tem]
-            batch_data = list(
-                map(lambda x: x.long().to(configs['device']), tem))
-            _, _, batch_last_items, _, _, _, _  = batch_data
-            # predict result
-            with torch.no_grad():
-                batch_pred = model.full_predict(batch_data)
-            predicted_labels = batch_pred.max(1)[1]
-            true_labels = torch.cat((true_labels, batch_last_items), dim=0)
-            pred_labels = torch.cat((pred_labels, predicted_labels), dim=0)
-            pred_scores = torch.cat((pred_scores, batch_pred), dim=0)
-        metrics_data = self.metric_call(true_labels.to(configs['device']), pred_labels.to(configs['device']))
-
-        # Accuracy based on top three
-        _, top_indices = torch.topk(pred_scores, 3)
-        correct_top = 0
-        for i, true_label in enumerate(true_labels):
-            if true_label.item() in top_indices[i].cpu().numpy():
-                correct_top += 1
-        accuracy_top_three.append(correct_top / len(pred_labels))
-        metrics_data['AccTopThree'] = np.mean(accuracy_top_three)
-        return metrics_data
-
-    def eval(self, model, test_dataloader):
-        # for most GNN models, you can have all embeddings ready at one forward
-        if 'eval_at_one_forward' in configs['test'] and configs['test']['eval_at_one_forward']:
-            return self.eval_at_one_forward(model, test_dataloader)
-        
-        metrics_data = self.eval_new(model, test_dataloader)
-
-        result = {}
-        for metric in self.metrics:
-            result[metric] = np.zeros(len(self.k))
-
-        batch_ratings = []
-        ground_truths = []
-        test_user_count = 0
-        test_user_num = len(test_dataloader.dataset.test_users)
-        for _, tem in enumerate(test_dataloader):
-            if not isinstance(tem, list):
-                tem = [tem]
-            test_user = tem[0].numpy().tolist()
-            batch_data = list(
-                map(lambda x: x.long().to(configs['device']), tem))
-            # predict result
-            with torch.no_grad():
-                batch_pred = model.full_predict(batch_data)
-            test_user_count += batch_pred.shape[0]
-            # filter out history items
-            batch_pred = self._mask_history_pos(
-                batch_pred, test_user, test_dataloader)
-            _, batch_rate = torch.topk(batch_pred, k=max(self.k))
-            batch_ratings.append(batch_rate.cpu())
-            # ground truth
-            ground_truth = []
-            for user_idx in test_user:
-                ground_truth.append(
-                    list(test_dataloader.dataset.user_pos_lists[user_idx]))
-            ground_truths.append(ground_truth)
-        assert test_user_count == test_user_num
-
-        # calculate metrics
-        data_pair = zip(batch_ratings, ground_truths)
-        eval_results = []
-        for _data in data_pair:
-            eval_results.append(self.eval_batch(_data, self.k))
-        for batch_result in eval_results:
-            for metric in self.metrics:
-                result[metric] += batch_result[metric] / test_user_num
-        print(metrics_data)
         return result
 
     def _mask_history_pos(self, batch_rate, test_user, test_dataloader):
