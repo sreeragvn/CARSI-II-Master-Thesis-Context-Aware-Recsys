@@ -40,7 +40,10 @@ class CL4SRec(BaseModel):
         self.lstm_num_layers = configs['lstm']['num_layers']
 
         # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
+        # Todo we should reduce the size of static embedding before we 
         self.static_embedding = nn.ModuleList([nn.Embedding(num_embeddings=static_context_max + 1, embedding_dim=self.emb_size) for static_context_max, _ in zip(configs['data']['static_context_max'], range(configs['data']['static_context_feat_num']))])
+        self.fc_input_size = len(self.static_embedding) * self.emb_size
+        self.fc_static_embedding = nn.Linear(self.fc_input_size, self.lstm_hidden_size)
 
         if configs['model']['click_encoder'] == 'lstm':
             self.emb_layer = nn.Embedding(self.item_num + 2,  self.emb_size)
@@ -80,12 +83,12 @@ class CL4SRec(BaseModel):
 
         if configs['model']['context_encoder'] == 'lstm':
             self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers)
-                                                        
+                                    
         self.fc_layers = nn.Sequential(
-            # nn.Linear(192, 128),
-            nn.Linear(512, 256),
+            nn.Linear(192, 128),
+            # nn.Linear(512, 256),
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(128, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
@@ -367,6 +370,7 @@ class CL4SRec(BaseModel):
         for i, embedding_layer in enumerate(self.static_embedding):
             static_context.append(embedding_layer(batch_static_context[:, i]))
         static_context = torch.cat(static_context, dim=1)
+        static_context = self.fc_static_embedding(static_context)
         out = torch.cat((sasrec_out, context_output, static_context), dim=1)
         output = self.fc_layers(out)
         # output = self.relu(output)
