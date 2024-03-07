@@ -11,15 +11,12 @@ def parse_configure():
     parser.add_argument('--cuda', type=str, default='0', help='Device number')
     args = parser.parse_args()
 
-    if args.device == 'cuda':
-            if not torch.cuda.is_available():
+    if args.device == 'cuda' and not torch.cuda.is_available():
                 print("CUDA is not available. Switching to CPU.")
                 args.device = 'cpu'
-            else:
-                os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
 
-    # if args.device == 'cuda':
-    #     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
+    if args.device == 'cuda':
+        os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
 
     if args.model == None:
         raise Exception("Please provide the model name through --model.")

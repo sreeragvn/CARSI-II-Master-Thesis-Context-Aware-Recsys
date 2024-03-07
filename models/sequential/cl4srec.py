@@ -94,16 +94,16 @@ class CL4SRec(BaseModel):
             self.context_encoder = LSTM_contextEncoder(self.dynamic_context_feat_num, 
                                                        self.lstm_hidden_size, 
                                                        self.lstm_num_layers)
+            input_size = 3 * self.emb_size
         elif model_config['context_encoder'] == 'transformer':
             self.context_encoder = TransformerEncoder_DynamicContext(self.dynamic_context_feat_num, # num_features_continuous
                                                                      data_config['dynamic_context_window_length'],
                                                                      hidden_dim=512, # d_model
                                                                      num_heads=8,)
+            input_size = 6400 + 2 * self.emb_size
 
         # Fully Connected Layers
         fc_layers = []
-        # input_size =3 * self.emb_size
-        input_size = 6400 + 2 * self.emb_size
         for _ in range(15):  # Adjust the number of layers as needed
             fc_layers.extend([nn.Linear(input_size, 128), nn.ReLU()])
             input_size = 128
