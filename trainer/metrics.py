@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from config.configurator import configs
-from torchmetrics import Precision, F1Score, Recall, Accuracy, ConfusionMatrix
+# from torchmetrics import Precision, F1Score, Recall, Accuracy, ConfusionMatrix
 import pandas as pd
 import os
 import pickle
@@ -17,38 +17,38 @@ class Metric(object):
         precision = correct.float() / (k * target.size(0))
         return precision.item()
     
-    def metric_call(self, true_labels, predicted_labels):
+    # def metric_call(self, true_labels, predicted_labels):
 
-        path_to_metrics = 'results_metrics'
-        with open(configs['train']['parameter_label_mapping_path'], 'rb') as f:
-                _label_mapping = pickle.load(f)
-        _num_classes = len(list(_label_mapping.keys()))
-        # metrics per class to dataframe
-        accuracy = Accuracy(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
-        f1 = F1Score(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
-        precision = Precision(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
-        recall = Recall(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
-        conf_matrix = ConfusionMatrix(task="multiclass", num_classes=_num_classes).to(configs['device'])
+    #     path_to_metrics = 'results_metrics'
+    #     with open(configs['train']['parameter_label_mapping_path'], 'rb') as f:
+    #             _label_mapping = pickle.load(f)
+    #     _num_classes = len(list(_label_mapping.keys()))
+    #     # metrics per class to dataframe
+    #     accuracy = Accuracy(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
+    #     f1 = F1Score(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
+    #     precision = Precision(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
+    #     recall = Recall(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
+    #     conf_matrix = ConfusionMatrix(task="multiclass", num_classes=_num_classes).to(configs['device'])
 
-        # acc_list = accuracy(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
-        # f1_list = f1(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
-        # precision_list = precision(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
-        # recall_list = recall(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
-        # cm = conf_matrix(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     # acc_list = accuracy(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     # f1_list = f1(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     # precision_list = precision(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     # recall_list = recall(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     # cm = conf_matrix(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
 
-        acc = np.mean(accuracy(true_labels, predicted_labels).cpu().numpy())
-        f1 = np.mean(f1(true_labels, predicted_labels).cpu().numpy())
-        precision = np.mean(precision(true_labels, predicted_labels).cpu().numpy())
-        recall = np.mean(recall(true_labels, predicted_labels).cpu().numpy())
-        # cm = conf_matrix(true_labels, predicted_labels).tolist()
+    #     acc = np.mean(accuracy(true_labels, predicted_labels).cpu().numpy())
+    #     f1 = np.mean(f1(true_labels, predicted_labels).cpu().numpy())
+    #     precision = np.mean(precision(true_labels, predicted_labels).cpu().numpy())
+    #     recall = np.mean(recall(true_labels, predicted_labels).cpu().numpy())
+    #     # cm = conf_matrix(true_labels, predicted_labels).tolist()
 
-        # metrics_data = [acc_list, f1_list, recall_list, precision_list]
-        results = {'Accuracy': acc, 'F1Score': f1, 'Recall': recall, "Precision": precision}
-        # metrics_df = pd.DataFrame(metrics_data, columns=_label_mapping.keys(), index=index_names)
-        # metrics_df.to_csv(os.path.join(path_to_metrics, "class_metrics.csv"))
-        # cm_df = pd.DataFrame(cm, columns=_label_mapping.keys(), index=_label_mapping.keys())
-        # cm_df.to_csv(os.path.join(path_to_metrics, "confusion_matrix.csv"))
-        return results
+    #     # metrics_data = [acc_list, f1_list, recall_list, precision_list]
+    #     results = {'Accuracy': acc, 'F1Score': f1, 'Recall': recall, "Precision": precision}
+    #     # metrics_df = pd.DataFrame(metrics_data, columns=_label_mapping.keys(), index=index_names)
+    #     # metrics_df.to_csv(os.path.join(path_to_metrics, "class_metrics.csv"))
+    #     # cm_df = pd.DataFrame(cm, columns=_label_mapping.keys(), index=_label_mapping.keys())
+    #     # cm_df.to_csv(os.path.join(path_to_metrics, "confusion_matrix.csv"))
+    #     return results
 
     def metrics_calc(self, target, output):
 

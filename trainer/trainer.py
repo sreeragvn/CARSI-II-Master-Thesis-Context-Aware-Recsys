@@ -14,7 +14,6 @@ import torch.optim as optim
 from trainer.metrics import Metric
 from config.configurator import configs
 from models.bulid_model import build_model
-from torch.utils.tensorboard import SummaryWriter
 from .utils import DisabledSummaryWriter, log_exceptions
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import torch.optim.lr_scheduler as lr_scheduler
@@ -22,6 +21,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.lr_scheduler import LambdaLR
 
 if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
+    from torch.utils.tensorboard import SummaryWriter
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     writer = SummaryWriter(log_dir=f'runs/{timestr}')
 else:
