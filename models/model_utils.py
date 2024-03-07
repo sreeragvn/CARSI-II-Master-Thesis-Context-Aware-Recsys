@@ -48,7 +48,6 @@ class MultiHeadAttention(nn.Module):
 
         return self.output_linear(x)
 
-
 class PositionwiseFeedForward(nn.Module):
     def __init__(self, hidden_size, d_ff, dropout=0.1):
         super(PositionwiseFeedForward, self).__init__()
@@ -59,7 +58,6 @@ class PositionwiseFeedForward(nn.Module):
 
     def forward(self, x):
         return self.w_2(self.dropout(self.activation(self.w_1(x))))
-
 
 class ResidualConnection(nn.Module):
     def __init__(self, hidden_size, dropout):
@@ -116,9 +114,9 @@ class LSTM_contextEncoder(nn.Module):
         _, (h_n, _) = self.lstm(x)
         return h_n[-1]
 
-class LSTM_clickEncoder(nn.Module):
+class LSTM_interactionEncoder(nn.Module):
     def __init__(self, num_items, embedding_dim, lstm_hidden_dim, num_layers):
-        super(LSTM_clickEncoder, self).__init__()        
+        super(LSTM_interactionEncoder, self).__init__()        
         
         self.lstm = nn.LSTM(embedding_dim, lstm_hidden_dim, num_layers, batch_first=True)
         self.output_layer = nn.Linear(lstm_hidden_dim, num_items)

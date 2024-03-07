@@ -6,6 +6,7 @@ optimizer:
 
 train:
   model_test_run: true
+  weighted_loss_fn: true
   epoch: 3500
   batch_size: 16
   save_model: true
@@ -31,7 +32,7 @@ data:
 model:
   name: cl4srec
   context_encoder: lstm
-  click_encoder: sasrec
+  interaction_encoder: sasrec
   dropout_rate: 0.1
   n_layers: 2
   embedding_size: 64
