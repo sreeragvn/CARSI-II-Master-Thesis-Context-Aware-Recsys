@@ -28,10 +28,11 @@ data:
   type: sequential
   name: aug
   seq_aug: false
+  dynamic_context_window_length: 100
 
 model:
   name: cl4srec
-  context_encoder: lstm
+  context_encoder: transformer
   interaction_encoder: sasrec
   dropout_rate: 0.1
   n_layers: 2

@@ -1,7 +1,8 @@
 import math
 import random
 from models.base_model import BaseModel
-from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder, LSTM_interactionEncoder, TransformerEncoder
+from models.model_utils import LSTM_interactionEncoder, TransformerEncoder, TransformerEncoder_DynamicContext
+from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -35,7 +36,7 @@ class CL4SRec(BaseModel):
         self.batch_size = train_config['batch_size']
         self.lmd = model_config['lmd']
         self.tau = model_config['tau']
-        self.lstm_input_size = data_config['dynamic_context_feat_num']
+        self.dynamic_context_feat_num = data_config['dynamic_context_feat_num']
         self.lstm_hidden_size = lstm_config['hidden_size']
         self.lstm_num_layers = lstm_config['num_layers']
         self.inner_size = duorec_config['inner_size']
@@ -90,12 +91,19 @@ class CL4SRec(BaseModel):
 
         # dynamic Context Encoder
         if model_config['context_encoder'] == 'lstm':
-            self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, 
+            self.context_encoder = LSTM_contextEncoder(self.dynamic_context_feat_num, 
                                                        self.lstm_hidden_size, 
                                                        self.lstm_num_layers)
+        elif model_config['context_encoder'] == 'transformer':
+            self.context_encoder = TransformerEncoder_DynamicContext(self.dynamic_context_feat_num, # num_features_continuous
+                                                                     data_config['dynamic_context_window_length'],
+                                                                     hidden_dim=512, # d_model
+                                                                     num_heads=8,)
+
         # Fully Connected Layers
         fc_layers = []
-        input_size =3 * self.emb_size
+        # input_size =3 * self.emb_size
+        input_size = 6400 + 2 * self.emb_size
         for _ in range(15):  # Adjust the number of layers as needed
             fc_layers.extend([nn.Linear(input_size, 128), nn.ReLU()])
             input_size = 128
