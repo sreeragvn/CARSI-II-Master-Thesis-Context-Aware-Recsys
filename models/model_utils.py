@@ -172,6 +172,7 @@ class TransformerEncoder_DynamicContext(nn.Module):
         
         # Embedding + Positional
         x = self.input_embedding(x_cont)
+        self.pos_enc = self.pos_enc.to(x.device)
         x += self.pos_enc
 
         # Multi-Head Attention

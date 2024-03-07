@@ -1,11 +1,11 @@
 optimizer:
   name: adam
-  lr: 1.0e-3
+  lr: 1.0e-4
   final_lr: 1.0e-6
   weight_decay: 0
 
 train:
-  model_test_run: true
+  model_test_run: false
   weighted_loss_fn: true
   epoch: 3500
   batch_size: 16
