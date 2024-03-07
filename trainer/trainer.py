@@ -40,7 +40,6 @@ def init_seed():
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
-
 class Trainer(object):
     def __init__(self, data_handler, logger):
         self.data_handler = data_handler
