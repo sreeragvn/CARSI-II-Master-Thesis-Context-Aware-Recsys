@@ -1,6 +1,7 @@
 import os
 import yaml
 import argparse
+import torch
 
 def parse_configure():
     parser = argparse.ArgumentParser(description='SSLRec')
@@ -11,7 +12,14 @@ def parse_configure():
     args = parser.parse_args()
 
     if args.device == 'cuda':
-        os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
+            if not torch.cuda.is_available():
+                print("CUDA is not available. Switching to CPU.")
+                args.device = 'cpu'
+            else:
+                os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
+
+    # if args.device == 'cuda':
+    #     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
 
     if args.model == None:
         raise Exception("Please provide the model name through --model.")

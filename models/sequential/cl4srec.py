@@ -94,7 +94,7 @@ class CL4SRec(BaseModel):
         # Loss Function
         with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
             _class_w = pickle.load(f)
-            
+
         if configs['train']['model_test_run']:
             self.loss_func = nn.CrossEntropyLoss()
         else:
@@ -218,13 +218,17 @@ class CL4SRec(BaseModel):
 
     def _init_weights(self, module):
         """ Initialize the weights """
-        if isinstance(module, (nn.Linear, nn.Embedding)):
+        if isinstance(module, (nn.Embedding)):
             module.weight.data.normal_(mean=0.0, std=0.02)
         elif isinstance(module, nn.LayerNorm):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
-        if isinstance(module, nn.Linear) and module.bias is not None:
-            module.bias.data.zero_()
+        # if isinstance(module, nn.Linear) and module.bias is not None:
+        #     module.bias.data.zero_()
+        if isinstance(module, (nn.Linear)):
+            nn.init.xavier_uniform_(module.weight.data)
+            if module.bias is not None:
+                module.bias.data.zero_()
 
     def get_attention_mask(self, item_seq):
         """Generate left-to-right uni-directional attention mask for multi-head attention."""
