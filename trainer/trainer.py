@@ -103,8 +103,6 @@ class Trainer(object):
                     loss_log_dict[loss_name] += _loss_val
 
         self.scheduler.step()
-        # validation_loss = ep_loss / steps  # You might replace this with your actual validation loss
-        # self.scheduler.step(validation_loss)
 
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
