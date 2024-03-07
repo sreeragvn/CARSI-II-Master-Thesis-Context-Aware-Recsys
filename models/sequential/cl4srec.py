@@ -92,7 +92,9 @@ class CL4SRec(BaseModel):
         self.fc_layers = nn.Sequential(*fc_layers)
 
         # Loss Function
-        self.loss_func = nn.CrossEntropyLoss()
+        with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
+            _class_w = pickle.load(f)
+        self.loss_func = nn.CrossEntropyLoss(_class_w)
 
         # self.item_num = configs['data']['item_num']
         # self.emb_size = configs['model']['embedding_size']
