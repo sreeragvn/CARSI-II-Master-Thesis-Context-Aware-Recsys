@@ -1,7 +1,7 @@
 import math
 import random
 from models.base_model import BaseModel
-from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder, LSTM_clickEncoder, TransformerEncoder
+from models.model_utils import TransformerLayer, TransformerEmbedding, LSTM_contextEncoder, LSTM_interactionEncoder, TransformerEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -13,12 +13,10 @@ class CL4SRec(BaseModel):
     r"""
     SASRec is the first sequential recommender based on self-attentive mechanism.
     """
-
     def __init__(self, data_handler):
         super(CL4SRec, self).__init__(data_handler)
 
-        self.configs = configs
-
+        # # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
         # Extract configuration parameters
         data_config = configs['data']
         model_config = configs['model']
@@ -46,42 +44,55 @@ class CL4SRec(BaseModel):
         self.hidden_act = duorec_config['hidden_act']
         self.layer_norm_eps = duorec_config['layer_norm_eps']
         self.initializer_range = duorec_config['initializer_range']
+        self.static_context_max_token = data_config['static_context_max']
+        self.static_context_num = data_config['static_context_feat_num']
 
         # Static Embedding
-        self.static_embedding = nn.ModuleList([nn.Embedding(num_embeddings=max_val + 1, embedding_dim=self.emb_size) for max_val, _ in zip(data_config['static_context_max'], range(data_config['static_context_feat_num']))])
+        self.static_embedding = nn.ModuleList([nn.Embedding(num_embeddings=max_val + 1, 
+                                                            embedding_dim=self.emb_size) 
+                                                            for max_val, _ in zip(self.static_context_max_token, 
+                                                                                  range(self.static_context_num))])
         self.fc_input_size = len(self.static_embedding) * self.emb_size
-        self.fc_static_embedding = nn.Linear(self.fc_input_size, self.lstm_hidden_size)
+        self.fc_static_dim_red = nn.Linear(self.fc_input_size, self.lstm_hidden_size)
 
-        # Click Encoder( # click_encoder options are lstm, sasrec, durorec)
-        if model_config['click_encoder'] == 'lstm':
+        # interaction Encoder( # interaction_encoder options are lstm, sasrec, durorec)
+        if model_config['interaction_encoder'] == 'lstm':
             self.emb_layer = nn.Embedding(self.item_num + 2, self.emb_size)
-            self.click_encoder = LSTM_clickEncoder(self.item_num + 2, self.emb_size, self.lstm_hidden_size, self.lstm_num_layers)
-        elif model_config['click_encoder'] == 'sasrec':
-            self.emb_layer = TransformerEmbedding(self.item_num + 2, self.emb_size, self.max_len)
-            self.transformer_layers = nn.ModuleList([TransformerLayer(self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])
-        elif model_config['click_encoder'] == 'duorec':
+            self.interaction_encoder = LSTM_interactionEncoder(self.item_num + 2, 
+                                                         self.emb_size, 
+                                                         self.lstm_hidden_size, 
+                                                         self.lstm_num_layers)
+        elif model_config['interaction_encoder'] == 'sasrec':
+            self.emb_layer = TransformerEmbedding(self.item_num + 2, 
+                                                  self.emb_size, self.max_len)
+            self.transformer_layers = nn.ModuleList([TransformerLayer(self.emb_size, 
+                                                                      self.n_heads, 
+                                                                      self.inner_size, 
+                                                                      self.dropout_rate) 
+                                                                      for _ in range(self.n_layers)])
+        # implementation of sasrec from another source - DUORec https://github.com/RuihongQiu/DuoRec/tree/master
+        elif model_config['interaction_encoder'] == 'duorec':
             self.emb_layer = nn.Embedding(self.item_num + 2, self.emb_size, padding_idx=0)
             self.position_embedding = nn.Embedding(self.max_len, self.emb_size)
-            self.transformer_layers = TransformerEncoder(
-                n_layers=self.n_layers,
-                n_heads=self.n_heads,
-                hidden_size=self.emb_size,
-                inner_size=self.inner_size,
-                hidden_dropout_prob=self.hidden_dropout_prob,
-                attn_dropout_prob=self.attn_dropout_prob,
-                hidden_act=self.hidden_act,
-                layer_norm_eps=self.layer_norm_eps,
-                eps=self.initializer_range
-            )
+            self.transformer_layers = TransformerEncoder(n_layers=self.n_layers,
+                                                         n_heads=self.n_heads,
+                                                         hidden_size=self.emb_size,
+                                                         inner_size=self.inner_size,
+                                                         hidden_dropout_prob=self.hidden_dropout_prob,
+                                                         attn_dropout_prob=self.attn_dropout_prob,
+                                                         hidden_act=self.hidden_act,
+                                                         layer_norm_eps=self.layer_norm_eps,
+                                                         eps=self.initializer_range)
             self.LayerNorm = nn.LayerNorm(self.emb_size, eps=self.initializer_range)
             self.dropout = nn.Dropout(self.attn_dropout_prob)
         else:
-            print('mention the click encoder - sasrec, lstm or duorec')
+            print('mention the interaction encoder - sasrec, lstm or duorec')
 
         # dynamic Context Encoder
         if model_config['context_encoder'] == 'lstm':
-            self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers)
-
+            self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, 
+                                                       self.lstm_hidden_size, 
+                                                       self.lstm_num_layers)
         # Fully Connected Layers
         fc_layers = []
         input_size =3 * self.emb_size
@@ -95,114 +106,10 @@ class CL4SRec(BaseModel):
         with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
             _class_w = pickle.load(f)
 
-        if configs['train']['model_test_run']:
+        if configs['train']['model_test_run'] or configs['train']['weighted_loss_fn']:
             self.loss_func = nn.CrossEntropyLoss()
         else:
             self.loss_func = nn.CrossEntropyLoss(_class_w)
-
-        # self.item_num = configs['data']['item_num']
-        # self.emb_size = configs['model']['embedding_size']
-        # self.max_len = configs['model']['max_seq_len']
-        # self.mask_token = self.item_num + 1
-        # # load parameters info
-        # self.n_layers = configs['model']['n_layers']
-        # self.n_heads = configs['model']['n_heads']
-        # self.emb_size = configs['model']['embedding_size']
-        # # the dimensionality in feed-forward layer
-        # self.inner_size = 4 * self.emb_size
-        # self.dropout_rate = configs['model']['dropout_rate']
-
-        # self.batch_size = configs['train']['batch_size']
-        # self.lmd = configs['model']['lmd']
-        # self.tau = configs['model']['tau']
-
-        # with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
-        #     _class_w = pickle.load(f)
-
-        # self.lstm_input_size = configs['data']['dynamic_context_feat_num']
-        # self.lstm_hidden_size = configs['lstm']['hidden_size']
-        # self.lstm_num_layers = configs['lstm']['num_layers']
-
-        # # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
-        # # Todo we should reduce the size of static embedding before we 
-        # self.static_embedding = nn.ModuleList([nn.Embedding(num_embeddings=static_context_max + 1, embedding_dim=self.emb_size) for static_context_max, _ in zip(configs['data']['static_context_max'], range(configs['data']['static_context_feat_num']))])
-        # self.fc_input_size = len(self.static_embedding) * self.emb_size
-        # self.fc_static_embedding = nn.Linear(self.fc_input_size, self.lstm_hidden_size)
-
-        # if configs['model']['click_encoder'] == 'lstm':
-        #     self.emb_layer = nn.Embedding(self.item_num + 2,  self.emb_size)
-        #     self.click_encoder = LSTM_clickEncoder(self.item_num + 2, self.emb_size, self.lstm_hidden_size, self.lstm_num_layers)
-        # elif configs['model']['click_encoder'] == 'sasrec':
-        #     self.emb_layer = TransformerEmbedding(
-        #         self.item_num + 2, self.emb_size, self.max_len)
-        #     self.transformer_layers = nn.ModuleList([TransformerLayer(
-        #         self.emb_size, self.n_heads, self.inner_size, self.dropout_rate) for _ in range(self.n_layers)])    
-        # ## implementation of sasrec from another source - DUORec https://github.com/RuihongQiu/DuoRec/tree/master
-        # elif configs['duorec']['status']:
-        #     self.n_layers_1 = configs['duorec']['n_layers']
-        #     self.n_heads_1 = configs['duorec']['n_heads']
-        #     self.hidden_size_1 = configs['duorec']['hidden_size']  # same as embedding_size
-        #     self.inner_size_1 = configs['duorec']['inner_size']  # the dimensionality in feed-forward layer
-        #     self.hidden_dropout_prob_1 = configs['duorec']['hidden_dropout_prob']
-        #     self.attn_dropout_prob_1 = configs['duorec']['attn_dropout_prob']
-        #     self.hidden_act_1 = configs['duorec']['hidden_act']
-        #     self.layer_norm_eps_1 = configs['duorec']['layer_norm_eps']
-        #     self.item_embedding_1 = nn.Embedding(self.item_num + 2, self.hidden_size_1, padding_idx=0)
-        #     self.position_embedding_1 = nn.Embedding(self.max_len, self.hidden_size_1)
-        #     self.trm_encoder_1 = TransformerEncoder(
-        #         n_layers=self.n_layers_1,
-        #         n_heads=self.n_heads_1,
-        #         hidden_size=self.hidden_size_1,
-        #         inner_size=self.inner_size_1,
-        #         hidden_dropout_prob=self.hidden_dropout_prob_1,
-        #         attn_dropout_prob=self.attn_dropout_prob_1,
-        #         hidden_act=self.hidden_act_1,
-        #         layer_norm_eps=self.layer_norm_eps_1
-        #     )
-        #     self.LayerNorm_1 = nn.LayerNorm(self.hidden_size_1, eps=self.layer_norm_eps_1)
-        #     self.dropout_1 = nn.Dropout(self.hidden_dropout_prob_1)
-
-        # # self.loss_func = nn.CrossEntropyLoss(weight =_class_w)
-        # self.loss_func = nn.CrossEntropyLoss()
-
-        # if configs['model']['context_encoder'] == 'lstm':
-        #     self.context_encoder = LSTM_contextEncoder(self.lstm_input_size, self.lstm_hidden_size, self.lstm_num_layers)
-                                    
-        # self.fc_layers = nn.Sequential(
-        #     nn.Linear(192, 128),
-        #     # nn.Linear(512, 256),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, self.emb_size)
-        # )
-        # self.relu = nn.ReLU()
 
         self.mask_default = self.mask_correlated_samples(
             batch_size=self.batch_size)
@@ -215,20 +122,17 @@ class CL4SRec(BaseModel):
         # Count the total number of parameters in the model
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
-
     def _init_weights(self, module):
         """ Initialize the weights """
         if isinstance(module, (nn.Embedding)):
             module.weight.data.normal_(mean=0.0, std=0.02)
-        elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
-        # if isinstance(module, nn.Linear) and module.bias is not None:
-        #     module.bias.data.zero_()
         if isinstance(module, (nn.Linear)):
             nn.init.xavier_uniform_(module.weight.data)
             if module.bias is not None:
                 module.bias.data.zero_()
+        elif isinstance(module, nn.LayerNorm):
+            module.bias.data.zero_()
+            module.weight.data.fill_(1.0)
 
     def get_attention_mask(self, item_seq):
         """Generate left-to-right uni-directional attention mask for multi-head attention."""
@@ -240,7 +144,6 @@ class CL4SRec(BaseModel):
         subsequent_mask = torch.triu(torch.ones(attn_shape), diagonal=1)  # torch.uint8
         subsequent_mask = (subsequent_mask == 0).unsqueeze(1)
         subsequent_mask = subsequent_mask.long().to(item_seq.device)
-
         extended_attention_mask = extended_attention_mask * subsequent_mask
         extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
@@ -360,11 +263,6 @@ class CL4SRec(BaseModel):
                 aug_seq2.append(seq.tolist())
                 aug_len2.append(length)
 
-        # aug_seq1 = torch.tensor(
-        #     aug_seq1, dtype=torch.long, device=batch_seqs.device)
-        # aug_seq2 = torch.tensor(
-        #     aug_seq2, dtype=torch.long, device=batch_seqs.device)
-        # return aug_seq1, aug_seq2
         aug_seq1 = torch.tensor(np.array(aug_seq1), dtype=torch.long, device=batch_seqs.device)
         aug_seq2 = torch.tensor(np.array(aug_seq2), dtype=torch.long, device=batch_seqs.device)
 
@@ -420,11 +318,11 @@ class CL4SRec(BaseModel):
         # .repeat(1, batch_seqs.size(1), 1) replicates the tensor along the sequence dimension, essentially creating a 3D mask with the same shape as batch_seqs.
         # .unsqueeze(1) adds another singleton dimension at the beginning of the tensor. This is often used for compatibility with transformer models that expect a mask with dimensions [batch_size, 1, sequence_length, sequence_length].
         # Todo - This has to be done for the context as well. Ensure the padding is done with a negative number. not zero. since zero speed itself is relevant.
-        # click_encoder options are lstm, sasrec, durorec
-        if configs['model']['click_encoder'] == 'lstm':
+        # interaction_encoder options are lstm, sasrec, durorec
+        if configs['model']['interaction_encoder'] == 'lstm':
             item_embedded = self.emb_layer(batch_seqs)
-            sasrec_out = self.click_encoder(item_embedded) ## not sasrec. just lstm
-        elif  configs['model']['click_encoder'] == 'duorec':
+            sasrec_out = self.interaction_encoder(item_embedded) ## not sasrec. just lstm
+        elif  configs['model']['interaction_encoder'] == 'duorec':
             position_ids = torch.arange(batch_seqs.size(1), dtype=torch.long, device=batch_seqs.device)
             position_ids = position_ids.unsqueeze(0).expand_as(batch_seqs)
             position_embedding = self.position_embedding(position_ids)
@@ -439,7 +337,7 @@ class CL4SRec(BaseModel):
             trm_output = self.transformer_layers(input_emb, extended_attention_mask, output_all_encoded_layers=True)
             output = trm_output[-1]
             sasrec_out = self.gather_indexes(output, sequence_length - 1)
-        elif configs['model']['click_encoder'] == 'sasrec':
+        elif configs['model']['interaction_encoder'] == 'sasrec':
             mask = (batch_seqs > 0).unsqueeze(1).repeat(
                 1, batch_seqs.size(1), 1).unsqueeze(1)
             # Embedding Layer:
@@ -459,7 +357,7 @@ class CL4SRec(BaseModel):
         for i, embedding_layer in enumerate(self.static_embedding):
             static_context.append(embedding_layer(batch_static_context[:, i]))
         static_context = torch.cat(static_context, dim=1)
-        static_context = self.fc_static_embedding(static_context)
+        static_context = self.fc_static_dim_red(static_context)
         out = torch.cat((sasrec_out, context_output, static_context), dim=1)
         output = self.fc_layers(out)
         return output
@@ -473,9 +371,9 @@ class CL4SRec(BaseModel):
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, sequence_length)
         # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
         # Todo why you are adding + 1 to  item_num when slicing
-        if configs['model']['click_encoder'] == 'lstm':
+        if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        elif  configs['model']['click_encoder'] == 'duorec':
+        elif  configs['model']['interaction_encoder'] == 'duorec':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
@@ -510,9 +408,9 @@ class CL4SRec(BaseModel):
         _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, seq_len  = batch_data
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, seq_len)
         
-        if configs['model']['click_encoder'] == 'lstm':
+        if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer(batch_last_items)
-        elif configs['model']['click_encoder'] == 'duorec':
+        elif configs['model']['interaction_encoder'] == 'duorec':
             test_item_emb = self.item_embedding_1(batch_last_items)
         else:
             test_item_emb = self.emb_layer.token_emb(batch_last_items)
@@ -530,9 +428,9 @@ class CL4SRec(BaseModel):
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, seq_len)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
     
-        if configs['model']['click_encoder'] == 'lstm':
+        if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        elif  configs['model']['click_encoder'] == 'duorec':
+        elif  configs['model']['interaction_encoder'] == 'duorec':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
