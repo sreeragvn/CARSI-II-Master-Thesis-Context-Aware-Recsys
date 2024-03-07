@@ -32,7 +32,7 @@ class CL4SRec(BaseModel):
         self.lmd = configs['model']['lmd']
         self.tau = configs['model']['tau']
 
-        with open(configs['train']['parameter_path'], 'rb') as f:
+        with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
             _class_w = pickle.load(f)
 
         self.lstm_input_size = configs['data']['dynamic_context_feat_num']
@@ -413,6 +413,21 @@ class CL4SRec(BaseModel):
             }
 
         return loss + cl_loss, loss_dict
+    
+    def predict(self, batch_data):
+        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, seq_len  = batch_data
+        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, seq_len)
+        
+        if configs['model']['click_encoder'] == 'lstm':
+            test_item_emb = self.emb_layer(batch_last_items)
+        elif  configs['duorec']['status']:
+            test_item_emb = self.item_embedding_1(batch_last_items)
+        else:
+            test_item_emb = self.emb_layer.token_emb(batch_last_items)
+        test_item_emb = self.item_embedding(batch_last_items)
+
+        scores = torch.mul(logits, test_item_emb).sum(dim=1)  
+        return scores
 
     def full_predict(self, batch_data):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
