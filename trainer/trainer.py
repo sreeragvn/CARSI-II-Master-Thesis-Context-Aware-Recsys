@@ -81,18 +81,23 @@ class Trainer(object):
         # Sets the model in training mode.
         model.train()
 
-        for _, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
+        for i, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
         # for _, tem in enumerate(train_dataloader):
             # Iterates over batches in the training data using the train_dataloader.
-            self.optimizer.zero_grad()
+            # self.optimizer.zero_grad()
+            if not configs['train']['gradient_accumulation']: 
+                self.optimizer.zero_grad()
             batch_data = list(map(lambda x: x.long().to(configs['device']), tem))
             loss, loss_dict = model.cal_loss(batch_data)
             ep_loss += loss.item()
             loss.backward()
-            self.optimizer.step()
-            # if epoch_idx/epochs > 0.3:
+            # self.optimizer.step()
             # Zeroes the gradients, moves batch data to the device specified in the configuration, computes loss, backpropagates, and performs an optimizer step.
-
+            if configs['train']['gradient_accumulation'] and (i + 1) % configs['train']['accumulation_steps'] == 0:
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+            elif not configs['train']['gradient_accumulation']:
+                self.optimizer.step()
             # record loss
             # Records loss values in loss_log_dict. The loss values are normalized by the length of the training dataloader.
             for loss_name in loss_dict:
@@ -102,7 +107,11 @@ class Trainer(object):
                 else:
                     loss_log_dict[loss_name] += _loss_val
 
-        self.scheduler.step()
+        if configs['train']['gradient_accumulation'] and (i + 1) <= configs['train']['accumulation_steps']:
+            self.scheduler.step()
+        elif not configs['train']['gradient_accumulation']:
+            self.scheduler.step()
+
 
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
