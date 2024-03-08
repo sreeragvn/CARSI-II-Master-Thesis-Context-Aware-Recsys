@@ -57,9 +57,9 @@ class Trainer(object):
         if optim_config['name'] == 'adam':
             self.optimizer = optim.Adam(model.parameters(
             ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
-            # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.2, min_lr=0.00000001, verbose=True)
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.2, min_lr=0.00000001, verbose=True)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
-            self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
+            # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
 
 
     def train_epoch(self, model, epoch_idx):
@@ -106,12 +106,23 @@ class Trainer(object):
                 else:
                     loss_log_dict[loss_name] += _loss_val
 
-        if configs['train']['gradient_accumulation'] and (i + 1) <= configs['train']['accumulation_steps']:
-            self.scheduler.step()
-        elif not configs['train']['gradient_accumulation']:
-            self.scheduler.step()
+        #if configs['train']['gradient_accumulation'] and not (i + 1) <= configs['train']['accumulation_steps']:
+        #    self.scheduler.step()
+        #elif not configs['train']['gradient_accumulation']:
+        #    self.scheduler.step()
+        test_loader = self.data_handler.test_dataloader
+        total_val_loss = 0
+        with torch.no_grad():
+            for i, val_tem in enumerate(test_loader):
+                val_batch_data = list(map(lambda x: x.long().to(configs['device']), val_tem))
+                val_loss, val_loss_dict = model.cal_loss(val_batch_data)
+                avg_val_loss = val_loss.item() / len(test_loader)
+                total_val_loss += avg_val_loss
 
-
+        total_val_loss = round(total_val_loss, 2)
+        print('val_loss: ', total_val_loss)
+        # Update the scheduler based on the validation loss
+        self.scheduler.step(total_val_loss)
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
 
