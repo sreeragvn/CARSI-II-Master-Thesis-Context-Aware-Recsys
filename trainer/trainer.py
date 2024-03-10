@@ -93,9 +93,13 @@ class Trainer(object):
             # self.optimizer.step()
             # Zeroes the gradients, moves batch data to the device specified in the configuration, computes loss, backpropagates, and performs an optimizer step.
             if configs['train']['gradient_accumulation'] and (i + 1) % configs['train']['accumulation_steps'] == 0:
+                # Perform gradient clipping
+                # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 self.optimizer.step()
                 self.optimizer.zero_grad()
             elif not configs['train']['gradient_accumulation']:
+                # Perform gradient clipping
+                # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 self.optimizer.step()
             # record loss
             # Records loss values in loss_log_dict. The loss values are normalized by the length of the training dataloader.
@@ -115,7 +119,7 @@ class Trainer(object):
         with torch.no_grad():
             for i, val_tem in enumerate(test_loader):
                 val_batch_data = list(map(lambda x: x.long().to(configs['device']), val_tem))
-                val_loss, val_loss_dict = model.cal_loss(val_batch_data)
+                val_loss, _ = model.cal_loss(val_batch_data)
                 avg_val_loss = val_loss.item() / len(test_loader)
                 total_val_loss += avg_val_loss
 
@@ -123,6 +127,7 @@ class Trainer(object):
         total_val_loss = round(total_val_loss, 2)
         print('val_loss: ', total_val_loss)
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
+        writer.add_scalar('Loss/val', total_val_loss / steps, epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
 
         # log loss
