@@ -63,14 +63,14 @@ class DataHandlerSequential:
     def _read_csv_dynamic_context(self, csv_file):
         try:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
-            max_length = context['session_id'].value_counts().max()
+            max_length = context['window_id'].value_counts().max()
             self.max_dynamic_context_length = max(self.max_dynamic_context_length, max_length)
-            context = context.drop(['datetime'], axis=1)
+            context = context.drop(['datetime', 'session'], axis=1)
 
             context_dict = {}
-            for session_id, group in context.groupby('session_id'):
-                context_dict[session_id] = {
-                    column: group[column].tolist() for column in context.columns.difference(['session_id'])
+            for window_id, group in context.groupby('window_id'):
+                context_dict[window_id] = {
+                    column: group[column].tolist() for column in context.columns.difference(['window_id'])
                 }
             return context_dict
         except Exception as e:
@@ -79,14 +79,14 @@ class DataHandlerSequential:
         
     def _read_csv_static_context(self, csv_file):
         try:
-            context = pd.read_csv(csv_file)
+            context = pd.read_csv(csv_file, parse_dates=['datetime'])
+            context = context.drop(['datetime'], axis=1)
             context = context.astype(int)
-            
-            self.static_context_embedding_size = context.drop(columns='session').max(axis=0).tolist()
+            self.static_context_embedding_size = context.drop(columns=['session', 'window_id']).max(axis=0).tolist()
             context_dict = {}
             for index, row in context.iterrows():
-                session_key = row['session']
-                row_dict = row.drop('session').to_dict()
+                session_key = row['window_id']
+                row_dict = row.drop('window_id').to_dict()
                 context_dict[session_key] = row_dict
             return context_dict
         except Exception as e:

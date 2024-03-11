@@ -16,7 +16,7 @@ train:
   seed: 2023
   tensorboard: true
   ssl: false
-  gradient_accumulation: false
+  gradient_accumulation: true
   accumulation_steps: 4
 
 test:
