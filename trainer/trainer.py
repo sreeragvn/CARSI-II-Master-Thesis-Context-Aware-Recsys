@@ -57,9 +57,9 @@ class Trainer(object):
         if optim_config['name'] == 'adam':
             self.optimizer = optim.Adam(model.parameters(
             ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
-            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.5, min_lr=1e-8, verbose=True)
+            # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.9, min_lr=1e-6, verbose=True)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
-            # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
+            self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
 
 
     def train_epoch(self, model, epoch_idx):
@@ -123,7 +123,8 @@ class Trainer(object):
                 avg_val_loss = val_loss.item() / len(test_loader)
                 total_val_loss += avg_val_loss
 
-        self.scheduler.step(total_val_loss)
+        # self.scheduler.step(total_val_loss)
+        self.scheduler.step()
         total_val_loss = round(total_val_loss, 2)
         print('val_loss: ', total_val_loss)
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
