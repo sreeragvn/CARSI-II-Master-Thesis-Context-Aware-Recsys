@@ -29,7 +29,6 @@ class CL4SRec(BaseModel):
         self.emb_size = model_config['embedding_size']
         self.max_len = model_config['max_seq_len']
         self.mask_token = self.item_num + 1
-        print(self.item_num)
         self.n_layers = model_config['n_layers']
         self.n_heads = model_config['n_heads']
         self.inner_size = 4 * self.emb_size
