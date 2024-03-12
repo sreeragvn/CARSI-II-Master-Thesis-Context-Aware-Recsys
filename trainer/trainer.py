@@ -20,10 +20,11 @@ import torch.optim.lr_scheduler as lr_scheduler
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.lr_scheduler import LambdaLR
 
+configs['test']['save_path'] = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+
 if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
+    timestr = configs['test']['save_path']
     from torch.utils.tensorboard import SummaryWriter
-    timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
-    configs['test']['save_path'] = timestr
     writer = SummaryWriter(log_dir=f'runs/{timestr}')
 else:
     writer = DisabledSummaryWriter()
