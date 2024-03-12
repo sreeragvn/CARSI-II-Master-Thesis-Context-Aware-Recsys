@@ -5,7 +5,7 @@ optimizer:
   weight_decay: 0
 
 train:
-  model_test_run: false
+  model_test_run: true
   weighted_loss_fn: true
   epoch: 1
   batch_size: 16
