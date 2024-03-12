@@ -45,7 +45,7 @@ class DataHandlerSequential:
             # skip header
             line = f.readline()
             while line:
-                uid, seq, last_item, time_delta_seq = line.strip().split('\t')
+                uid, seq, last_item, time_delta_seq, _ = line.strip().split('\t')
                 seq = seq.split(' ')
                 seq = [int(item) for item in seq]
                 time_delta_seq = time_delta_seq.split(' ')
@@ -150,6 +150,6 @@ class DataHandlerSequential:
         trn_data = SequentialDataset(user_seqs_train, dynamic_context_train, static_context_train)
         tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, mode='test')
         self.test_dataloader = data.DataLoader(
-            tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
+            tst_data, batch_size=configs['test']['batch_size'], shuffle=True, num_workers=0)
         self.train_dataloader = data.DataLoader(
             trn_data, batch_size=configs['train']['batch_size'], shuffle=True, num_workers=0)

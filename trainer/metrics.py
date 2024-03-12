@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from config.configurator import configs
-# from torchmetrics import Precision, F1Score, Recall, Accuracy, ConfusionMatrix
+from torchmetrics.classification import MulticlassConfusionMatrix
 import pandas as pd
 import os
 import pickle
@@ -10,6 +10,10 @@ class Metric(object):
     def __init__(self):
         self.metrics = configs['test']['metrics']
         self.k = configs['test']['k']
+        with open(configs['train']['parameter_label_mapping_path'], 'rb') as f:
+            _label_mapping = pickle.load(f)
+        self._num_classes = len(list(_label_mapping.keys()))
+        self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes+1)
 
     def precision_at_k(output, target, k=3):
         _, indices = torch.topk(output, k, dim=1)
@@ -85,7 +89,7 @@ class Metric(object):
         # print(metrics)
         return metrics
     
-    def eval_new(self, model, test_dataloader):
+    def eval_new(self, model, test_dataloader, test):
         true_labels = torch.empty(0).to(configs['device'])
         pred_labels = torch.empty(0).to(configs['device'])
         pred_scores = torch.empty(0).to(configs['device'])
@@ -103,8 +107,12 @@ class Metric(object):
             true_labels = torch.cat((true_labels, batch_last_items), dim=0).to(configs['device'])
             pred_labels = torch.cat((pred_labels, predicted_labels), dim=0).to(configs['device'])
             pred_scores = torch.cat((pred_scores, batch_pred), dim=0).to(configs['device'])
-        # print(pred_scores)
         metrics_data = self.metrics_calc(true_labels, pred_scores)
+        if test and not configs['train']['model_test_run']:
+            cm = self.cm(pred_scores, true_labels)
+            conf_matrix_np = cm.numpy()
+            cm_name = configs['test']['save_path']
+            np.savetxt(f'results_metrics/cm_{cm_name}.csv', conf_matrix_np, delimiter=',', fmt='%d')
 
         # Accuracy based on top three
         # _, top_indices = torch.topk(pred_scores, 3)
@@ -116,12 +124,12 @@ class Metric(object):
         # metrics_data['AccTopThree'] = np.mean(accuracy_top_three)
         return metrics_data
 
-    def eval(self, model, test_dataloader):
+    def eval(self, model, test_dataloader, test=False):
         # for most GNN models, you can have all embeddings ready at one forward
         # if 'eval_at_one_forward' in configs['test'] and configs['test']['eval_at_one_forward']:
         #     return self.eval_at_one_forward(model, test_dataloader)
         
-        metrics_data = self.eval_new(model, test_dataloader)
+        metrics_data = self.eval_new(model, test_dataloader, test)
         return metrics_data
         # result = {}
         # for metric in self.metrics:

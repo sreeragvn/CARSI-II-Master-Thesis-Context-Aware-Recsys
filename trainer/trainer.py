@@ -23,6 +23,7 @@ from torch.optim.lr_scheduler import LambdaLR
 if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
     from torch.utils.tensorboard import SummaryWriter
     timestr = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+    configs['test']['save_path'] = timestr
     writer = SummaryWriter(log_dir=f'runs/{timestr}')
 else:
     writer = DisabledSummaryWriter()
@@ -69,6 +70,7 @@ class Trainer(object):
         # Retrieves the training data loader from the data_handler.
         # Calls the sample_negs method on the training dataset, which might be related to negative sampling in recommendation systems.
         train_dataloader = self.data_handler.train_dataloader
+        #todo val loss and train loss are different in model test run where you have both dataset the same. check this.
         # train_dataloader.dataset.sample_negs()
         # Initializes dictionaries for tracking loss values (loss_log_dict) and the cumulative epoch loss (ep_loss).
         # steps calculates the number of steps (batches) in the training dataset.
@@ -110,10 +112,6 @@ class Trainer(object):
                 else:
                     loss_log_dict[loss_name] += _loss_val
 
-        #if configs['train']['gradient_accumulation'] and not (i + 1) <= configs['train']['accumulation_steps']:
-        #    self.scheduler.step()
-        #elif not configs['train']['gradient_accumulation']:
-        #    self.scheduler.step()
         test_loader = self.data_handler.test_dataloader
         total_val_loss = 0
         with torch.no_grad():
@@ -124,7 +122,10 @@ class Trainer(object):
                 total_val_loss += avg_val_loss
 
         # self.scheduler.step(total_val_loss)
-        self.scheduler.step()
+        if configs['train']['gradient_accumulation'] and not (i + 1) <= configs['train']['accumulation_steps']:
+           self.scheduler.step()
+        elif not configs['train']['gradient_accumulation']:
+           self.scheduler.step()
         total_val_loss = round(total_val_loss, 2)
         print('val_loss: ', total_val_loss)
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
@@ -242,7 +243,7 @@ class Trainer(object):
         # If available, evaluates the model on the test set using the metric.eval method.
         # Logs evaluation results using the logger.
         if hasattr(self.data_handler, 'test_dataloader'):
-            eval_result = self.metric.eval(model, self.data_handler.test_dataloader)
+            eval_result = self.metric.eval(model, self.data_handler.test_dataloader, test=True)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set')
         else:
             raise NotImplemented
