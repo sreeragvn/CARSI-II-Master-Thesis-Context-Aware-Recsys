@@ -66,6 +66,8 @@ class DataHandlerSequential:
             max_length = context['window_id'].value_counts().max()
             self.max_dynamic_context_length = max(self.max_dynamic_context_length, max_length)
             context = context.drop(['datetime', 'session'], axis=1)
+            context['window_id'] = context.groupby('window_id').ngroup()
+            context['window_id'] = context['window_id'] - context['window_id'].min()
 
             context_dict = {}
             for window_id, group in context.groupby('window_id'):
@@ -80,9 +82,11 @@ class DataHandlerSequential:
     def _read_csv_static_context(self, csv_file):
         try:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
-            context = context.drop(['datetime'], axis=1)
+            context = context.drop(['datetime', 'session'], axis=1)
             context = context.astype(int)
-            self.static_context_embedding_size = context.drop(columns=['session', 'window_id']).max(axis=0).tolist()
+            self.static_context_embedding_size = context.drop(columns=['window_id']).max(axis=0).tolist()
+            context['window_id'] = context.groupby('window_id').ngroup()
+            context['window_id'] = context['window_id'] - context['window_id'].min()
             context_dict = {}
             for index, row in context.iterrows():
                 session_key = row['window_id']
