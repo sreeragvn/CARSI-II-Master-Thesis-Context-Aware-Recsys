@@ -96,6 +96,7 @@ class SequentialDataset(data.Dataset):
             time_delta_i = self.time_delta[idx]
             padded_dynamic_context = self._process_context(self.dynamic_context[idx], context_type='dynamic')
             static_context= self._process_context(self.static_context[idx], context_type='static')
+            
             if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
                 result = (
                     self.uids[idx],
