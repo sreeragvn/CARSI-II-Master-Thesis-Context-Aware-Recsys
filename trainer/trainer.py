@@ -130,7 +130,7 @@ class Trainer(object):
         total_val_loss = round(total_val_loss, 2)
         print('val_loss: ', total_val_loss)
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
-        writer.add_scalar('Loss/val', total_val_loss / steps, epoch_idx)
+        writer.add_scalar('Loss/val', total_val_loss, epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
 
         # log loss
