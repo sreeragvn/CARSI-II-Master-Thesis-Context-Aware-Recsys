@@ -24,6 +24,7 @@ test:
   metrics: [recall, precision]
   k: [1, 2, 3]
   batch_size: 16
+  train_eval: false
 
 data:
   type: sequential
