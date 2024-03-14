@@ -22,9 +22,9 @@ class DataHandlerSequential:
         configs['train']['parameter_class_weights_path']  = path.join(predir, 'parameters/param.pkl')
         configs['train']['parameter_label_mapping_path']  = path.join(predir, 'parameters/label_mapping.pkl')
             
-        self.trn_file = path.join(predir, 'seq/train.tsv')
-        self.val_file = path.join(predir, 'seq/test.tsv')
-        self.tst_file = path.join(predir, 'seq/test.tsv')
+        self.trn_file = path.join(predir, 'seq/non_dup/train.tsv')
+        self.val_file = path.join(predir, 'seq/non_dup/test.tsv')
+        self.tst_file = path.join(predir, 'seq/non_dup/test.tsv')
 
         self.trn_dynamic_context_file = path.join(predir, 'dynamic_context/train.csv')
         self.val_dynamic_context_file = path.join(predir, 'dynamic_context/test.csv')
