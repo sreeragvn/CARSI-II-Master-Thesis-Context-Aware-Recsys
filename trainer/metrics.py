@@ -108,9 +108,9 @@ class Metric(object):
         metrics_data = self.metrics_calc(true_labels, pred_scores)
         if test and not configs['train']['model_test_run'] and configs['train']['conf_mat']:
             from torchmetrics.classification import MulticlassConfusionMatrix
-            self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes+1)
+            self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes+1).to(configs['device'])
             cm = self.cm(pred_scores, true_labels)
-            conf_matrix_np = cm.numpy()
+            conf_matrix_np = cm.cpu().numpy()
             cm_name = configs['test']['save_path']
             np.savetxt(f'results_metrics/cm_{cm_name}.csv', conf_matrix_np, delimiter=',', fmt='%d')
 
