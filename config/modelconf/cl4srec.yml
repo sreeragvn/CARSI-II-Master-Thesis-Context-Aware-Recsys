@@ -15,6 +15,7 @@ train:
   reproducible: true
   seed: 2023
   tensorboard: true
+  conf_mat: True
   ssl: false
   gradient_accumulation: false
   accumulation_steps: 4
