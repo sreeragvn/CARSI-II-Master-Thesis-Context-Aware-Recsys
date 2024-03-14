@@ -5,9 +5,9 @@ optimizer:
   weight_decay: 0
 
 train:
-  model_test_run: true
+  model_test_run: false
   weighted_loss_fn: true
-  epoch: 1
+  epoch: 60
   batch_size: 16
   save_model: true
   log_loss: true
@@ -15,9 +15,9 @@ train:
   reproducible: true
   seed: 2023
   tensorboard: true
-  conf_mat: True
+  conf_mat: true
   ssl: false
-  gradient_accumulation: false
+  gradient_accumulation: true
   accumulation_steps: 4
 
 test:
