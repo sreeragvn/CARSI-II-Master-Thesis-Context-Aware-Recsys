@@ -1,13 +1,13 @@
 optimizer:
   name: adam
-  lr: 1.0e-4
+  lr: 1.0e-3
   final_lr: 1.0e-6
   weight_decay: 0
 
 train:
   model_test_run: false
   weighted_loss_fn: true
-  epoch: 210
+  epoch: 3000
   batch_size: 16
   save_model: true
   log_loss: true
@@ -18,7 +18,7 @@ train:
   conf_mat: true
   ssl: false
   gradient_accumulation: true
-  accumulation_steps: 4
+  accumulation_steps: 10
 
 test:
   metrics: [recall, precision]
@@ -40,7 +40,7 @@ model:
   n_layers: 2
   embedding_size: 64
   n_heads: 2
-  max_seq_len: 10
+  max_seq_len: 20
   lmd: 0.1
   tau: 1
 
