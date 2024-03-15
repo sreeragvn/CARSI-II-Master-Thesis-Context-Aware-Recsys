@@ -22,9 +22,9 @@ class DataHandlerSequential:
         configs['train']['parameter_class_weights_path']  = path.join(predir, 'parameters/param.pkl')
         configs['train']['parameter_label_mapping_path']  = path.join(predir, 'parameters/label_mapping.pkl')
             
-        self.trn_file = path.join(predir, 'seq/non_dup/train.tsv')
-        self.val_file = path.join(predir, 'seq/non_dup/test.tsv')
-        self.tst_file = path.join(predir, 'seq/non_dup/test.tsv')
+        self.trn_file = path.join(predir, 'seq/train.tsv')
+        self.val_file = path.join(predir, 'seq/test.tsv')
+        self.tst_file = path.join(predir, 'seq/test.tsv')
 
         self.trn_dynamic_context_file = path.join(predir, 'dynamic_context/train.csv')
         self.val_dynamic_context_file = path.join(predir, 'dynamic_context/test.csv')
@@ -66,8 +66,8 @@ class DataHandlerSequential:
             max_length = context['window_id'].value_counts().max()
             self.max_dynamic_context_length = max(self.max_dynamic_context_length, max_length)
             context = context.drop(['datetime', 'session'], axis=1)
-            context['window_id'] = context.groupby('window_id').ngroup()
-            context['window_id'] = context['window_id'] - context['window_id'].min()
+            # context['window_id'] = context.groupby('window_id').ngroup()
+            # context['window_id'] = context['window_id'] - context['window_id'].min()
 
             context_dict = {}
             for window_id, group in context.groupby('window_id'):
@@ -85,8 +85,8 @@ class DataHandlerSequential:
             context = context.drop(['datetime', 'session'], axis=1)
             context = context.astype(int)
             self.static_context_embedding_size = context.drop(columns=['window_id']).max(axis=0).tolist()
-            context['window_id'] = context.groupby('window_id').ngroup()
-            context['window_id'] = context['window_id'] - context['window_id'].min()
+            # context['window_id'] = context.groupby('window_id').ngroup()
+            # context['window_id'] = context['window_id'] - context['window_id'].min()
             context_dict = {}
             for index, row in context.iterrows():
                 session_key = row['window_id']
