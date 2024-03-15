@@ -7,7 +7,7 @@ optimizer:
 train:
   model_test_run: false
   weighted_loss_fn: true
-  epoch: 60
+  epoch: 210
   batch_size: 16
   save_model: true
   log_loss: true
