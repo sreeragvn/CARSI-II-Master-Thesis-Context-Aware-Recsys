@@ -28,7 +28,7 @@ test:
 
 data:
   type: sequential
-  name: aug
+  name: undersampling
   seq_aug: false
   dynamic_context_window_length: 100
 
