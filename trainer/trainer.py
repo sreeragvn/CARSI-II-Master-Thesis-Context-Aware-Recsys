@@ -56,7 +56,7 @@ class Trainer(object):
         gamma = 0.999
 
         if optim_config['name'] == 'adam':
-            self.optimizer = optim.RAdam(model.parameters(
+            self.optimizer = optim.Adam(model.parameters(
             ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
             # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.9, min_lr=1e-6, verbose=True)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)

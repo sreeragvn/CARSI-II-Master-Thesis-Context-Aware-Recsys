@@ -43,7 +43,7 @@ model:
   max_seq_len: 20
   lmd: 0.1
   tau: 1
-  encoder_combine: concat
+  encoder_combine: attention
 
 lstm:
   hidden_size: 64

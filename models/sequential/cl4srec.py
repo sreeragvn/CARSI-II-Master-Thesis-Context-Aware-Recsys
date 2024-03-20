@@ -56,6 +56,8 @@ class CL4SRec(BaseModel):
         self.fc_input_size = len(self.static_embedding) * self.emb_size
         self.fc_static_dim_red = nn.Linear(self.fc_input_size, self.lstm_hidden_size)
 
+        self.fc_context_dim_red = nn.Linear(128, 64)
+
         # interaction Encoder( # interaction_encoder options are lstm, sasrec, durorec)
         if model_config['interaction_encoder'] == 'lstm':
             self.emb_layer = nn.Embedding(self.item_num + 2, self.emb_size)
@@ -119,7 +121,7 @@ class CL4SRec(BaseModel):
         with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
             _class_w = pickle.load(f)
 
-        if configs['train']['model_test_run'] or configs['train']['weighted_loss_fn']:
+        if configs['train']['model_test_run'] or not configs['train']['weighted_loss_fn']:
             self.loss_func = nn.CrossEntropyLoss()
         else:
             self.loss_func = nn.CrossEntropyLoss(_class_w)
@@ -371,14 +373,15 @@ class CL4SRec(BaseModel):
             static_context.append(embedding_layer(batch_static_context[:, i]))
         static_context = torch.cat(static_context, dim=1)
         static_context = self.fc_static_dim_red(static_context)
+        context = torch.cat((context_output, static_context), dim=1)
         # print(sasrec_out.size(), context_output.size(), static_context.size())
         if configs['model']['encoder_combine'] == 'concat':
-            out = torch.cat((sasrec_out, context_output, static_context), dim=1)
+            out = torch.cat((sasrec_out, context), dim=1)
         if configs['model']['encoder_combine'] == 'attention':
-            out = self.multi_head_attention(sasrec_out, context_output, static_context)
+            out, _ = self.multi_head_attention(self.fc_context_dim_red(context), self.fc_context_dim_red(context), sasrec_out)
         # print(out.size())
-        output = self.fc_layers(out)
-        return output
+        # out = self.fc_layers(out)
+        return out
 
     def cal_loss(self, batch_data):
         # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
