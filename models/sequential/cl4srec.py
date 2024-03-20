@@ -110,6 +110,11 @@ class CL4SRec(BaseModel):
         fc_layers.append(nn.Linear(128, self.emb_size))
         self.fc_layers = nn.Sequential(*fc_layers)
 
+
+        #multi head attention on encoder outputs
+        # self.multi_head_attention = MultiHeadAttention_decoder(self.emb_size, self.n_heads)
+        if configs['model']['encoder_combine'] == 'attention':
+            self.multi_head_attention = nn.MultiheadAttention(self.emb_size, self.n_heads)
         # Loss Function
         with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
             _class_w = pickle.load(f)
@@ -366,13 +371,17 @@ class CL4SRec(BaseModel):
             static_context.append(embedding_layer(batch_static_context[:, i]))
         static_context = torch.cat(static_context, dim=1)
         static_context = self.fc_static_dim_red(static_context)
-        out = torch.cat((sasrec_out, context_output, static_context), dim=1)
+        # print(sasrec_out.size(), context_output.size(), static_context.size())
+        if configs['model']['encoder_combine'] == 'concat':
+            out = torch.cat((sasrec_out, context_output, static_context), dim=1)
+        if configs['model']['encoder_combine'] == 'attention':
+            out = self.multi_head_attention(sasrec_out, context_output, static_context)
+        # print(out.size())
         output = self.fc_layers(out)
         return output
 
     def cal_loss(self, batch_data):
         # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
-
         # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
         _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, sequence_length = batch_data
         # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).

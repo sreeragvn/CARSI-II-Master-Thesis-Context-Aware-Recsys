@@ -28,7 +28,7 @@ test:
 
 data:
   type: sequential
-  name: undersampling
+  name: aug
   seq_aug: false
   dynamic_context_window_length: 100
 
@@ -43,6 +43,7 @@ model:
   max_seq_len: 20
   lmd: 0.1
   tau: 1
+  encoder_combine: concat
 
 lstm:
   hidden_size: 64

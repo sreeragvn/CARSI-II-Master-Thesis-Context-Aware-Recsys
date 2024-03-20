@@ -48,6 +48,8 @@ class MultiHeadAttention(nn.Module):
 
         return self.output_linear(x)
 
+# class MultiHeadAttention_decoder(nn.Module)
+
 class PositionwiseFeedForward(nn.Module):
     def __init__(self, hidden_size, d_ff, dropout=0.1):
         super(PositionwiseFeedForward, self).__init__()
