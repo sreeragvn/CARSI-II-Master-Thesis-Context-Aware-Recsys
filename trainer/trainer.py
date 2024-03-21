@@ -54,13 +54,20 @@ class Trainer(object):
         # total_epochs = configs['train']['epoch']
         # gamma = (final_lr / initial_lr) ** (1 / total_epochs)
         gamma = 0.999
+        warmup_steps = int(configs['train']['epoch'] * 0.4)
+        d_model = 64
+
+        def lr_lambda(step):
+            return (d_model ** -0.5) * min((step + 1) ** (-0.5), (step + 1) * warmup_steps ** (-1.5))
+
 
         if optim_config['name'] == 'adam':
             self.optimizer = optim.Adam(model.parameters(
-            ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
+            ), lr=initial_lr, betas=(0.9, 0.98), eps=1e-09, weight_decay=optim_config['weight_decay'])
             # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.9, min_lr=1e-6, verbose=True)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
-            self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
+            # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
+            self.scheduler = LambdaLR(self.optimizer, lr_lambda)
 
 
     def train_epoch(self, model, epoch_idx):
@@ -99,10 +106,13 @@ class Trainer(object):
                 # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 self.optimizer.step()
                 self.optimizer.zero_grad()
+                self.scheduler.step()
+
             elif not configs['train']['gradient_accumulation']:
                 # Perform gradient clipping
                 # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 self.optimizer.step()
+                self.scheduler.step()
             # record loss
             # Records loss values in loss_log_dict. The loss values are normalized by the length of the training dataloader.
             for loss_name in loss_dict:
@@ -121,11 +131,6 @@ class Trainer(object):
                 avg_val_loss = val_loss.item() / len(test_loader)
                 total_val_loss += avg_val_loss
 
-        # self.scheduler.step(total_val_loss)
-        if configs['train']['gradient_accumulation'] and not (i + 1) <= configs['train']['accumulation_steps']:
-           self.scheduler.step()
-        elif not configs['train']['gradient_accumulation']:
-           self.scheduler.step()
         total_val_loss = round(total_val_loss, 2)
         print('val_loss: ', total_val_loss)
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)

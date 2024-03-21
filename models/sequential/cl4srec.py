@@ -139,70 +139,59 @@ class CL4SRec(BaseModel):
             module.weight.data.fill_(1.0)
 
     def forward(self, batch_seqs,batch_context, batch_static_context, sequence_length):
-        # method processes input sequences through an embedding layer and a stack of transformer layers, and the final output is the representation of the sequence, typically extracted from the last position. The mask is used to prevent the model from attending to padding elements during the transformer layers' computations.
-
-        # batch_seqs > 0 creates a boolean tensor indicating non-padding elements.
-        # .unsqueeze(1) adds a singleton dimension to the tensor to make it compatible for broadcasting.
-        # .repeat(1, batch_seqs.size(1), 1) replicates the tensor along the sequence dimension, essentially creating a 3D mask with the same shape as batch_seqs.
-        # .unsqueeze(1) adds another singleton dimension at the beginning of the tensor. This is often used for compatibility with transformer models that expect a mask with dimensions [batch_size, 1, sequence_length, sequence_length].
-        # Todo - This has to be done for the context as well. Ensure the padding is done with a negative number. not zero. since zero speed itself is relevant.
         # interaction_encoder options are lstm, sasrec, durorec
         if configs['model']['interaction_encoder'] == 'lstm':
-            sasrec_out = self.interaction_encoder(batch_seqs) ## not sasrec. just lstm
+            sasrec_out = self.interaction_encoder(batch_seqs)
         elif  configs['model']['interaction_encoder'] == 'duorec':
             sasrec_out = self.transformer_layers(batch_seqs, sequence_length)
         elif configs['model']['interaction_encoder'] == 'sasrec':
             mask = (batch_seqs > 0).unsqueeze(1).repeat(
                 1, batch_seqs.size(1), 1).unsqueeze(1)
-            # Embedding Layer:
-            # Passes the input sequence batch_seqs through an embedding layer (self.emb_layer). This layer converts integer indices into dense vectors.
             x = self.emb_layer(batch_seqs)
-
-            # Transformer Layers:
-            # Iterates through a series of transformer layers (self.transformer_layers) and applies each one to the input tensor x. The transformer layers are expected to take the input tensor and the mask as arguments.
             for transformer in self.transformer_layers:
                 x = transformer(x, mask)
-            # Extracts the output from the last position of the sequence (-1). This is a common practice in transformer-based models, where the output corresponding to the last position is often used as a representation of the entire sequence.
             sasrec_out = x[:, -1, :]
+
         batch_context = batch_context.to(sasrec_out.dtype)
         context_output = self.context_encoder(batch_context)
+
         static_context = self.static_embedding(batch_static_context)
+
         context = torch.cat((context_output, static_context), dim=1)
         if configs['model']['encoder_combine'] == 'concat':
             out = torch.cat((sasrec_out, context), dim=1)
             out = self.fc_layers(out)
         if configs['model']['encoder_combine'] == 'attention':
-            out, _ = self.multi_head_attention(self.fc_context_dim_red(context), self.fc_context_dim_red(context), sasrec_out)
+            out, _ = self.multi_head_attention(sasrec_out, 
+                                               self.fc_context_dim_red(context), 
+                                               self.fc_context_dim_red(context))
+            
         return out
 
     def cal_loss(self, batch_data):
-        # The method computes the total loss for a recommendation system, which includes a recommendation loss based on the last items in sequences and a contrastive loss using augmented sequences for contrastive learning. This approach aims to learn meaningful representations for recommendation by leveraging both sequential patterns and contrastive learning principles.
-        # Input Data:The input batch_data is assumed to be a tuple containing three elements: batch_user, batch_seqs, and batch_last_items. These likely represent user identifiers, sequences of items, and the last items in those sequences, respectively.
         _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, sequence_length = batch_data
-        # Sequential Output:Calls the forward method (previously explained) to obtain the output representation (seq_output) for the input sequences (batch_seqs).
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, sequence_length)
-        # Compute Logits:Computes logits by performing matrix multiplication between the sequence output (seq_output) and the transpose of the embedding weights for items (test_item_emb). This operation is often used in recommendation systems to calculate the compatibility scores between user representations and item representations.
-        # Todo why you are adding + 1 to  item_num when slicing
+
         if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         elif  configs['model']['interaction_encoder'] == 'duorec':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
-        # test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
-        # Compute Recommendation Loss:Computes the recommendation loss using a specified loss function (self.loss_func). This loss measures the discrepancy between the predicted logits and the actual last items in the sequences.
         loss = self.loss_func(logits, batch_last_items)
-        # Contrastive Learning (NCE):Generates augmented sequences (aug_seq1 and aug_seq2) using the _cl4srec_aug method (not provided). These augmented sequences are then processed through the model to obtain representations (seq_output1 and seq_output2).
-        # NCE
+
         if configs['train']['ssl']:
             aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
             seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context, sequence_length)
             seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context, sequence_length)
-            # Compute InfoNCE Loss (Contrastive Loss):Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. The temperature parameter (temp) and batch size are specified.
+            # Compute InfoNCE Loss (Contrastive Loss):
+            # Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. 
+            # The temperature parameter (temp) and batch size are specified.
             cl_loss = self.lmd * self.info_nce(
                 seq_output1, seq_output2, temp=self.tau, batch_size=aug_seq1.shape[0])
-            # Aggregate Losses and Return: Aggregates the recommendation loss and contrastive loss into a total loss. Returns the total loss along with a dictionary containing individual loss components (rec_loss and cl_loss).
+            # Aggregate Losses and Return: Aggregates the recommendation loss and contrastive loss into a total loss. 
+            # Returns the total loss along with a dictionary containing individual loss components (rec_loss and cl_loss).
             loss_dict = {
                 'rec_loss': loss.item(),
                 'cl_loss': cl_loss.item(),
