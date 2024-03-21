@@ -128,13 +128,14 @@ class Trainer(object):
             for i, val_tem in enumerate(test_loader):
                 val_batch_data = list(map(lambda x: x.long().to(configs['device']), val_tem))
                 val_loss, _ = model.cal_loss(val_batch_data)
-                avg_val_loss = val_loss.item() / len(test_loader)
-                total_val_loss += avg_val_loss
+                total_val_loss += val_loss.item()
 
-        total_val_loss = round(total_val_loss, 2)
-        print('val_loss: ', total_val_loss)
+        test_step = len(test_loader.dataset) // configs['test']['batch_size']
+        avg_val_loss = total_val_loss / len(test_loader)
+        total_val_loss = round(avg_val_loss, 2)
+        print('val_loss: ', avg_val_loss)
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
-        writer.add_scalar('Loss/val', total_val_loss, epoch_idx)
+        writer.add_scalar('Loss/val', total_val_loss /test_step, epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
 
         # log loss
