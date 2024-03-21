@@ -132,10 +132,10 @@ class Trainer(object):
 
         test_step = len(test_loader.dataset) // configs['test']['batch_size']
         avg_val_loss = total_val_loss / len(test_loader)
-        total_val_loss = round(avg_val_loss, 2)
-        print('val_loss: ', avg_val_loss)
+        # total_val_loss = round(avg_val_loss, 2)
+        print('val_loss: ', round(avg_val_loss,2))
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
-        writer.add_scalar('Loss/val', total_val_loss /test_step, epoch_idx)
+        writer.add_scalar('Loss/val', round(total_val_loss /test_step,2), epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
 
         # log loss
