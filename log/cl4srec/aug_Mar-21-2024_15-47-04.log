@@ -1,0 +1,32 @@
+2024-03-21 15:47:04,514 - {'optimizer': {'name': 'adam', 'lr': 0.001, 'final_lr': 1e-06, 'weight_decay': 0}, 'train': {'model_test_run': False, 'weighted_loss_fn': True, 'epoch': 3000, 'batch_size': 16, 'save_model': True, 'log_loss': True, 'test_step': 1, 'reproducible': True, 'seed': 2023, 'tensorboard': True, 'conf_mat': True, 'ssl': False, 'gradient_accumulation': False, 'accumulation_steps': 10, 'early_stop': False, 'parameter_class_weights_path': './datasets/sequential/aug/parameters/param.pkl', 'parameter_label_mapping_path': './datasets/sequential/aug/parameters/label_mapping.pkl'}, 'test': {'metrics': ['recall', 'precision'], 'k': [1, 2, 3], 'batch_size': 16, 'train_eval': False, 'save_path': '2024-03-21_15-46'}, 'data': {'type': 'sequential', 'name': 'aug', 'seq_aug': False, 'dynamic_context_window_length': 100, 'user_num': 4426, 'item_num': 28, 'max_context_length': 100, 'dynamic_context_feat_num': 14, 'static_context_feat_num': 7, 'static_context_max': [6, 12, 6, 23, 1, 1, 1]}, 'model': {'name': 'cl4srec', 'context_encoder': 'lstm', 'interaction_encoder': 'sasrec', 'dropout_rate': 0.1, 'n_layers': 2, 'embedding_size': 64, 'n_heads': 2, 'max_seq_len': 10, 'lmd': 0.1, 'tau': 1, 'encoder_combine': 'concat'}, 'lstm': {'hidden_size': 64, 'num_layers': 30, 'output_size': 256}, 'tune': {'enable': False, 'hyperparameters': ['dropout_rate', 'lmb', 'tau'], 'dropout_rate': [0.1, 0.3, 0.5], 'lmb': [0.05, 0.1, 0.2], 'tau': [0.5, 0.7, 0.9]}, 'duorec': {'inner_size': 256, 'hidden_dropout_prob': 0.5, 'attn_dropout_prob': 0.5, 'hidden_act': 'gelu', 'layer_norm_eps': 1e-12, 'initializer_range': 0.02}, 'device': 'cpu'}
+2024-03-21 15:47:05,029 - Expected size for first two dimensions of batch2 tensor to be: [32, 10] but got: [32, 1].
+Traceback (most recent call last):
+  File "/Volumes/Workspace/In-Car CARSI/carsii/trainer/utils.py", line 15, in wrapper
+    return func(*args, **kwargs)
+  File "/Volumes/Workspace/In-Car CARSI/carsii/trainer/trainer.py", line 162, in train
+    self.train_epoch(model, epoch_idx)
+  File "/Volumes/Workspace/In-Car CARSI/carsii/trainer/trainer.py", line 99, in train_epoch
+    loss, loss_dict = model.cal_loss(batch_data)
+  File "/Volumes/Workspace/In-Car CARSI/carsii/models/sequential/cl4srec.py", line 174, in cal_loss
+    seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, sequence_length)
+  File "/Volumes/Workspace/In-Car CARSI/carsii/models/sequential/cl4srec.py", line 152, in forward
+    x = transformer(x, mask)
+  File "/Users/sreeragvn/miniconda3/envs/carsii/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/Users/sreeragvn/miniconda3/envs/carsii/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Volumes/Workspace/In-Car CARSI/carsii/models/model_utils.py", line 80, in forward
+    x = self.input_sublayer(x, lambda _x: self.attention.forward(_x, _x, _x, mask=mask))
+  File "/Users/sreeragvn/miniconda3/envs/carsii/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/Users/sreeragvn/miniconda3/envs/carsii/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Volumes/Workspace/In-Car CARSI/carsii/models/model_utils.py", line 67, in forward
+    return x + self.dropout(sublayer(self.norm(x)))
+  File "/Volumes/Workspace/In-Car CARSI/carsii/models/model_utils.py", line 80, in <lambda>
+    x = self.input_sublayer(x, lambda _x: self.attention.forward(_x, _x, _x, mask=mask))
+  File "/Volumes/Workspace/In-Car CARSI/carsii/models/model_utils.py", line 41, in forward
+    x, attn = self._cal_attention(query, key, value, mask=mask, dropout=self.dropout)
+  File "/Volumes/Workspace/In-Car CARSI/carsii/models/model_utils.py", line 31, in _cal_attention
+    return t.matmul(p_attn, value), p_attn
+RuntimeError: Expected size for first two dimensions of batch2 tensor to be: [32, 10] but got: [32, 1].
