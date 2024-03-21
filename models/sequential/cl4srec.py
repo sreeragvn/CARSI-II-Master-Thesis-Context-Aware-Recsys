@@ -5,6 +5,7 @@ from models.model_utils import TransformerLayer, TransformerEmbedding
 from models.interaction_encoder import DUORec, LSTM_interactionEncoder
 from models.dynamic_context_encoder import TransformerEncoder_DynamicContext, LSTM_contextEncoder
 from models.static_context_encoder import static_context_encoder
+from .create import SASRecEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -67,7 +68,17 @@ class CL4SRec(BaseModel):
                                                                       self.inner_size, 
                                                                       self.dropout_rate) 
                                                                       for _ in range(self.n_layers)])
-            self.sasrec_fc_layer1 = nn.Linear(self.max_len * self.emb_size, 512)
+            self.sasrec_fc_layer1 = nn.Linear((self.max_len -1 )* self.emb_size, 512)
+            self.sasrec_fc_layer2 = nn.Linear(512, 128)  # Reducing 256 to 128
+            self.sasrec_fc_layer3 = nn.Linear(128, 64) 
+        elif model_config['interaction_encoder'] == 'transformer':
+            self.emb_layer = nn.Embedding(self.item_num + 2, self.emb_size)
+            self.transformer_layers = SASRecEncoder(embedding_size=self.emb_size,
+                                    num_blocks=self.n_layers,
+                                    num_heads=self.n_heads, 
+                                    dropout=self.dropout_rate
+                                )
+            self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size, 512)
             self.sasrec_fc_layer2 = nn.Linear(512, 128)  # Reducing 256 to 128
             self.sasrec_fc_layer3 = nn.Linear(128, 64) 
         # implementation of sasrec from another source - DUORec https://github.com/RuihongQiu/DuoRec/tree/master
@@ -90,7 +101,9 @@ class CL4SRec(BaseModel):
         if model_config['context_encoder'] == 'lstm':
             self.context_encoder = LSTM_contextEncoder(self.dynamic_context_feat_num, 
                                                        self.lstm_hidden_size, 
-                                                       self.lstm_num_layers)
+                                                       self.lstm_num_layers,
+                                                       self.emb_size
+                                                       )
             input_size = 136
         elif model_config['context_encoder'] == 'transformer':
             self.context_encoder = TransformerEncoder_DynamicContext(self.dynamic_context_feat_num, # num_features_continuous
@@ -154,14 +167,23 @@ class CL4SRec(BaseModel):
             for transformer in self.transformer_layers:
                 x = transformer(x, mask)
 
-            print(x.size())
-            x_reshaped = x.view(x.size(0), -1)
-            print(x_reshaped.size())
+            all_tokens_except_last = x[:, :-1, :]
+            last_token = x[:, -1, :]
+            # print(all_tokens_except_last.size())
+
+            x_reshaped = all_tokens_except_last.view(x.size(0), -1)
+            
             sasrec_out = self.sasrec_fc_layer1(x_reshaped)
             sasrec_out = self.sasrec_fc_layer2(sasrec_out)
             sasrec_out = self.sasrec_fc_layer3(sasrec_out)
-            print(sasrec_out.size())
             # sasrec_out = x[:, -1, :]
+        elif configs['model']['interaction_encoder'] == 'transformer':
+            emb_out = self.emb_layer(batch_seqs)  # (seq_len, batch_size, embed_dim)
+            sasrec_out = self.transformer_layers(emb_out)
+            x_reshaped = sasrec_out.view(sasrec_out.size(0), -1)
+            sasrec_out = self.sasrec_fc_layer1(x_reshaped)
+            sasrec_out = self.sasrec_fc_layer2(sasrec_out)
+            sasrec_out = self.sasrec_fc_layer3(sasrec_out)
             # print(sasrec_out.size())
 
         batch_context = batch_context.to(sasrec_out.dtype)
@@ -186,7 +208,7 @@ class CL4SRec(BaseModel):
 
         if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        elif  configs['model']['interaction_encoder'] == 'duorec':
+        elif  configs['model']['interaction_encoder'] == 'transformer':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
@@ -223,11 +245,11 @@ class CL4SRec(BaseModel):
         
         if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer(batch_last_items)
-        elif configs['model']['interaction_encoder'] == 'duorec':
-            test_item_emb = self.item_embedding_1(batch_last_items)
+        elif configs['model']['interaction_encoder'] == 'transformer':
+            test_item_emb = self.emb_layer(batch_last_items)
         else:
             test_item_emb = self.emb_layer.token_emb(batch_last_items)
-        test_item_emb = self.item_embedding(batch_last_items)
+        test_item_emb = self.emb_layer(batch_last_items)
 
         scores = torch.mul(logits, test_item_emb).sum(dim=1)  
         return scores

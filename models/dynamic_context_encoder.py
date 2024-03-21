@@ -6,18 +6,22 @@ import torch.nn.functional as F
 
 
 class LSTM_contextEncoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers):
+    def __init__(self, input_size, hidden_size, num_layers, emb_size):
         super(LSTM_contextEncoder, self).__init__()
         self.input_size = input_size
         self.lstm = nn.LSTM(input_size=input_size,
                             hidden_size=hidden_size,
                             num_layers=num_layers,
                             batch_first = True)
+        self.fc1 = nn.Linear(hidden_size, hidden_size // 2)  # Half the dimension
+        self.fc2 = nn.Linear(hidden_size // 2, emb_size)
+        self.relu = nn.ReLU()
     def forward(self, x):
         x = x.permute(0, 2, 1)
         _,(h_n, _) = self.lstm(x)
         h_n = h_n[-1]
-        return h_n
+        out = self.fc2(self.relu(self.fc1(h_n)))
+        return out
 
 class TransformerEncoder_DynamicContext(nn.Module):
     def __init__(
