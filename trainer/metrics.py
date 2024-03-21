@@ -11,7 +11,6 @@ class Metric(object):
         self.k = configs['test']['k']
         with open(configs['train']['parameter_label_mapping_path'], 'rb') as f:
             _label_mapping = pickle.load(f)
-        # print(_label_mapping)
         self._num_classes = len(list(_label_mapping.keys()))
 
     def precision_at_k(output, target, k=3):
@@ -85,7 +84,6 @@ class Metric(object):
 
         for metric in metrics:
             metrics[metric] = np.array(metrics[metric])
-        # print(metrics)
         return metrics
     
     def eval_new(self, model, test_dataloader, test):

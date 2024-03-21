@@ -8,7 +8,7 @@ import torch.utils.data as data
 from os import path
 import pandas as pd 
 import os
-
+import torch
 
 class DataHandlerSequential:
     def __init__(self):
@@ -85,8 +85,6 @@ class DataHandlerSequential:
             context = context.drop(['datetime', 'session'], axis=1)
             context = context.astype(int)
             self.static_context_embedding_size = context.drop(columns=['window_id']).max(axis=0).tolist()
-            # context['window_id'] = context.groupby('window_id').ngroup()
-            # context['window_id'] = context['window_id'] - context['window_id'].min()
             context_dict = {}
             for index, row in context.iterrows():
                 session_key = row['window_id']
@@ -149,6 +147,7 @@ class DataHandlerSequential:
         #Only implementing the case of no sequence augmentations _seq_aug
         trn_data = SequentialDataset(user_seqs_train, dynamic_context_train, static_context_train)
         tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, mode='test')
+
         self.test_dataloader = data.DataLoader(
             tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
         self.train_dataloader = data.DataLoader(
