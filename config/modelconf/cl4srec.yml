@@ -16,7 +16,7 @@ train:
   seed: 2023
   tensorboard: true
   conf_mat: true
-  ssl: false
+  ssl: true
   gradient_accumulation: true
   accumulation_steps: 10
 
@@ -43,7 +43,7 @@ model:
   max_seq_len: 20
   lmd: 0.1
   tau: 1
-  encoder_combine: attention
+  encoder_combine: concat
 
 lstm:
   hidden_size: 64
