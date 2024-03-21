@@ -67,6 +67,9 @@ class CL4SRec(BaseModel):
                                                                       self.inner_size, 
                                                                       self.dropout_rate) 
                                                                       for _ in range(self.n_layers)])
+            self.sasrec_fc_layer1 = nn.Linear(self.max_len * self.emb_size, 512)
+            self.sasrec_fc_layer2 = nn.Linear(512, 128)  # Reducing 256 to 128
+            self.sasrec_fc_layer3 = nn.Linear(128, 64) 
         # implementation of sasrec from another source - DUORec https://github.com/RuihongQiu/DuoRec/tree/master
         elif model_config['interaction_encoder'] == 'duorec':
             self.transformer_layers = DUORec(self.item_num, 
@@ -150,7 +153,16 @@ class CL4SRec(BaseModel):
             x = self.emb_layer(batch_seqs)
             for transformer in self.transformer_layers:
                 x = transformer(x, mask)
-            sasrec_out = x[:, -1, :]
+
+            print(x.size())
+            x_reshaped = x.view(x.size(0), -1)
+            print(x_reshaped.size())
+            sasrec_out = self.sasrec_fc_layer1(x_reshaped)
+            sasrec_out = self.sasrec_fc_layer2(sasrec_out)
+            sasrec_out = self.sasrec_fc_layer3(sasrec_out)
+            print(sasrec_out.size())
+            # sasrec_out = x[:, -1, :]
+            # print(sasrec_out.size())
 
         batch_context = batch_context.to(sasrec_out.dtype)
         context_output = self.context_encoder(batch_context)
