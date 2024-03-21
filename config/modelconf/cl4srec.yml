@@ -17,7 +17,7 @@ train:
   tensorboard: true
   conf_mat: true
   ssl: true
-  gradient_accumulation: true
+  gradient_accumulation: false
   accumulation_steps: 10
 
 test:
