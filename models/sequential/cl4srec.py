@@ -5,7 +5,7 @@ from models.model_utils import TransformerLayer, TransformerEmbedding
 from models.interaction_encoder import DUORec, LSTM_interactionEncoder
 from models.dynamic_context_encoder import TransformerEncoder_DynamicContext, LSTM_contextEncoder
 from models.static_context_encoder import static_context_encoder
-from .create import SASRecEncoder
+from .SASRecEncoder import SASRecEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -19,7 +19,6 @@ class CL4SRec(BaseModel):
     """
     def __init__(self, data_handler):
         super(CL4SRec, self).__init__(data_handler)
-
         # # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
         # Extract configuration parameters
         data_config = configs['data']
@@ -69,18 +68,18 @@ class CL4SRec(BaseModel):
                                                                       self.dropout_rate) 
                                                                       for _ in range(self.n_layers)])
             self.sasrec_fc_layer1 = nn.Linear((self.max_len -1 )* self.emb_size, 512)
-            self.sasrec_fc_layer2 = nn.Linear(512, 128)  # Reducing 256 to 128
+            self.sasrec_fc_layer2 = nn.Linear(512, 128) 
             self.sasrec_fc_layer3 = nn.Linear(128, 64) 
         elif model_config['interaction_encoder'] == 'transformer':
             self.emb_layer = nn.Embedding(self.item_num + 2, self.emb_size)
-            self.transformer_layers = SASRecEncoder(embedding_size=self.emb_size,
-                                    num_blocks=self.n_layers,
-                                    num_heads=self.n_heads, 
-                                    dropout=self.dropout_rate
-                                )
-            self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size, 512)
-            self.sasrec_fc_layer2 = nn.Linear(512, 128)  # Reducing 256 to 128
-            self.sasrec_fc_layer3 = nn.Linear(128, 64) 
+            self.transformer_layers = nn.TransformerEncoderLayer(self.emb_size, 
+                                                                 self.n_heads, 
+                                                                 dim_feedforward=self.inner_size, 
+                                                                 dropout=self.dropout_rate, 
+                                                                 batch_first=True)
+            self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size, 128)
+            self.sasrec_fc_layer2 = nn.Linear(128, 64)  # Reducing 256 to 128
+            self.sasrec_fc_layer3 = nn.Linear(64, 32) 
         # implementation of sasrec from another source - DUORec https://github.com/RuihongQiu/DuoRec/tree/master
         elif model_config['interaction_encoder'] == 'duorec':
             self.transformer_layers = DUORec(self.item_num, 
@@ -104,7 +103,7 @@ class CL4SRec(BaseModel):
                                                        self.lstm_num_layers,
                                                        self.emb_size
                                                        )
-            input_size = 136
+            input_size = 56
         elif model_config['context_encoder'] == 'transformer':
             self.context_encoder = TransformerEncoder_DynamicContext(self.dynamic_context_feat_num, # num_features_continuous
                                                                      data_config['dynamic_context_window_length'],
@@ -115,8 +114,8 @@ class CL4SRec(BaseModel):
         # FCs after concatenation layer
         fc_layers = []
         for _ in range(1):
-            fc_layers.extend([nn.Linear(input_size, 128), nn.ReLU()])
-        fc_layers.append(nn.Linear(128, self.emb_size))
+            fc_layers.extend([nn.Linear(input_size, 32), nn.ReLU()])
+        fc_layers.append(nn.Linear(32, self.emb_size))
         self.fc_layers = nn.Sequential(*fc_layers)
 
         # Combine 3 encoder outputs - Attention or concatenation
@@ -129,12 +128,13 @@ class CL4SRec(BaseModel):
         else:
             with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
                 _class_w = pickle.load(f)
+                # _class_w = _class_w[1:]
             self.loss_func = nn.CrossEntropyLoss(_class_w)
 
         self.mask_default = self.mask_correlated_samples(
             batch_size=self.batch_size)
         self.cl_loss_func = nn.CrossEntropyLoss()
-
+        self.val_loss_func = nn.CrossEntropyLoss()
         # parameters initialization
         self.apply(self._init_weights)
 
@@ -238,7 +238,44 @@ class CL4SRec(BaseModel):
             }
 
         return loss + cl_loss, loss_dict
-    
+
+    def val_cal_loss(self, val_batch_data):
+        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, sequence_length = val_batch_data
+        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, sequence_length)
+
+        if configs['model']['interaction_encoder'] == 'lstm':
+            test_item_emb = self.emb_layer.weight[:self.item_num+1]
+        elif  configs['model']['interaction_encoder'] == 'transformer':
+            test_item_emb = self.emb_layer.weight[:self.item_num +1]
+        else:
+            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
+        logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
+        loss = self.val_loss_func(logits, batch_last_items)
+
+        if configs['train']['ssl']:
+            aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
+            seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context, sequence_length)
+            seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context, sequence_length)
+            # Compute InfoNCE Loss (Contrastive Loss):
+            # Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. 
+            # The temperature parameter (temp) and batch size are specified.
+            cl_loss = self.lmd * self.info_nce(
+                seq_output1, seq_output2, temp=self.tau, batch_size=aug_seq1.shape[0])
+            # Aggregate Losses and Return: Aggregates the recommendation loss and contrastive loss into a total loss. 
+            # Returns the total loss along with a dictionary containing individual loss components (rec_loss and cl_loss).
+            loss_dict = {
+                'rec_loss': loss.item(),
+                'cl_loss': cl_loss.item(),
+            }
+        else:
+            cl_loss = 0
+            loss_dict = {
+                'rec_loss': loss.item(),
+                'cl_loss': cl_loss,
+            }
+
+        return loss + cl_loss, loss_dict
+
     def predict(self, batch_data):
         _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, seq_len  = batch_data
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, seq_len)
@@ -265,7 +302,7 @@ class CL4SRec(BaseModel):
     
         if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        elif  configs['model']['interaction_encoder'] == 'duorec':
+        elif  configs['model']['interaction_encoder'] == 'transformer':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]

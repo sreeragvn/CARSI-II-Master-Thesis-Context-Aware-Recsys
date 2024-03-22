@@ -19,15 +19,7 @@ class SASRecEncoder(nn.Module):
         ])
         
     def forward(self, x):
-        # x shape: (batch_size, seq_len)
-        
-        # Embedding layer
-        
-        
-        # Positional encoding
         x = self.positional_encoding(x)
-        
-        # SASRec blocks
         for block in self.sasrec_blocks:
             x = block(x)
         
