@@ -55,19 +55,21 @@ class Trainer(object):
         # gamma = (final_lr / initial_lr) ** (1 / total_epochs)
         gamma = 0.999
         warmup_steps = int(configs['train']['epoch'] * 0.4)
-        d_model = 64
+        d_model = configs['model']['embedding_size']
 
         def lr_lambda(step):
             return (d_model ** -0.5) * min((step + 1) ** (-0.5), (step + 1) * warmup_steps ** (-1.5))
 
 
         if optim_config['name'] == 'adam':
+            # self.optimizer = optim.Adam(model.parameters(
+            # ), lr=initial_lr, betas=(0.9, 0.98), eps=1e-09, weight_decay=optim_config['weight_decay'])
             self.optimizer = optim.Adam(model.parameters(
-            ), lr=initial_lr, betas=(0.9, 0.98), eps=1e-09, weight_decay=optim_config['weight_decay'])
+            ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
             # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.9, min_lr=1e-6, verbose=True)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
-            # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
-            self.scheduler = LambdaLR(self.optimizer, lr_lambda)
+            self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
+            # self.scheduler = LambdaLR(self.optimizer, lr_lambda)
 
 
     def train_epoch(self, model, epoch_idx):
@@ -106,13 +108,12 @@ class Trainer(object):
                 # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-                self.scheduler.step()
 
             elif not configs['train']['gradient_accumulation']:
                 # Perform gradient clipping
                 # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 self.optimizer.step()
-                self.scheduler.step()
+                
             # record loss
             # Records loss values in loss_log_dict. The loss values are normalized by the length of the training dataloader.
             for loss_name in loss_dict:
@@ -122,12 +123,14 @@ class Trainer(object):
                 else:
                     loss_log_dict[loss_name] += _loss_val
 
+        self.scheduler.step()
+
         test_loader = self.data_handler.test_dataloader
         total_val_loss = 0
         with torch.no_grad():
             for i, val_tem in enumerate(test_loader):
                 val_batch_data = list(map(lambda x: x.long().to(configs['device']), val_tem))
-                val_loss, _ = model.cal_loss(val_batch_data)
+                val_loss, _ = model.val_cal_loss(val_batch_data)
                 total_val_loss += val_loss.item()
 
         test_step = len(test_loader.dataset) // configs['test']['batch_size']

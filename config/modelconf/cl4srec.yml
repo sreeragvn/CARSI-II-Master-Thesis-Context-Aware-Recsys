@@ -17,8 +17,8 @@ train:
   tensorboard: true
   conf_mat: true
   ssl: false
-  gradient_accumulation: false
-  accumulation_steps: 10
+  gradient_accumulation: true
+  accumulation_steps: 4
 
 test:
   metrics: [recall, precision]
@@ -38,7 +38,7 @@ model:
   interaction_encoder: transformer
   dropout_rate: 0.1
   n_layers: 2
-  embedding_size: 64
+  embedding_size: 16
   n_heads: 2
   max_seq_len: 10
   lmd: 0.1
@@ -46,8 +46,8 @@ model:
   encoder_combine: concat
 
 lstm:
-  hidden_size: 256
-  num_layers: 30
+  hidden_size: 64
+  num_layers: 2
 
 tune:
   enable: false
