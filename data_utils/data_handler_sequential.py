@@ -51,11 +51,20 @@ class DataHandlerSequential:
                 user_seqs["item_seq"].append(seq)
                 user_seqs["item_id"].append(int(last_item))
                 user_seqs["time_delta"].append(time_delta_seq)
-
-                self.max_item_id = max(
-                    self.max_item_id, max(max(seq), int(last_item)))
+                self.max_item_id = max(self.max_item_id, max(max(seq), int(last_item)))
                 line = f.readline()
         return user_seqs
+    
+    def _sample_context_data(self, data):
+        small_dict = {}
+        count = 0
+        for key, value in data.items():
+            if count < 100:
+                small_dict[key] = value
+                count += 1
+            else:
+                break
+        return small_dict
     
     def _read_csv_dynamic_context(self, csv_file):
         try:
@@ -72,15 +81,7 @@ class DataHandlerSequential:
                     column: group[column].tolist() for column in context.columns.difference(['window_id'])
                 }
             if configs['train']['model_test_run']:
-                small_dict = {}
-                count = 0
-                for key, value in context_dict.items():
-                    if count < 100:
-                        small_dict[key] = value
-                        count += 1
-                    else:
-                        break
-                context_dict = small_dict
+                context_dict = self._sample_context_data(context_dict)
             return context_dict
         except Exception as e:
             print(f"Error reading dynamic CSV file: {e}")
@@ -99,15 +100,7 @@ class DataHandlerSequential:
                 context_dict[session_key] = row_dict
             
             if configs['train']['model_test_run']:
-                small_dict = {}
-                count = 0
-                for key, value in context_dict.items():
-                    if count < 100:
-                        small_dict[key] = value
-                        count += 1
-                    else:
-                        break
-                context_dict = small_dict
+                context_dict = self._sample_context_data(context_dict)
 
             return context_dict
         except Exception as e:
@@ -126,19 +119,19 @@ class DataHandlerSequential:
         configs['data']['static_context_feat_num'] = len(list(static_context_data[list(static_context_data.keys())[0]].keys()))
         configs['data']['static_context_max']  = self.static_context_embedding_size
 
-    def _seq_aug(self, user_seqs):
-        user_seqs_aug = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
-        for uid, seq, last_item, time_delta in zip(user_seqs["uid"], user_seqs["item_seq"], user_seqs["item_id"], user_seqs["time_delta"]):
-            user_seqs_aug["uid"].append(uid)
-            user_seqs_aug["item_seq"].append(seq)
-            user_seqs_aug["item_id"].append(last_item)
-            user_seqs_aug["time_delta"].append(time_delta)
-            for i in range(1, len(seq)-1):
-                user_seqs_aug["uid"].append(uid)
-                user_seqs_aug["item_seq"].append(seq[:i])
-                user_seqs_aug["item_id"].append(seq[i])
-                user_seqs_aug["time_delta"].append(time_delta[:i])
-        return user_seqs_aug
+    # def _seq_aug(self, user_seqs):
+    #     user_seqs_aug = {"uid": [], "item_seq": [], "item_id": [], "time_delta": []}
+    #     for uid, seq, last_item, time_delta in zip(user_seqs["uid"], user_seqs["item_seq"], user_seqs["item_id"], user_seqs["time_delta"]):
+    #         user_seqs_aug["uid"].append(uid)
+    #         user_seqs_aug["item_seq"].append(seq)
+    #         user_seqs_aug["item_id"].append(last_item)
+    #         user_seqs_aug["time_delta"].append(time_delta)
+    #         for i in range(1, len(seq)-1):
+    #             user_seqs_aug["uid"].append(uid)
+    #             user_seqs_aug["item_seq"].append(seq[:i])
+    #             user_seqs_aug["item_id"].append(seq[i])
+    #             user_seqs_aug["time_delta"].append(time_delta[:i])
+    #     return user_seqs_aug
 
     def load_data(self):
         user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
@@ -165,7 +158,7 @@ class DataHandlerSequential:
 
         #Only implementing the case of no sequence augmentations _seq_aug
         trn_data = SequentialDataset(user_seqs_train, dynamic_context_train, static_context_train)
-        tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, mode='test')
+        tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test)
 
         self.test_dataloader = data.DataLoader(
             tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)

@@ -7,6 +7,8 @@ class Tuner(object):
     def __init__(self, logger):
         self.logger = logger
         self.hyperparameters = configs['tune']['hyperparameters']
+        if not configs['train']['ssl']:
+            self.hyperparameters.remove('lmd', 'tau')
         self.tune_list = []
         self.search_length = 1
         for hyper_para in self.hyperparameters:

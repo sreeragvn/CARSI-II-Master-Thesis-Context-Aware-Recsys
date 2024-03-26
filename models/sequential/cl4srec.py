@@ -2,7 +2,7 @@ import math
 import random
 from models.base_model import BaseModel
 from models.model_utils import TransformerLayer, TransformerEmbedding
-from models.interaction_encoder import DUORec, LSTM_interactionEncoder
+from models.interaction_encoder import  LSTM_interactionEncoder
 from models.dynamic_context_encoder import TransformerEncoder_DynamicContext, LSTM_contextEncoder
 from models.static_context_encoder import static_context_encoder
 import numpy as np
@@ -24,7 +24,6 @@ class CL4SRec(BaseModel):
         model_config = configs['model']
         train_config = configs['train']
         lstm_config = configs['lstm']
-        duorec_config = configs['duorec']
 
         self.item_num = data_config['item_num']
         self.emb_size = model_config['embedding_size']
@@ -40,17 +39,16 @@ class CL4SRec(BaseModel):
         self.dynamic_context_feat_num = data_config['dynamic_context_feat_num']
         self.lstm_hidden_size = lstm_config['hidden_size']
         self.lstm_num_layers = lstm_config['num_layers']
-        self.inner_size = duorec_config['inner_size']
-        self.hidden_dropout_prob = duorec_config['hidden_dropout_prob']
-        self.attn_dropout_prob = duorec_config['attn_dropout_prob']
-        self.hidden_act = duorec_config['hidden_act']
-        self.layer_norm_eps = duorec_config['layer_norm_eps']
-        self.initializer_range = duorec_config['initializer_range']
         self.static_context_max_token = data_config['static_context_max']
         self.static_context_num = data_config['static_context_feat_num']
 
+        self.mask_default = self.mask_correlated_samples(batch_size=self.batch_size)
+
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=0.2)
+        
+        #static context encoder
         self.static_embedding  = static_context_encoder(self.static_context_max_token, 8, 32, 16, 8)
-        self.fc_context_dim_red = nn.Linear(72, 64)
 
         # interaction Encoder( # interaction_encoder options are lstm, sasrec, durorec)
         if model_config['interaction_encoder'] == 'lstm':
@@ -66,34 +64,11 @@ class CL4SRec(BaseModel):
                                                                       self.inner_size, 
                                                                       self.dropout_rate) 
                                                                       for _ in range(self.n_layers)])
-            self.sasrec_fc_layer1 = nn.Linear((self.max_len -1 )* self.emb_size, 512)
-            self.sasrec_fc_layer2 = nn.Linear(512, 128) 
-            self.sasrec_fc_layer3 = nn.Linear(128, 64) 
-        elif model_config['interaction_encoder'] == 'transformer':
-            self.emb_layer = nn.Embedding(self.item_num + 2, self.emb_size)
-            self.transformer_layers = nn.TransformerEncoderLayer(self.emb_size, 
-                                                                 self.n_heads, 
-                                                                 dim_feedforward=self.inner_size, 
-                                                                 dropout=self.dropout_rate, 
-                                                                 batch_first=True)
             self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size, 128)
-            self.sasrec_fc_layer2 = nn.Linear(128, 64)  # Reducing 256 to 128
-            self.sasrec_fc_layer3 = nn.Linear(64, 32) 
-        # implementation of sasrec from another source - DUORec https://github.com/RuihongQiu/DuoRec/tree/master
-        elif model_config['interaction_encoder'] == 'duorec':
-            self.transformer_layers = DUORec(self.item_num, 
-                                             self.emb_size, 
-                                             self.max_len, 
-                                             self.n_layers, 
-                                             self.n_heads,
-                                             self.inner_size, 
-                                             self.hidden_dropout_prob, 
-                                             self.attn_dropout_prob, 
-                                             self.hidden_act,
-                                             self.layer_norm_eps, 
-                                             self.initializer_range)
+            self.sasrec_fc_layer2 = nn.Linear(128, 128) 
+            self.sasrec_fc_layer3 = nn.Linear(128, 64) 
         else:
-            print('mention the interaction encoder - sasrec, lstm or duorec')
+            print('mention the interaction encoder - sasrec or lstm')
 
         # dynamic Context Encoder
         if model_config['context_encoder'] == 'lstm':
@@ -102,7 +77,7 @@ class CL4SRec(BaseModel):
                                                        self.lstm_num_layers,
                                                        self.emb_size
                                                        )
-            input_size = 56
+            input_size = 88
         elif model_config['context_encoder'] == 'transformer':
             self.context_encoder = TransformerEncoder_DynamicContext(self.dynamic_context_feat_num, # num_features_continuous
                                                                      data_config['dynamic_context_window_length'],
@@ -113,12 +88,13 @@ class CL4SRec(BaseModel):
         # FCs after concatenation layer
         fc_layers = []
         for _ in range(1):
-            fc_layers.extend([nn.Linear(input_size, 32), nn.ReLU()])
+            fc_layers.extend([nn.Linear(input_size, 32), self.relu, self.dropout])
         fc_layers.append(nn.Linear(32, self.emb_size))
         self.fc_layers = nn.Sequential(*fc_layers)
 
         # Combine 3 encoder outputs - Attention or concatenation
         if configs['model']['encoder_combine'] == 'attention':
+            self.fc_context_dim_red = nn.Linear(72, 64)
             self.multi_head_attention = nn.MultiheadAttention(self.emb_size, self.n_heads)
 
         # Loss Function
@@ -129,11 +105,9 @@ class CL4SRec(BaseModel):
                 _class_w = pickle.load(f)
                 # _class_w = _class_w[1:]
             self.loss_func = nn.CrossEntropyLoss(_class_w)
-
-        self.mask_default = self.mask_correlated_samples(
-            batch_size=self.batch_size)
         self.cl_loss_func = nn.CrossEntropyLoss()
         self.val_loss_func = nn.CrossEntropyLoss()
+
         # parameters initialization
         self.apply(self._init_weights)
 
@@ -153,12 +127,10 @@ class CL4SRec(BaseModel):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
-    def forward(self, batch_seqs,batch_context, batch_static_context, sequence_length):
+    def forward(self, batch_seqs,batch_context, batch_static_context):
         # interaction_encoder options are lstm, sasrec, durorec
         if configs['model']['interaction_encoder'] == 'lstm':
             sasrec_out = self.interaction_encoder(batch_seqs)
-        elif  configs['model']['interaction_encoder'] == 'duorec':
-            sasrec_out = self.transformer_layers(batch_seqs, sequence_length)
         elif configs['model']['interaction_encoder'] == 'sasrec':
             mask = (batch_seqs > 0).unsqueeze(1).repeat(
                 1, batch_seqs.size(1), 1).unsqueeze(1)
@@ -166,26 +138,15 @@ class CL4SRec(BaseModel):
             for transformer in self.transformer_layers:
                 x = transformer(x, mask)
 
-            all_tokens_except_last = x[:, :-1, :]
-            last_token = x[:, -1, :]
+            # all_tokens_except_last = x[:, :-1, :]
+            # last_token = x[:, -1, :]
             # print(all_tokens_except_last.size())
-
-            x_reshaped = all_tokens_except_last.view(x.size(0), -1)
+            sasrec_out = x.view(x.size(0), -1)
             
-            sasrec_out = self.sasrec_fc_layer1(x_reshaped)
-            sasrec_out = self.sasrec_fc_layer2(sasrec_out)
-            sasrec_out = self.sasrec_fc_layer3(sasrec_out)
+            sasrec_out = self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out)))
+            sasrec_out = self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out)))
+            sasrec_out = self.dropout(self.relu(self.sasrec_fc_layer3(sasrec_out)))
             # sasrec_out = x[:, -1, :]
-        elif configs['model']['interaction_encoder'] == 'transformer':
-            mask = (batch_seqs > 0).unsqueeze(1).repeat(
-                1, batch_seqs.size(1), 1).unsqueeze(1)
-            emb_out = self.emb_layer(batch_seqs)  # (seq_len, batch_size, embed_dim)
-            sasrec_out = self.transformer_layers(emb_out)
-            x_reshaped = sasrec_out.view(sasrec_out.size(0), -1)
-            sasrec_out = self.sasrec_fc_layer1(x_reshaped)
-            sasrec_out = self.sasrec_fc_layer2(sasrec_out)
-            sasrec_out = self.sasrec_fc_layer3(sasrec_out)
-            # print(sasrec_out.size())
 
         batch_context = batch_context.to(sasrec_out.dtype)
         context_output = self.context_encoder(batch_context)
@@ -197,19 +158,16 @@ class CL4SRec(BaseModel):
             out = torch.cat((sasrec_out, context), dim=1)
             out = self.fc_layers(out)
         if configs['model']['encoder_combine'] == 'attention':
-            out, _ = self.multi_head_attention(sasrec_out, 
-                                               self.fc_context_dim_red(context), 
-                                               self.fc_context_dim_red(context))
+            context = self.fc_context_dim_red(context)
+            out, _ = self.multi_head_attention(sasrec_out, context, context)
             
         return out
 
     def cal_loss(self, batch_data):
-        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, sequence_length = batch_data
-        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, sequence_length)
+        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, _ = batch_data
+        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
 
         if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        elif  configs['model']['interaction_encoder'] == 'transformer':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
@@ -218,8 +176,8 @@ class CL4SRec(BaseModel):
 
         if configs['train']['ssl']:
             aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
-            seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context, sequence_length)
-            seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context, sequence_length)
+            seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context)
+            seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context)
             # Compute InfoNCE Loss (Contrastive Loss):
             # Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. 
             # The temperature parameter (temp) and batch size are specified.
@@ -241,49 +199,28 @@ class CL4SRec(BaseModel):
         return loss + cl_loss, loss_dict
 
     def val_cal_loss(self, val_batch_data):
-        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, sequence_length = val_batch_data
-        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, sequence_length)
+        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, _ = val_batch_data
+        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
 
         if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        elif  configs['model']['interaction_encoder'] == 'transformer':
-            test_item_emb = self.emb_layer.weight[:self.item_num +1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
         loss = self.val_loss_func(logits, batch_last_items)
 
-        if configs['train']['ssl']:
-            aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
-            seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context, sequence_length)
-            seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context, sequence_length)
-            # Compute InfoNCE Loss (Contrastive Loss):
-            # Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. 
-            # The temperature parameter (temp) and batch size are specified.
-            cl_loss = self.lmd * self.info_nce(
-                seq_output1, seq_output2, temp=self.tau, batch_size=aug_seq1.shape[0])
-            # Aggregate Losses and Return: Aggregates the recommendation loss and contrastive loss into a total loss. 
-            # Returns the total loss along with a dictionary containing individual loss components (rec_loss and cl_loss).
-            loss_dict = {
-                'rec_loss': loss.item(),
-                'cl_loss': cl_loss.item(),
-            }
-        else:
-            cl_loss = 0
-            loss_dict = {
-                'rec_loss': loss.item(),
-                'cl_loss': cl_loss,
-            }
-
+        cl_loss = 0
+        loss_dict = {
+            'rec_loss': loss.item(),
+            'cl_loss': cl_loss,
+        }
         return loss + cl_loss, loss_dict
 
     def predict(self, batch_data):
-        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, seq_len  = batch_data
-        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, seq_len)
+        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, _  = batch_data
+        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         
         if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer(batch_last_items)
-        elif configs['model']['interaction_encoder'] == 'transformer':
             test_item_emb = self.emb_layer(batch_last_items)
         else:
             test_item_emb = self.emb_layer.token_emb(batch_last_items)
@@ -296,14 +233,12 @@ class CL4SRec(BaseModel):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
 
         # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
-        _, batch_seqs, _, _, batch_dynamic_context, batch_static_context, seq_len  = batch_data
+        _, batch_seqs, _, _, batch_dynamic_context, batch_static_context, _  = batch_data
         # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
-        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, seq_len)
+        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
     
         if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        elif  configs['model']['interaction_encoder'] == 'transformer':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         else:
             test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
