@@ -5,7 +5,6 @@ from models.model_utils import TransformerLayer, TransformerEmbedding
 from models.interaction_encoder import DUORec, LSTM_interactionEncoder
 from models.dynamic_context_encoder import TransformerEncoder_DynamicContext, LSTM_contextEncoder
 from models.static_context_encoder import static_context_encoder
-from .SASRecEncoder import SASRecEncoder
 import numpy as np
 import torch
 from torch import nn
@@ -178,6 +177,8 @@ class CL4SRec(BaseModel):
             sasrec_out = self.sasrec_fc_layer3(sasrec_out)
             # sasrec_out = x[:, -1, :]
         elif configs['model']['interaction_encoder'] == 'transformer':
+            mask = (batch_seqs > 0).unsqueeze(1).repeat(
+                1, batch_seqs.size(1), 1).unsqueeze(1)
             emb_out = self.emb_layer(batch_seqs)  # (seq_len, batch_size, embed_dim)
             sasrec_out = self.transformer_layers(emb_out)
             x_reshaped = sasrec_out.view(sasrec_out.size(0), -1)

@@ -14,10 +14,7 @@ class DataHandlerSequential:
     def __init__(self):
         data_name = configs['data']['name']
 
-        if configs['train']['model_test_run']:
-            predir = f'./datasets/sequential/test/{data_name}'
-        else:
-            predir = f'./datasets/sequential/{data_name}'
+        predir = f'./datasets/sequential/{data_name}'
 
         configs['train']['parameter_class_weights_path']  = path.join(predir, 'parameters/param.pkl')
         configs['train']['parameter_label_mapping_path']  = path.join(predir, 'parameters/label_mapping.pkl')
@@ -74,6 +71,16 @@ class DataHandlerSequential:
                 context_dict[window_id] = {
                     column: group[column].tolist() for column in context.columns.difference(['window_id'])
                 }
+            if configs['train']['model_test_run']:
+                small_dict = {}
+                count = 0
+                for key, value in context_dict.items():
+                    if count < 100:
+                        small_dict[key] = value
+                        count += 1
+                    else:
+                        break
+                context_dict = small_dict
             return context_dict
         except Exception as e:
             print(f"Error reading dynamic CSV file: {e}")
@@ -90,6 +97,18 @@ class DataHandlerSequential:
                 session_key = row['window_id']
                 row_dict = row.drop('window_id').to_dict()
                 context_dict[session_key] = row_dict
+            
+            if configs['train']['model_test_run']:
+                small_dict = {}
+                count = 0
+                for key, value in context_dict.items():
+                    if count < 100:
+                        small_dict[key] = value
+                        count += 1
+                    else:
+                        break
+                context_dict = small_dict
+
             return context_dict
         except Exception as e:
             print(f"Error reading static context CSV file: {e}")
@@ -122,21 +141,21 @@ class DataHandlerSequential:
         return user_seqs_aug
 
     def load_data(self):
+        user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
+        user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
+        dynamic_context_train =  self._read_csv_dynamic_context(self.trn_dynamic_context_file)
+        dynamic_context_test =  self._read_csv_dynamic_context(self.tst_dynamic_context_file)
+        static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
+        static_context_test =  self._read_csv_static_context(self.tst_static_context_file)
+
         if configs['train']['model_test_run']:
-            user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
-            user_seqs_test = self._read_tsv_to_user_seqs(self.trn_file)
-            dynamic_context_train =  self._read_csv_dynamic_context(self.trn_dynamic_context_file)
-            dynamic_context_test =  self._read_csv_dynamic_context(self.trn_dynamic_context_file)
-            static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
-            static_context_test =  self._read_csv_static_context(self.trn_static_context_file)
-        else:
-            user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
-            user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
-            dynamic_context_train =  self._read_csv_dynamic_context(self.trn_dynamic_context_file)
-            dynamic_context_test =  self._read_csv_dynamic_context(self.tst_dynamic_context_file)
-            static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
-            static_context_test =  self._read_csv_static_context(self.tst_static_context_file)
+            user_seqs_train  = {key: value[:100] for key, value in user_seqs_train.items()}
+            user_seqs_test = user_seqs_train
+            dynamic_context_test = dynamic_context_train
+            static_context_test = static_context_train
+
         self._set_statistics(user_seqs_train, user_seqs_test, dynamic_context_test, static_context_test)
+
         # # seqeuntial augmentation: [1, 2, 3,] -> [1,2], [3]
         # if 'seq_aug' in configs['data'] and configs['data']['seq_aug']:
         #     user_seqs_aug = self._seq_aug(user_seqs_train)
