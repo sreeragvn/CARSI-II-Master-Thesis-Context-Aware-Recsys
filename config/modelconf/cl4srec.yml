@@ -5,9 +5,9 @@ optimizer:
   weight_decay: 0
 
 train:
-  model_test_run: false
+  model_test_run: true
   weighted_loss_fn: true
-  epoch: 3000
+  epoch: 200
   batch_size: 16
   save_model: true
   log_loss: true
@@ -21,7 +21,7 @@ train:
   accumulation_steps: 4
 
 test:
-  metrics: [recall, precision]
+  metrics: [precision, recall, f1score, accuracy]
   k: [1, 2, 3]
   batch_size: 16
   train_eval: false

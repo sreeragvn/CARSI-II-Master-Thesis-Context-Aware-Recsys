@@ -4,6 +4,7 @@ from config.configurator import configs
 import pandas as pd
 import os
 import pickle
+from torchmetrics.classification import MulticlassConfusionMatrix
 class Metric(object):
 
     def __init__(self):
@@ -106,7 +107,6 @@ class Metric(object):
             pred_scores = torch.cat((pred_scores, batch_pred), dim=0).to(configs['device'])
         metrics_data = self.metrics_calc(true_labels, pred_scores)
         if test and not configs['train']['model_test_run'] and configs['train']['conf_mat']:
-            from torchmetrics.classification import MulticlassConfusionMatrix
             self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes+1).to(configs['device'])
             cm = self.cm(pred_scores, true_labels)
             conf_matrix_np = cm.cpu().numpy()
