@@ -85,6 +85,7 @@ class Trainer(object):
         # steps calculates the number of steps (batches) in the training dataset.
         # for recording loss
         loss_log_dict = {}
+        loss_log_dict_val = {}
         ep_loss = 0
         steps = len(train_dataloader.dataset) // configs['train']['batch_size']
         # start this epoch
@@ -117,11 +118,11 @@ class Trainer(object):
             # record loss
             # Records loss values in loss_log_dict. The loss values are normalized by the length of the training dataloader.
             for loss_name in loss_dict:
-                _loss_val = float(loss_dict[loss_name]) / len(train_dataloader)
+                _loss_train = float(loss_dict[loss_name]) / len(train_dataloader)
                 if loss_name not in loss_log_dict:
-                    loss_log_dict[loss_name] = _loss_val
+                    loss_log_dict[loss_name] = _loss_train
                 else:
-                    loss_log_dict[loss_name] += _loss_val
+                    loss_log_dict[loss_name] += _loss_train
 
         self.scheduler.step()
 
@@ -130,12 +131,11 @@ class Trainer(object):
         with torch.no_grad():
             for i, val_tem in enumerate(test_loader):
                 val_batch_data = list(map(lambda x: x.long().to(configs['device']), val_tem))
-                val_loss, _ = model.val_cal_loss(val_batch_data)
+                val_loss, val_loss_dict = model.val_cal_loss(val_batch_data)
                 total_val_loss += val_loss.item()
 
         test_step = len(test_loader.dataset) // configs['test']['batch_size']
         avg_val_loss = total_val_loss / len(test_loader)
-        # total_val_loss = round(avg_val_loss, 2)
         print('val_loss: ', round(avg_val_loss,3))
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
         writer.add_scalar('Loss/val', round(total_val_loss /test_step,3), epoch_idx)

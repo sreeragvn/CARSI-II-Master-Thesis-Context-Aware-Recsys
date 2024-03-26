@@ -16,11 +16,15 @@ class LSTM_contextEncoder(nn.Module):
         self.fc1 = nn.Linear(hidden_size, hidden_size // 2)  # Half the dimension
         self.fc2 = nn.Linear(hidden_size // 2, emb_size)
         self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=0.2)
     def forward(self, x):
         x = x.permute(0, 2, 1)
         _,(h_n, _) = self.lstm(x)
         h_n = h_n[-1]
-        out = self.fc2(self.relu(self.fc1(h_n)))
+        out = self.relu(self.fc1(h_n))
+        out = self.dropout(out) 
+        out = self.relu(self.fc2(out))
+        out = self.dropout(out) 
         return out
 
 class TransformerEncoder_DynamicContext(nn.Module):
