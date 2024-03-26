@@ -10,6 +10,7 @@ import torch
 from torch import nn
 from config.configurator import configs
 import pickle
+from ..TCNN.tcn_model import TCNModel
 
 
 class CL4SRec(BaseModel):
@@ -84,11 +85,17 @@ class CL4SRec(BaseModel):
                                                                      hidden_dim=self.emb_size, # d_model
                                                                      num_heads=8,)
             input_size = 6400 + 2 * self.emb_size
+        elif model_config['context_encoder'] == 'tempcnn':
+            self.context_encoder = TCNModel(self.dynamic_context_feat_num, num_channels=[20] * 2, kernel_size=3, dropout=0.25)
+            input_size = 136
+            output_size = 64
 
         # FCs after concatenation layer
         fc_layers = []
-        for _ in range(1):
-            fc_layers.extend([nn.Linear(input_size, 32), self.relu, self.dropout])
+        for _ in range(2):
+            fc_layers.extend([nn.Linear(input_size, output_size), self.relu, self.dropout])
+            input_size = 64
+            output_size = 32
         fc_layers.append(nn.Linear(32, self.emb_size))
         self.fc_layers = nn.Sequential(*fc_layers)
 
