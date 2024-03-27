@@ -66,11 +66,10 @@ class Trainer(object):
             # ), lr=initial_lr, betas=(0.9, 0.98), eps=1e-09, weight_decay=optim_config['weight_decay'])
             self.optimizer = optim.Adam(model.parameters(
             ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
-            # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.9, min_lr=1e-6, verbose=True)
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=10, factor=0.9, min_lr=1e-6)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
-            self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
+            # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
             # self.scheduler = LambdaLR(self.optimizer, lr_lambda)
-
 
     def train_epoch(self, model, epoch_idx):
         # This method encapsulates the training logic for one epoch of a recommender system. It involves iterating over batches, computing and backpropagating the loss, and logging relevant information. The specifics may vary based on the model and data handling mechanisms used in the recommender system.
@@ -124,8 +123,6 @@ class Trainer(object):
                 else:
                     loss_log_dict[loss_name] += _loss_train
 
-        self.scheduler.step()
-
         test_loader = self.data_handler.test_dataloader
         total_val_loss = 0
         with torch.no_grad():
@@ -140,6 +137,8 @@ class Trainer(object):
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
         writer.add_scalar('Loss/val', round(total_val_loss /test_step,3), epoch_idx)
         # Uses a writer (probably a TensorBoard SummaryWriter) to log the training loss for the epoch.
+
+        self.scheduler.step(avg_val_loss)
 
         # log loss
         if configs['train']['log_loss']:
