@@ -47,6 +47,8 @@ class CL4SRec(BaseModel):
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.3)
+        self.output_fc = nn.Linear(self.emb_size,self.item_num + 1)
+        self.softmax = nn.LogSoftmax(dim=1)
 
         # interaction Encoder( # interaction_encoder options are lstm, sasrec, durorec)
         if model_config['interaction_encoder'] == 'lstm':
@@ -111,17 +113,16 @@ class CL4SRec(BaseModel):
 
         # Loss Function
         if configs['train']['model_test_run'] or not configs['train']['weighted_loss_fn']:
-            self.loss_func = nn.CrossEntropyLoss()
+            self.loss_func = nn.NLLLoss()
+            self.val_loss_func = nn.NLLLoss()
         else:
             with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
                 _class_w = pickle.load(f)
                 # _class_w = _class_w[1:]
-            self.loss_func = nn.CrossEntropyLoss(_class_w)
-        self.cl_loss_func = nn.CrossEntropyLoss()
-        self.val_loss_func = nn.CrossEntropyLoss()
-
-        
-
+            self.loss_func = nn.NLLLoss(_class_w)
+            self.val_loss_func = nn.NLLLoss(_class_w)
+        self.cl_loss_func = nn.NLLLoss()
+    
     def count_parameters(self):
         # Count the total number of parameters in the model
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
@@ -170,19 +171,14 @@ class CL4SRec(BaseModel):
         if configs['model']['encoder_combine'] == 'attention':
             context = self.fc_context_dim_red(context)
             out, _ = self.multi_head_attention(sasrec_out, context, context)
-            
+        out = self.softmax(self.output_fc(out))
         return out
 
     def cal_loss(self, batch_data):
         _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, _ = batch_data
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
 
-        if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        else:
-            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
-        logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
-        loss = self.loss_func(logits, batch_last_items)
+        loss = self.loss_func(seq_output, batch_last_items)
 
         if configs['train']['ssl']:
             aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
@@ -212,12 +208,7 @@ class CL4SRec(BaseModel):
         _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, _ = val_batch_data
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
 
-        if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        else:
-            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
-        logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
-        loss = self.val_loss_func(logits, batch_last_items)
+        loss = self.val_loss_func(seq_output, batch_last_items)
 
         cl_loss = 0
         loss_dict = {
@@ -229,15 +220,8 @@ class CL4SRec(BaseModel):
     def predict(self, batch_data):
         _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, _  = batch_data
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
-        
-        if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer(batch_last_items)
-        else:
-            test_item_emb = self.emb_layer.token_emb(batch_last_items)
-        test_item_emb = self.emb_layer(batch_last_items)
-
-        scores = torch.mul(logits, test_item_emb).sum(dim=1)  
-        return scores
+     
+        return logits
 
     def full_predict(self, batch_data):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
@@ -248,14 +232,7 @@ class CL4SRec(BaseModel):
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
     
-        if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        else:
-            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
-        # test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
-        # Return Predicted Scores:Returns the computed scores, which represent the predicted relevance or preference scores for each item in the vocabulary for the given batch of users and sequences.
-        scores = torch.matmul(logits, test_item_emb.transpose(0, 1))
-        return scores
+        return logits
 
     def info_nce(self, z_i, z_j, temp, batch_size):
         # The method computes the InfoNCE loss for pairs of embeddings (z_i and z_j) by comparing the positive sample similarities with negative sample similarities, where negative samples are selected based on a mask to ensure they are uncorrelated. The final loss is calculated using a contrastive loss function.
