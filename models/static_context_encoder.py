@@ -2,6 +2,13 @@ import torch as t
 from torch import nn
 from config.configurator import configs
 
+def weights_init(m):
+    if isinstance(m, nn.Embedding):
+        nn.init.uniform_(m.weight.data, -0.1, 0.1)
+    elif isinstance(m, nn.Linear):
+        nn.init.xavier_normal_(m.weight.data)
+        nn.init.constant_(m.bias.data, 0.0)
+
 class static_context_encoder(nn.Module):
     def __init__(self, vocab_sizes, embedding_dim, hidden_dim1, hidden_dim2, output_dim):
         super(static_context_encoder, self).__init__()
@@ -14,6 +21,7 @@ class static_context_encoder(nn.Module):
         self.output_layer = nn.Linear(hidden_dim2, output_dim)
         self.dropout = nn.Dropout(p=0.2)
         self.relu = nn.ReLU()
+        self.apply(weights_init)
 
     # def forward(self, x):
     #     embedded = [

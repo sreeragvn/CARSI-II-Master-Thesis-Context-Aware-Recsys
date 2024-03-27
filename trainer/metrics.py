@@ -13,6 +13,7 @@ class Metric(object):
         with open(configs['train']['parameter_label_mapping_path'], 'rb') as f:
             _label_mapping = pickle.load(f)
         self._num_classes = len(list(_label_mapping.keys()))
+        self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes+1).to(configs['device'])
 
     def precision_at_k(output, target, k=3):
         _, indices = torch.topk(output, k, dim=1)
@@ -111,7 +112,6 @@ class Metric(object):
             pred_scores = torch.cat((pred_scores, batch_pred), dim=0).to(configs['device'])
         metrics_data = self.metrics_calc(true_labels, pred_scores)
         if test and not configs['train']['model_test_run'] and configs['train']['conf_mat']:
-            self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes+1).to(configs['device'])
             cm = self.cm(pred_scores, true_labels)
             conf_matrix_np = cm.cpu().numpy()
             cm_name = configs['test']['save_path']

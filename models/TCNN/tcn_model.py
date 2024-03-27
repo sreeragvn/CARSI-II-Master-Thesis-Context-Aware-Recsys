@@ -16,7 +16,7 @@ class TemporalBlock(nn.Module):
         self.net = nn.Sequential(self.pad, self.conv1, self.relu, self.dropout,
                                  self.pad, self.conv2, self.relu, self.dropout)
         self.downsample = nn.Conv1d(
-            n_inputs, n_outputs, 1) if n_inputs     != n_outputs else None
+            n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
         self.relu = nn.ReLU()
         self.init_weights()
 
@@ -57,7 +57,7 @@ class TCNModel(nn.Module):
             num_input, num_channels, kernel_size=kernel_size, dropout=dropout)
         self.dropout = nn.Dropout(dropout)
         # self.decoder = nn.Linear(num_channels[-1], 1)
-        self.fc = FlattenLinear(2000, [1024, 512, 256, 128, 64], 64, dropout_p=0.1)
+        self.fc = FlattenLinear(2000, [1024, 512, 256, 128], 64, dropout_p=0.2)
 
     def forward(self, x):
         # out = self.tcn(x)[:, :, -1]
@@ -88,6 +88,13 @@ class FlattenLinear(nn.Module):
         
         # Create sequential model
         self.model = nn.Sequential(*layers)
+        self.init_weights()
+    
+    def init_weights(self):
+        for layer in self.model:
+            if isinstance(layer, nn.Linear):
+                nn.init.xavier_uniform_(layer.weight)
+                nn.init.constant_(layer.bias, 0.0)
     
     def forward(self, x):
         return self.model(x)

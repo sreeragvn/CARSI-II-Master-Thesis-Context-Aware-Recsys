@@ -1,0 +1,494 @@
+2024-03-27 10:14:16,160 - {'optimizer': {'name': 'adam', 'lr': 0.001, 'final_lr': 1e-06, 'weight_decay': 0}, 'train': {'model_test_run': True, 'weighted_loss_fn': True, 'epoch': 1000, 'batch_size': 64, 'save_model': True, 'log_loss': True, 'test_step': 1, 'reproducible': True, 'seed': 2023, 'tensorboard': True, 'conf_mat': True, 'ssl': False, 'gradient_accumulation': False, 'accumulation_steps': 4, 'early_stop': False, 'parameter_class_weights_path': './datasets/sequential/aug/parameters/param.pkl', 'parameter_label_mapping_path': './datasets/sequential/aug/parameters/label_mapping.pkl'}, 'test': {'metrics': ['precision', 'recall', 'f1score', 'accuracy'], 'k': [1, 2, 3], 'batch_size': 64, 'train_eval': False, 'save_path': '2024-03-27_10-14'}, 'data': {'type': 'sequential', 'name': 'aug', 'seq_aug': False, 'dynamic_context_window_length': 100, 'user_num': 100, 'item_num': 28, 'max_context_length': 100, 'dynamic_context_feat_num': 14, 'static_context_feat_num': 6, 'static_context_max': [12, 6, 23, 1, 1, 1]}, 'model': {'name': 'cl4srec', 'context_encoder': 'tempcnn', 'interaction_encoder': 'sasrec', 'dropout_rate': 0.1, 'n_layers': 2, 'embedding_size': 16, 'n_heads': 2, 'max_seq_len': 10, 'lmd': 0.1, 'tau': 1, 'encoder_combine': 'concat'}, 'lstm': {'hidden_size': 64, 'num_layers': 2}, 'tune': {'enable': False, 'hyperparameters': ['dropout_rate', 'lmd', 'tau'], 'dropout_rate': [0.1, 0.2, 0.3], 'lmd': [0.05, 0.1, 0.2], 'tau': [0.5, 0.7, 0.9]}, 'device': 'cpu'}
+2024-03-27 10:14:17,288 - [Epoch   0 / 1000] rec_loss: 3.3489 cl_loss: 0.0000 
+2024-03-27 10:14:17,587 - Epoch   0 Test set [precision@1: 0.1100 precision@2: 0.0500 precision@3: 0.0400 ] Test set [recall@1: 0.1100 recall@2: 0.1100 recall@3: 0.1100 ] Test set [f1score@1: 0.1100 f1score@2: 0.0700 f1score@3: 0.0500 ] Test set [accuracy@1: 0.1100 accuracy@2: 0.1100 accuracy@3: 0.1100 ] 
+2024-03-27 10:14:18,282 - [Epoch   1 / 1000] rec_loss: 3.2426 cl_loss: 0.0000 
+2024-03-27 10:14:18,572 - Epoch   1 Test set [precision@1: 0.1100 precision@2: 0.0500 precision@3: 0.0400 ] Test set [recall@1: 0.1100 recall@2: 0.1100 recall@3: 0.1200 ] Test set [f1score@1: 0.1100 f1score@2: 0.0700 f1score@3: 0.0600 ] Test set [accuracy@1: 0.1100 accuracy@2: 0.1100 accuracy@3: 0.1200 ] 
+2024-03-27 10:14:19,230 - [Epoch   2 / 1000] rec_loss: 2.9731 cl_loss: 0.0000 
+2024-03-27 10:14:19,529 - Epoch   2 Test set [precision@1: 0.1100 precision@2: 0.1200 precision@3: 0.1200 ] Test set [recall@1: 0.1100 recall@2: 0.2500 recall@3: 0.3600 ] Test set [f1score@1: 0.1100 f1score@2: 0.1700 f1score@3: 0.1800 ] Test set [accuracy@1: 0.1100 accuracy@2: 0.2500 accuracy@3: 0.3600 ] 
+2024-03-27 10:14:20,184 - [Epoch   3 / 1000] rec_loss: 2.7302 cl_loss: 0.0000 
+2024-03-27 10:14:20,474 - Epoch   3 Test set [precision@1: 0.1100 precision@2: 0.1700 precision@3: 0.2000 ] Test set [recall@1: 0.1100 recall@2: 0.3400 recall@3: 0.6100 ] Test set [f1score@1: 0.1100 f1score@2: 0.2300 f1score@3: 0.3100 ] Test set [accuracy@1: 0.1100 accuracy@2: 0.3400 accuracy@3: 0.6100 ] 
+2024-03-27 10:14:21,205 - [Epoch   4 / 1000] rec_loss: 2.5421 cl_loss: 0.0000 
+2024-03-27 10:14:21,495 - Epoch   4 Test set [precision@1: 0.3900 precision@2: 0.2500 precision@3: 0.2000 ] Test set [recall@1: 0.3900 recall@2: 0.5000 recall@3: 0.6100 ] Test set [f1score@1: 0.3900 f1score@2: 0.3300 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5000 accuracy@3: 0.6100 ] 
+2024-03-27 10:14:22,154 - [Epoch   5 / 1000] rec_loss: 2.2232 cl_loss: 0.0000 
+2024-03-27 10:14:22,490 - Epoch   5 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:23,156 - [Epoch   6 / 1000] rec_loss: 2.3189 cl_loss: 0.0000 
+2024-03-27 10:14:23,465 - Epoch   6 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:24,155 - [Epoch   7 / 1000] rec_loss: 2.1890 cl_loss: 0.0000 
+2024-03-27 10:14:24,443 - Epoch   7 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:25,070 - [Epoch   8 / 1000] rec_loss: 2.0666 cl_loss: 0.0000 
+2024-03-27 10:14:25,380 - Epoch   8 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:26,016 - [Epoch   9 / 1000] rec_loss: 2.0476 cl_loss: 0.0000 
+2024-03-27 10:14:26,305 - Epoch   9 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6200 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6200 ] 
+2024-03-27 10:14:26,959 - [Epoch  10 / 1000] rec_loss: 1.9854 cl_loss: 0.0000 
+2024-03-27 10:14:27,258 - Epoch  10 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6200 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6200 ] 
+2024-03-27 10:14:27,884 - [Epoch  11 / 1000] rec_loss: 2.0241 cl_loss: 0.0000 
+2024-03-27 10:14:28,176 - Epoch  11 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6200 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6200 ] 
+2024-03-27 10:14:28,815 - [Epoch  12 / 1000] rec_loss: 2.1165 cl_loss: 0.0000 
+2024-03-27 10:14:29,096 - Epoch  12 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6200 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6200 ] 
+2024-03-27 10:14:29,766 - [Epoch  13 / 1000] rec_loss: 2.0148 cl_loss: 0.0000 
+2024-03-27 10:14:30,075 - Epoch  13 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6200 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6200 ] 
+2024-03-27 10:14:30,709 - [Epoch  14 / 1000] rec_loss: 1.9828 cl_loss: 0.0000 
+2024-03-27 10:14:30,992 - Epoch  14 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6300 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6300 ] 
+2024-03-27 10:14:31,621 - [Epoch  15 / 1000] rec_loss: 1.9696 cl_loss: 0.0000 
+2024-03-27 10:14:31,926 - Epoch  15 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2000 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6100 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6100 ] 
+2024-03-27 10:14:32,694 - [Epoch  16 / 1000] rec_loss: 2.0328 cl_loss: 0.0000 
+2024-03-27 10:14:32,984 - Epoch  16 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:33,611 - [Epoch  17 / 1000] rec_loss: 2.0349 cl_loss: 0.0000 
+2024-03-27 10:14:33,889 - Epoch  17 Test set [precision@1: 0.3900 precision@2: 0.2500 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5100 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3400 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5100 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:34,506 - [Epoch  18 / 1000] rec_loss: 1.8351 cl_loss: 0.0000 
+2024-03-27 10:14:34,784 - Epoch  18 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:35,403 - [Epoch  19 / 1000] rec_loss: 1.9545 cl_loss: 0.0000 
+2024-03-27 10:14:35,682 - Epoch  19 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2000 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.5900 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3000 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.5900 ] 
+2024-03-27 10:14:36,300 - [Epoch  20 / 1000] rec_loss: 1.9268 cl_loss: 0.0000 
+2024-03-27 10:14:36,577 - Epoch  20 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2000 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6100 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6100 ] 
+2024-03-27 10:14:37,215 - [Epoch  21 / 1000] rec_loss: 1.9310 cl_loss: 0.0000 
+2024-03-27 10:14:37,496 - Epoch  21 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2000 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6100 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6100 ] 
+2024-03-27 10:14:38,117 - [Epoch  22 / 1000] rec_loss: 1.8887 cl_loss: 0.0000 
+2024-03-27 10:14:38,398 - Epoch  22 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:39,014 - [Epoch  23 / 1000] rec_loss: 1.8271 cl_loss: 0.0000 
+2024-03-27 10:14:39,291 - Epoch  23 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2100 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6400 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6400 ] 
+2024-03-27 10:14:39,910 - [Epoch  24 / 1000] rec_loss: 1.8260 cl_loss: 0.0000 
+2024-03-27 10:14:40,202 - Epoch  24 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2200 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6500 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6500 ] 
+2024-03-27 10:14:40,821 - [Epoch  25 / 1000] rec_loss: 1.9139 cl_loss: 0.0000 
+2024-03-27 10:14:41,098 - Epoch  25 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2200 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6500 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6500 ] 
+2024-03-27 10:14:41,717 - [Epoch  26 / 1000] rec_loss: 1.9151 cl_loss: 0.0000 
+2024-03-27 10:14:42,028 - Epoch  26 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2000 ] Test set [recall@1: 0.3900 recall@2: 0.5200 recall@3: 0.6100 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3100 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5200 accuracy@3: 0.6100 ] 
+2024-03-27 10:14:42,655 - [Epoch  27 / 1000] rec_loss: 1.8938 cl_loss: 0.0000 
+2024-03-27 10:14:42,934 - Epoch  27 Test set [precision@1: 0.3900 precision@2: 0.2800 precision@3: 0.2200 ] Test set [recall@1: 0.3900 recall@2: 0.5700 recall@3: 0.6700 ] Test set [f1score@1: 0.3900 f1score@2: 0.3800 f1score@3: 0.3400 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5700 accuracy@3: 0.6700 ] 
+2024-03-27 10:14:43,548 - [Epoch  28 / 1000] rec_loss: 1.8459 cl_loss: 0.0000 
+2024-03-27 10:14:43,827 - Epoch  28 Test set [precision@1: 0.3900 precision@2: 0.2800 precision@3: 0.2300 ] Test set [recall@1: 0.3900 recall@2: 0.5500 recall@3: 0.6900 ] Test set [f1score@1: 0.3900 f1score@2: 0.3700 f1score@3: 0.3400 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5500 accuracy@3: 0.6900 ] 
+2024-03-27 10:14:44,455 - [Epoch  29 / 1000] rec_loss: 1.9160 cl_loss: 0.0000 
+2024-03-27 10:14:44,732 - Epoch  29 Test set [precision@1: 0.3900 precision@2: 0.2500 precision@3: 0.2200 ] Test set [recall@1: 0.3900 recall@2: 0.5000 recall@3: 0.6600 ] Test set [f1score@1: 0.3900 f1score@2: 0.3300 f1score@3: 0.3300 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5000 accuracy@3: 0.6600 ] 
+2024-03-27 10:14:45,351 - [Epoch  30 / 1000] rec_loss: 1.8627 cl_loss: 0.0000 
+2024-03-27 10:14:45,631 - Epoch  30 Test set [precision@1: 0.3900 precision@2: 0.2500 precision@3: 0.2200 ] Test set [recall@1: 0.3900 recall@2: 0.5100 recall@3: 0.6500 ] Test set [f1score@1: 0.3900 f1score@2: 0.3400 f1score@3: 0.3200 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5100 accuracy@3: 0.6500 ] 
+2024-03-27 10:14:46,253 - [Epoch  31 / 1000] rec_loss: 1.8426 cl_loss: 0.0000 
+2024-03-27 10:14:46,533 - Epoch  31 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2300 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6900 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3400 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6900 ] 
+2024-03-27 10:14:47,162 - [Epoch  32 / 1000] rec_loss: 1.8429 cl_loss: 0.0000 
+2024-03-27 10:14:47,451 - Epoch  32 Test set [precision@1: 0.3900 precision@2: 0.2600 precision@3: 0.2300 ] Test set [recall@1: 0.3900 recall@2: 0.5300 recall@3: 0.6900 ] Test set [f1score@1: 0.3900 f1score@2: 0.3500 f1score@3: 0.3400 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5300 accuracy@3: 0.6900 ] 
+2024-03-27 10:14:48,079 - [Epoch  33 / 1000] rec_loss: 1.8609 cl_loss: 0.0000 
+2024-03-27 10:14:48,357 - Epoch  33 Test set [precision@1: 0.3900 precision@2: 0.2800 precision@3: 0.2400 ] Test set [recall@1: 0.3900 recall@2: 0.5600 recall@3: 0.7100 ] Test set [f1score@1: 0.3900 f1score@2: 0.3700 f1score@3: 0.3500 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5600 accuracy@3: 0.7100 ] 
+2024-03-27 10:14:48,979 - [Epoch  34 / 1000] rec_loss: 1.7477 cl_loss: 0.0000 
+2024-03-27 10:14:49,259 - Epoch  34 Test set [precision@1: 0.3900 precision@2: 0.2800 precision@3: 0.2400 ] Test set [recall@1: 0.3900 recall@2: 0.5700 recall@3: 0.7300 ] Test set [f1score@1: 0.3900 f1score@2: 0.3800 f1score@3: 0.3700 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5700 accuracy@3: 0.7300 ] 
+2024-03-27 10:14:49,881 - [Epoch  35 / 1000] rec_loss: 1.7693 cl_loss: 0.0000 
+2024-03-27 10:14:50,160 - Epoch  35 Test set [precision@1: 0.3900 precision@2: 0.2800 precision@3: 0.2400 ] Test set [recall@1: 0.3900 recall@2: 0.5700 recall@3: 0.7100 ] Test set [f1score@1: 0.3900 f1score@2: 0.3800 f1score@3: 0.3500 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5700 accuracy@3: 0.7100 ] 
+2024-03-27 10:14:50,778 - [Epoch  36 / 1000] rec_loss: 1.7893 cl_loss: 0.0000 
+2024-03-27 10:14:51,062 - Epoch  36 Test set [precision@1: 0.3900 precision@2: 0.2800 precision@3: 0.2300 ] Test set [recall@1: 0.3900 recall@2: 0.5700 recall@3: 0.7000 ] Test set [f1score@1: 0.3900 f1score@2: 0.3800 f1score@3: 0.3500 ] Test set [accuracy@1: 0.3900 accuracy@2: 0.5700 accuracy@3: 0.7000 ] 
+2024-03-27 10:14:51,677 - [Epoch  37 / 1000] rec_loss: 1.8450 cl_loss: 0.0000 
+2024-03-27 10:14:51,955 - Epoch  37 Test set [precision@1: 0.4300 precision@2: 0.2900 precision@3: 0.2400 ] Test set [recall@1: 0.4300 recall@2: 0.5800 recall@3: 0.7300 ] Test set [f1score@1: 0.4300 f1score@2: 0.3900 f1score@3: 0.3700 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.5800 accuracy@3: 0.7300 ] 
+2024-03-27 10:14:52,591 - [Epoch  38 / 1000] rec_loss: 1.6881 cl_loss: 0.0000 
+2024-03-27 10:14:52,892 - Epoch  38 Test set [precision@1: 0.4300 precision@2: 0.3000 precision@3: 0.2400 ] Test set [recall@1: 0.4300 recall@2: 0.6000 recall@3: 0.7100 ] Test set [f1score@1: 0.4300 f1score@2: 0.4000 f1score@3: 0.3500 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6000 accuracy@3: 0.7100 ] 
+2024-03-27 10:14:53,519 - [Epoch  39 / 1000] rec_loss: 1.7710 cl_loss: 0.0000 
+2024-03-27 10:14:53,802 - Epoch  39 Test set [precision@1: 0.4300 precision@2: 0.3000 precision@3: 0.2400 ] Test set [recall@1: 0.4300 recall@2: 0.6000 recall@3: 0.7200 ] Test set [f1score@1: 0.4300 f1score@2: 0.4000 f1score@3: 0.3600 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6000 accuracy@3: 0.7200 ] 
+2024-03-27 10:14:54,475 - [Epoch  40 / 1000] rec_loss: 1.7845 cl_loss: 0.0000 
+2024-03-27 10:14:54,765 - Epoch  40 Test set [precision@1: 0.4200 precision@2: 0.2900 precision@3: 0.2500 ] Test set [recall@1: 0.4200 recall@2: 0.5900 recall@3: 0.7500 ] Test set [f1score@1: 0.4200 f1score@2: 0.3900 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4200 accuracy@2: 0.5900 accuracy@3: 0.7500 ] 
+2024-03-27 10:14:55,460 - [Epoch  41 / 1000] rec_loss: 1.7524 cl_loss: 0.0000 
+2024-03-27 10:14:55,742 - Epoch  41 Test set [precision@1: 0.4200 precision@2: 0.3000 precision@3: 0.2500 ] Test set [recall@1: 0.4200 recall@2: 0.6000 recall@3: 0.7500 ] Test set [f1score@1: 0.4200 f1score@2: 0.4000 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4200 accuracy@2: 0.6000 accuracy@3: 0.7500 ] 
+2024-03-27 10:14:56,397 - [Epoch  42 / 1000] rec_loss: 1.6730 cl_loss: 0.0000 
+2024-03-27 10:14:56,690 - Epoch  42 Test set [precision@1: 0.4300 precision@2: 0.3000 precision@3: 0.2400 ] Test set [recall@1: 0.4300 recall@2: 0.6000 recall@3: 0.7300 ] Test set [f1score@1: 0.4300 f1score@2: 0.4000 f1score@3: 0.3700 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6000 accuracy@3: 0.7300 ] 
+2024-03-27 10:14:57,357 - [Epoch  43 / 1000] rec_loss: 1.6992 cl_loss: 0.0000 
+2024-03-27 10:14:57,668 - Epoch  43 Test set [precision@1: 0.4400 precision@2: 0.2900 precision@3: 0.2500 ] Test set [recall@1: 0.4400 recall@2: 0.5900 recall@3: 0.7400 ] Test set [f1score@1: 0.4400 f1score@2: 0.3900 f1score@3: 0.3700 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.5900 accuracy@3: 0.7400 ] 
+2024-03-27 10:14:58,348 - [Epoch  44 / 1000] rec_loss: 1.6483 cl_loss: 0.0000 
+2024-03-27 10:14:58,636 - Epoch  44 Test set [precision@1: 0.4300 precision@2: 0.3100 precision@3: 0.2500 ] Test set [recall@1: 0.4300 recall@2: 0.6100 recall@3: 0.7600 ] Test set [f1score@1: 0.4300 f1score@2: 0.4100 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6100 accuracy@3: 0.7600 ] 
+2024-03-27 10:14:59,298 - [Epoch  45 / 1000] rec_loss: 1.6637 cl_loss: 0.0000 
+2024-03-27 10:14:59,585 - Epoch  45 Test set [precision@1: 0.4400 precision@2: 0.3000 precision@3: 0.2600 ] Test set [recall@1: 0.4400 recall@2: 0.6000 recall@3: 0.7800 ] Test set [f1score@1: 0.4400 f1score@2: 0.4000 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.6000 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:00,240 - [Epoch  46 / 1000] rec_loss: 1.7044 cl_loss: 0.0000 
+2024-03-27 10:15:00,538 - Epoch  46 Test set [precision@1: 0.4400 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4400 recall@2: 0.6100 recall@3: 0.7800 ] Test set [f1score@1: 0.4400 f1score@2: 0.4100 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.6100 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:01,193 - [Epoch  47 / 1000] rec_loss: 1.7287 cl_loss: 0.0000 
+2024-03-27 10:15:01,486 - Epoch  47 Test set [precision@1: 0.4200 precision@2: 0.3100 precision@3: 0.2500 ] Test set [recall@1: 0.4200 recall@2: 0.6100 recall@3: 0.7600 ] Test set [f1score@1: 0.4200 f1score@2: 0.4100 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4200 accuracy@2: 0.6100 accuracy@3: 0.7600 ] 
+2024-03-27 10:15:02,135 - [Epoch  48 / 1000] rec_loss: 1.6823 cl_loss: 0.0000 
+2024-03-27 10:15:02,437 - Epoch  48 Test set [precision@1: 0.4200 precision@2: 0.3000 precision@3: 0.2600 ] Test set [recall@1: 0.4200 recall@2: 0.6000 recall@3: 0.7800 ] Test set [f1score@1: 0.4200 f1score@2: 0.4000 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4200 accuracy@2: 0.6000 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:03,132 - [Epoch  49 / 1000] rec_loss: 1.6336 cl_loss: 0.0000 
+2024-03-27 10:15:03,429 - Epoch  49 Test set [precision@1: 0.4300 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4300 recall@2: 0.6200 recall@3: 0.7700 ] Test set [f1score@1: 0.4300 f1score@2: 0.4100 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6200 accuracy@3: 0.7700 ] 
+2024-03-27 10:15:04,096 - [Epoch  50 / 1000] rec_loss: 1.7084 cl_loss: 0.0000 
+2024-03-27 10:15:04,392 - Epoch  50 Test set [precision@1: 0.4400 precision@2: 0.3100 precision@3: 0.2500 ] Test set [recall@1: 0.4400 recall@2: 0.6200 recall@3: 0.7600 ] Test set [f1score@1: 0.4400 f1score@2: 0.4100 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.6200 accuracy@3: 0.7600 ] 
+2024-03-27 10:15:05,085 - [Epoch  51 / 1000] rec_loss: 1.6464 cl_loss: 0.0000 
+2024-03-27 10:15:05,381 - Epoch  51 Test set [precision@1: 0.4400 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4400 recall@2: 0.6100 recall@3: 0.7700 ] Test set [f1score@1: 0.4400 f1score@2: 0.4100 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.6100 accuracy@3: 0.7700 ] 
+2024-03-27 10:15:06,081 - [Epoch  52 / 1000] rec_loss: 1.6264 cl_loss: 0.0000 
+2024-03-27 10:15:06,388 - Epoch  52 Test set [precision@1: 0.4400 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4400 recall@2: 0.6300 recall@3: 0.7700 ] Test set [f1score@1: 0.4400 f1score@2: 0.4200 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.6300 accuracy@3: 0.7700 ] 
+2024-03-27 10:15:07,042 - [Epoch  53 / 1000] rec_loss: 1.5006 cl_loss: 0.0000 
+2024-03-27 10:15:07,338 - Epoch  53 Test set [precision@1: 0.4400 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4400 recall@2: 0.6200 recall@3: 0.7900 ] Test set [f1score@1: 0.4400 f1score@2: 0.4100 f1score@3: 0.4000 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.6200 accuracy@3: 0.7900 ] 
+2024-03-27 10:15:07,988 - [Epoch  54 / 1000] rec_loss: 1.5673 cl_loss: 0.0000 
+2024-03-27 10:15:08,275 - Epoch  54 Test set [precision@1: 0.4300 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4300 recall@2: 0.6200 recall@3: 0.7700 ] Test set [f1score@1: 0.4300 f1score@2: 0.4100 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6200 accuracy@3: 0.7700 ] 
+2024-03-27 10:15:08,915 - [Epoch  55 / 1000] rec_loss: 1.5934 cl_loss: 0.0000 
+2024-03-27 10:15:09,208 - Epoch  55 Test set [precision@1: 0.4400 precision@2: 0.3100 precision@3: 0.2700 ] Test set [recall@1: 0.4400 recall@2: 0.6300 recall@3: 0.8000 ] Test set [f1score@1: 0.4400 f1score@2: 0.4200 f1score@3: 0.4000 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.6300 accuracy@3: 0.8000 ] 
+2024-03-27 10:15:09,852 - [Epoch  56 / 1000] rec_loss: 1.6606 cl_loss: 0.0000 
+2024-03-27 10:15:10,144 - Epoch  56 Test set [precision@1: 0.4500 precision@2: 0.3200 precision@3: 0.2600 ] Test set [recall@1: 0.4500 recall@2: 0.6400 recall@3: 0.7900 ] Test set [f1score@1: 0.4500 f1score@2: 0.4300 f1score@3: 0.4000 ] Test set [accuracy@1: 0.4500 accuracy@2: 0.6400 accuracy@3: 0.7900 ] 
+2024-03-27 10:15:10,781 - [Epoch  57 / 1000] rec_loss: 1.6360 cl_loss: 0.0000 
+2024-03-27 10:15:11,068 - Epoch  57 Test set [precision@1: 0.4600 precision@2: 0.3200 precision@3: 0.2700 ] Test set [recall@1: 0.4600 recall@2: 0.6500 recall@3: 0.8100 ] Test set [f1score@1: 0.4600 f1score@2: 0.4300 f1score@3: 0.4100 ] Test set [accuracy@1: 0.4600 accuracy@2: 0.6500 accuracy@3: 0.8100 ] 
+2024-03-27 10:15:11,705 - [Epoch  58 / 1000] rec_loss: 1.6231 cl_loss: 0.0000 
+2024-03-27 10:15:11,995 - Epoch  58 Test set [precision@1: 0.4500 precision@2: 0.3300 precision@3: 0.2600 ] Test set [recall@1: 0.4500 recall@2: 0.6600 recall@3: 0.7900 ] Test set [f1score@1: 0.4500 f1score@2: 0.4400 f1score@3: 0.4000 ] Test set [accuracy@1: 0.4500 accuracy@2: 0.6600 accuracy@3: 0.7900 ] 
+2024-03-27 10:15:12,646 - [Epoch  59 / 1000] rec_loss: 1.6440 cl_loss: 0.0000 
+2024-03-27 10:15:12,940 - Epoch  59 Test set [precision@1: 0.4300 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4300 recall@2: 0.6200 recall@3: 0.7800 ] Test set [f1score@1: 0.4300 f1score@2: 0.4100 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6200 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:13,579 - [Epoch  60 / 1000] rec_loss: 1.5189 cl_loss: 0.0000 
+2024-03-27 10:15:13,873 - Epoch  60 Test set [precision@1: 0.4300 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4300 recall@2: 0.6300 recall@3: 0.7900 ] Test set [f1score@1: 0.4300 f1score@2: 0.4200 f1score@3: 0.4000 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6300 accuracy@3: 0.7900 ] 
+2024-03-27 10:15:14,531 - [Epoch  61 / 1000] rec_loss: 1.4930 cl_loss: 0.0000 
+2024-03-27 10:15:14,874 - Epoch  61 Test set [precision@1: 0.4500 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4500 recall@2: 0.6100 recall@3: 0.7800 ] Test set [f1score@1: 0.4500 f1score@2: 0.4100 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4500 accuracy@2: 0.6100 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:15,534 - [Epoch  62 / 1000] rec_loss: 1.5466 cl_loss: 0.0000 
+2024-03-27 10:15:15,843 - Epoch  62 Test set [precision@1: 0.4300 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4300 recall@2: 0.6300 recall@3: 0.7800 ] Test set [f1score@1: 0.4300 f1score@2: 0.4200 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6300 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:16,519 - [Epoch  63 / 1000] rec_loss: 1.6209 cl_loss: 0.0000 
+2024-03-27 10:15:16,907 - Epoch  63 Test set [precision@1: 0.4300 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4300 recall@2: 0.6200 recall@3: 0.7800 ] Test set [f1score@1: 0.4300 f1score@2: 0.4100 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4300 accuracy@2: 0.6200 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:17,788 - [Epoch  64 / 1000] rec_loss: 1.5719 cl_loss: 0.0000 
+2024-03-27 10:15:18,103 - Epoch  64 Test set [precision@1: 0.4400 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4400 recall@2: 0.6300 recall@3: 0.7800 ] Test set [f1score@1: 0.4400 f1score@2: 0.4200 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4400 accuracy@2: 0.6300 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:18,774 - [Epoch  65 / 1000] rec_loss: 1.5008 cl_loss: 0.0000 
+2024-03-27 10:15:19,074 - Epoch  65 Test set [precision@1: 0.4500 precision@2: 0.3200 precision@3: 0.2600 ] Test set [recall@1: 0.4500 recall@2: 0.6400 recall@3: 0.7800 ] Test set [f1score@1: 0.4500 f1score@2: 0.4300 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4500 accuracy@2: 0.6400 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:19,744 - [Epoch  66 / 1000] rec_loss: 1.5877 cl_loss: 0.0000 
+2024-03-27 10:15:20,046 - Epoch  66 Test set [precision@1: 0.4600 precision@2: 0.3200 precision@3: 0.2600 ] Test set [recall@1: 0.4600 recall@2: 0.6400 recall@3: 0.7700 ] Test set [f1score@1: 0.4600 f1score@2: 0.4300 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4600 accuracy@2: 0.6400 accuracy@3: 0.7700 ] 
+2024-03-27 10:15:20,730 - [Epoch  67 / 1000] rec_loss: 1.5448 cl_loss: 0.0000 
+2024-03-27 10:15:21,224 - Epoch  67 Test set [precision@1: 0.4900 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4900 recall@2: 0.6200 recall@3: 0.7700 ] Test set [f1score@1: 0.4900 f1score@2: 0.4100 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4900 accuracy@2: 0.6200 accuracy@3: 0.7700 ] 
+2024-03-27 10:15:21,966 - [Epoch  68 / 1000] rec_loss: 1.5435 cl_loss: 0.0000 
+2024-03-27 10:15:22,279 - Epoch  68 Test set [precision@1: 0.4500 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4500 recall@2: 0.6200 recall@3: 0.7700 ] Test set [f1score@1: 0.4500 f1score@2: 0.4100 f1score@3: 0.3800 ] Test set [accuracy@1: 0.4500 accuracy@2: 0.6200 accuracy@3: 0.7700 ] 
+2024-03-27 10:15:23,006 - [Epoch  69 / 1000] rec_loss: 1.5168 cl_loss: 0.0000 
+2024-03-27 10:15:23,309 - Epoch  69 Test set [precision@1: 0.4500 precision@2: 0.3100 precision@3: 0.2600 ] Test set [recall@1: 0.4500 recall@2: 0.6100 recall@3: 0.7800 ] Test set [f1score@1: 0.4500 f1score@2: 0.4100 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4500 accuracy@2: 0.6100 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:24,034 - [Epoch  70 / 1000] rec_loss: 1.5559 cl_loss: 0.0000 
+2024-03-27 10:15:24,336 - Epoch  70 Test set [precision@1: 0.4700 precision@2: 0.3200 precision@3: 0.2600 ] Test set [recall@1: 0.4700 recall@2: 0.6500 recall@3: 0.7900 ] Test set [f1score@1: 0.4700 f1score@2: 0.4300 f1score@3: 0.4000 ] Test set [accuracy@1: 0.4700 accuracy@2: 0.6500 accuracy@3: 0.7900 ] 
+2024-03-27 10:15:24,989 - [Epoch  71 / 1000] rec_loss: 1.5022 cl_loss: 0.0000 
+2024-03-27 10:15:25,289 - Epoch  71 Test set [precision@1: 0.4500 precision@2: 0.3400 precision@3: 0.2600 ] Test set [recall@1: 0.4500 recall@2: 0.6700 recall@3: 0.7800 ] Test set [f1score@1: 0.4500 f1score@2: 0.4500 f1score@3: 0.3900 ] Test set [accuracy@1: 0.4500 accuracy@2: 0.6700 accuracy@3: 0.7800 ] 
+2024-03-27 10:15:26,020 - [Epoch  72 / 1000] rec_loss: 1.5087 cl_loss: 0.0000 
+2024-03-27 10:15:26,327 - Epoch  72 Test set [precision@1: 0.4700 precision@2: 0.3300 precision@3: 0.2800 ] Test set [recall@1: 0.4700 recall@2: 0.6600 recall@3: 0.8300 ] Test set [f1score@1: 0.4700 f1score@2: 0.4400 f1score@3: 0.4100 ] Test set [accuracy@1: 0.4700 accuracy@2: 0.6600 accuracy@3: 0.8300 ] 
+2024-03-27 10:15:27,042 - [Epoch  73 / 1000] rec_loss: 1.5164 cl_loss: 0.0000 
+2024-03-27 10:15:27,427 - Epoch  73 Test set [precision@1: 0.5100 precision@2: 0.3200 precision@3: 0.2600 ] Test set [recall@1: 0.5100 recall@2: 0.6500 recall@3: 0.7900 ] Test set [f1score@1: 0.5100 f1score@2: 0.4300 f1score@3: 0.4000 ] Test set [accuracy@1: 0.5100 accuracy@2: 0.6500 accuracy@3: 0.7900 ] 
+2024-03-27 10:15:28,171 - [Epoch  74 / 1000] rec_loss: 1.4574 cl_loss: 0.0000 
+2024-03-27 10:15:28,471 - Epoch  74 Test set [precision@1: 0.4600 precision@2: 0.3400 precision@3: 0.2800 ] Test set [recall@1: 0.4600 recall@2: 0.6900 recall@3: 0.8500 ] Test set [f1score@1: 0.4600 f1score@2: 0.4600 f1score@3: 0.4300 ] Test set [accuracy@1: 0.4600 accuracy@2: 0.6900 accuracy@3: 0.8500 ] 
+2024-03-27 10:15:29,183 - [Epoch  75 / 1000] rec_loss: 1.3719 cl_loss: 0.0000 
+2024-03-27 10:15:29,527 - Epoch  75 Test set [precision@1: 0.4500 precision@2: 0.3400 precision@3: 0.2800 ] Test set [recall@1: 0.4500 recall@2: 0.6800 recall@3: 0.8400 ] Test set [f1score@1: 0.4500 f1score@2: 0.4500 f1score@3: 0.4200 ] Test set [accuracy@1: 0.4500 accuracy@2: 0.6800 accuracy@3: 0.8400 ] 
+2024-03-27 10:15:30,290 - [Epoch  76 / 1000] rec_loss: 1.3687 cl_loss: 0.0000 
+2024-03-27 10:15:30,624 - Epoch  76 Test set [precision@1: 0.4900 precision@2: 0.3500 precision@3: 0.2800 ] Test set [recall@1: 0.4900 recall@2: 0.7000 recall@3: 0.8400 ] Test set [f1score@1: 0.4900 f1score@2: 0.4700 f1score@3: 0.4200 ] Test set [accuracy@1: 0.4900 accuracy@2: 0.7000 accuracy@3: 0.8400 ] 
+2024-03-27 10:15:31,298 - [Epoch  77 / 1000] rec_loss: 1.4934 cl_loss: 0.0000 
+2024-03-27 10:15:31,606 - Epoch  77 Test set [precision@1: 0.4800 precision@2: 0.3500 precision@3: 0.2800 ] Test set [recall@1: 0.4800 recall@2: 0.7100 recall@3: 0.8500 ] Test set [f1score@1: 0.4800 f1score@2: 0.4700 f1score@3: 0.4300 ] Test set [accuracy@1: 0.4800 accuracy@2: 0.7100 accuracy@3: 0.8500 ] 
+2024-03-27 10:15:32,319 - [Epoch  78 / 1000] rec_loss: 1.3319 cl_loss: 0.0000 
+2024-03-27 10:15:32,614 - Epoch  78 Test set [precision@1: 0.4700 precision@2: 0.3200 precision@3: 0.2800 ] Test set [recall@1: 0.4700 recall@2: 0.6500 recall@3: 0.8500 ] Test set [f1score@1: 0.4700 f1score@2: 0.4300 f1score@3: 0.4300 ] Test set [accuracy@1: 0.4700 accuracy@2: 0.6500 accuracy@3: 0.8500 ] 
+2024-03-27 10:15:33,286 - [Epoch  79 / 1000] rec_loss: 1.3791 cl_loss: 0.0000 
+2024-03-27 10:15:33,602 - Epoch  79 Test set [precision@1: 0.5300 precision@2: 0.3400 precision@3: 0.2800 ] Test set [recall@1: 0.5300 recall@2: 0.6900 recall@3: 0.8500 ] Test set [f1score@1: 0.5300 f1score@2: 0.4600 f1score@3: 0.4300 ] Test set [accuracy@1: 0.5300 accuracy@2: 0.6900 accuracy@3: 0.8500 ] 
+2024-03-27 10:15:34,305 - [Epoch  80 / 1000] rec_loss: 1.3509 cl_loss: 0.0000 
+2024-03-27 10:15:34,611 - Epoch  80 Test set [precision@1: 0.5100 precision@2: 0.3400 precision@3: 0.2800 ] Test set [recall@1: 0.5100 recall@2: 0.6900 recall@3: 0.8500 ] Test set [f1score@1: 0.5100 f1score@2: 0.4600 f1score@3: 0.4300 ] Test set [accuracy@1: 0.5100 accuracy@2: 0.6900 accuracy@3: 0.8500 ] 
+2024-03-27 10:15:35,405 - [Epoch  81 / 1000] rec_loss: 1.3425 cl_loss: 0.0000 
+2024-03-27 10:15:35,727 - Epoch  81 Test set [precision@1: 0.4600 precision@2: 0.3400 precision@3: 0.2800 ] Test set [recall@1: 0.4600 recall@2: 0.6700 recall@3: 0.8500 ] Test set [f1score@1: 0.4600 f1score@2: 0.4500 f1score@3: 0.4300 ] Test set [accuracy@1: 0.4600 accuracy@2: 0.6700 accuracy@3: 0.8500 ] 
+2024-03-27 10:15:36,393 - [Epoch  82 / 1000] rec_loss: 1.3961 cl_loss: 0.0000 
+2024-03-27 10:15:36,688 - Epoch  82 Test set [precision@1: 0.4900 precision@2: 0.3800 precision@3: 0.2900 ] Test set [recall@1: 0.4900 recall@2: 0.7500 recall@3: 0.8800 ] Test set [f1score@1: 0.4900 f1score@2: 0.5000 f1score@3: 0.4400 ] Test set [accuracy@1: 0.4900 accuracy@2: 0.7500 accuracy@3: 0.8800 ] 
+2024-03-27 10:15:37,399 - [Epoch  83 / 1000] rec_loss: 1.4317 cl_loss: 0.0000 
+2024-03-27 10:15:37,705 - Epoch  83 Test set [precision@1: 0.5200 precision@2: 0.3800 precision@3: 0.2900 ] Test set [recall@1: 0.5200 recall@2: 0.7600 recall@3: 0.8600 ] Test set [f1score@1: 0.5200 f1score@2: 0.5100 f1score@3: 0.4300 ] Test set [accuracy@1: 0.5200 accuracy@2: 0.7600 accuracy@3: 0.8600 ] 
+2024-03-27 10:15:38,392 - [Epoch  84 / 1000] rec_loss: 1.2938 cl_loss: 0.0000 
+2024-03-27 10:15:38,685 - Epoch  84 Test set [precision@1: 0.5000 precision@2: 0.3800 precision@3: 0.2900 ] Test set [recall@1: 0.5000 recall@2: 0.7600 recall@3: 0.8800 ] Test set [f1score@1: 0.5000 f1score@2: 0.5100 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5000 accuracy@2: 0.7600 accuracy@3: 0.8800 ] 
+2024-03-27 10:15:39,356 - [Epoch  85 / 1000] rec_loss: 1.3934 cl_loss: 0.0000 
+2024-03-27 10:15:39,644 - Epoch  85 Test set [precision@1: 0.5100 precision@2: 0.3600 precision@3: 0.2900 ] Test set [recall@1: 0.5100 recall@2: 0.7200 recall@3: 0.8700 ] Test set [f1score@1: 0.5100 f1score@2: 0.4800 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5100 accuracy@2: 0.7200 accuracy@3: 0.8700 ] 
+2024-03-27 10:15:40,332 - [Epoch  86 / 1000] rec_loss: 1.2956 cl_loss: 0.0000 
+2024-03-27 10:15:40,739 - Epoch  86 Test set [precision@1: 0.5400 precision@2: 0.3800 precision@3: 0.2900 ] Test set [recall@1: 0.5400 recall@2: 0.7500 recall@3: 0.8600 ] Test set [f1score@1: 0.5400 f1score@2: 0.5000 f1score@3: 0.4300 ] Test set [accuracy@1: 0.5400 accuracy@2: 0.7500 accuracy@3: 0.8600 ] 
+2024-03-27 10:15:41,695 - [Epoch  87 / 1000] rec_loss: 1.3883 cl_loss: 0.0000 
+2024-03-27 10:15:42,055 - Epoch  87 Test set [precision@1: 0.5400 precision@2: 0.3800 precision@3: 0.2900 ] Test set [recall@1: 0.5400 recall@2: 0.7700 recall@3: 0.8700 ] Test set [f1score@1: 0.5400 f1score@2: 0.5100 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5400 accuracy@2: 0.7700 accuracy@3: 0.8700 ] 
+2024-03-27 10:15:42,826 - [Epoch  88 / 1000] rec_loss: 1.2497 cl_loss: 0.0000 
+2024-03-27 10:15:43,221 - Epoch  88 Test set [precision@1: 0.5500 precision@2: 0.3800 precision@3: 0.2700 ] Test set [recall@1: 0.5500 recall@2: 0.7500 recall@3: 0.8200 ] Test set [f1score@1: 0.5500 f1score@2: 0.5000 f1score@3: 0.4100 ] Test set [accuracy@1: 0.5500 accuracy@2: 0.7500 accuracy@3: 0.8200 ] 
+2024-03-27 10:15:43,879 - [Epoch  89 / 1000] rec_loss: 1.3034 cl_loss: 0.0000 
+2024-03-27 10:15:44,168 - Epoch  89 Test set [precision@1: 0.5600 precision@2: 0.4000 precision@3: 0.3000 ] Test set [recall@1: 0.5600 recall@2: 0.7900 recall@3: 0.8900 ] Test set [f1score@1: 0.5600 f1score@2: 0.5300 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5600 accuracy@2: 0.7900 accuracy@3: 0.8900 ] 
+2024-03-27 10:15:44,817 - [Epoch  90 / 1000] rec_loss: 1.2519 cl_loss: 0.0000 
+2024-03-27 10:15:45,108 - Epoch  90 Test set [precision@1: 0.5600 precision@2: 0.3900 precision@3: 0.2900 ] Test set [recall@1: 0.5600 recall@2: 0.7800 recall@3: 0.8800 ] Test set [f1score@1: 0.5600 f1score@2: 0.5200 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5600 accuracy@2: 0.7800 accuracy@3: 0.8800 ] 
+2024-03-27 10:15:45,759 - [Epoch  91 / 1000] rec_loss: 1.3824 cl_loss: 0.0000 
+2024-03-27 10:15:46,045 - Epoch  91 Test set [precision@1: 0.5300 precision@2: 0.4000 precision@3: 0.2900 ] Test set [recall@1: 0.5300 recall@2: 0.8000 recall@3: 0.8800 ] Test set [f1score@1: 0.5300 f1score@2: 0.5300 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5300 accuracy@2: 0.8000 accuracy@3: 0.8800 ] 
+2024-03-27 10:15:46,689 - [Epoch  92 / 1000] rec_loss: 1.2860 cl_loss: 0.0000 
+2024-03-27 10:15:46,990 - Epoch  92 Test set [precision@1: 0.5300 precision@2: 0.4100 precision@3: 0.3000 ] Test set [recall@1: 0.5300 recall@2: 0.8300 recall@3: 0.9000 ] Test set [f1score@1: 0.5300 f1score@2: 0.5500 f1score@3: 0.4500 ] Test set [accuracy@1: 0.5300 accuracy@2: 0.8300 accuracy@3: 0.9000 ] 
+2024-03-27 10:15:47,717 - [Epoch  93 / 1000] rec_loss: 1.2408 cl_loss: 0.0000 
+2024-03-27 10:15:48,017 - Epoch  93 Test set [precision@1: 0.5500 precision@2: 0.3900 precision@3: 0.2900 ] Test set [recall@1: 0.5500 recall@2: 0.7800 recall@3: 0.8600 ] Test set [f1score@1: 0.5500 f1score@2: 0.5200 f1score@3: 0.4300 ] Test set [accuracy@1: 0.5500 accuracy@2: 0.7800 accuracy@3: 0.8600 ] 
+2024-03-27 10:15:48,684 - [Epoch  94 / 1000] rec_loss: 1.2419 cl_loss: 0.0000 
+2024-03-27 10:15:48,976 - Epoch  94 Test set [precision@1: 0.5900 precision@2: 0.4000 precision@3: 0.2900 ] Test set [recall@1: 0.5900 recall@2: 0.8000 recall@3: 0.8800 ] Test set [f1score@1: 0.5900 f1score@2: 0.5300 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5900 accuracy@2: 0.8000 accuracy@3: 0.8800 ] 
+2024-03-27 10:15:49,628 - [Epoch  95 / 1000] rec_loss: 1.3899 cl_loss: 0.0000 
+2024-03-27 10:15:49,925 - Epoch  95 Test set [precision@1: 0.5600 precision@2: 0.3900 precision@3: 0.2900 ] Test set [recall@1: 0.5600 recall@2: 0.7800 recall@3: 0.8700 ] Test set [f1score@1: 0.5600 f1score@2: 0.5200 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5600 accuracy@2: 0.7800 accuracy@3: 0.8700 ] 
+2024-03-27 10:15:50,590 - [Epoch  96 / 1000] rec_loss: 1.1967 cl_loss: 0.0000 
+2024-03-27 10:15:50,899 - Epoch  96 Test set [precision@1: 0.5700 precision@2: 0.4100 precision@3: 0.3000 ] Test set [recall@1: 0.5700 recall@2: 0.8200 recall@3: 0.9000 ] Test set [f1score@1: 0.5700 f1score@2: 0.5500 f1score@3: 0.4500 ] Test set [accuracy@1: 0.5700 accuracy@2: 0.8200 accuracy@3: 0.9000 ] 
+2024-03-27 10:15:51,557 - [Epoch  97 / 1000] rec_loss: 1.1327 cl_loss: 0.0000 
+2024-03-27 10:15:51,861 - Epoch  97 Test set [precision@1: 0.5500 precision@2: 0.4100 precision@3: 0.3000 ] Test set [recall@1: 0.5500 recall@2: 0.8100 recall@3: 0.8900 ] Test set [f1score@1: 0.5500 f1score@2: 0.5400 f1score@3: 0.4400 ] Test set [accuracy@1: 0.5500 accuracy@2: 0.8100 accuracy@3: 0.8900 ] 
+2024-03-27 10:15:52,535 - [Epoch  98 / 1000] rec_loss: 1.1621 cl_loss: 0.0000 
+2024-03-27 10:15:52,837 - Epoch  98 Test set [precision@1: 0.6000 precision@2: 0.4200 precision@3: 0.3100 ] Test set [recall@1: 0.6000 recall@2: 0.8400 recall@3: 0.9300 ] Test set [f1score@1: 0.6000 f1score@2: 0.5600 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6000 accuracy@2: 0.8400 accuracy@3: 0.9300 ] 
+2024-03-27 10:15:53,523 - [Epoch  99 / 1000] rec_loss: 1.1167 cl_loss: 0.0000 
+2024-03-27 10:15:53,832 - Epoch  99 Test set [precision@1: 0.5600 precision@2: 0.4300 precision@3: 0.3000 ] Test set [recall@1: 0.5600 recall@2: 0.8500 recall@3: 0.9000 ] Test set [f1score@1: 0.5600 f1score@2: 0.5700 f1score@3: 0.4500 ] Test set [accuracy@1: 0.5600 accuracy@2: 0.8500 accuracy@3: 0.9000 ] 
+2024-03-27 10:15:54,508 - [Epoch 100 / 1000] rec_loss: 1.1492 cl_loss: 0.0000 
+2024-03-27 10:15:54,809 - Epoch 100 Test set [precision@1: 0.6100 precision@2: 0.4300 precision@3: 0.3100 ] Test set [recall@1: 0.6100 recall@2: 0.8500 recall@3: 0.9200 ] Test set [f1score@1: 0.6100 f1score@2: 0.5700 f1score@3: 0.4600 ] Test set [accuracy@1: 0.6100 accuracy@2: 0.8500 accuracy@3: 0.9200 ] 
+2024-03-27 10:15:55,472 - [Epoch 101 / 1000] rec_loss: 1.1709 cl_loss: 0.0000 
+2024-03-27 10:15:55,767 - Epoch 101 Test set [precision@1: 0.6100 precision@2: 0.4300 precision@3: 0.3000 ] Test set [recall@1: 0.6100 recall@2: 0.8600 recall@3: 0.9100 ] Test set [f1score@1: 0.6100 f1score@2: 0.5700 f1score@3: 0.4600 ] Test set [accuracy@1: 0.6100 accuracy@2: 0.8600 accuracy@3: 0.9100 ] 
+2024-03-27 10:15:56,441 - [Epoch 102 / 1000] rec_loss: 1.0886 cl_loss: 0.0000 
+2024-03-27 10:15:56,751 - Epoch 102 Test set [precision@1: 0.5900 precision@2: 0.4100 precision@3: 0.3000 ] Test set [recall@1: 0.5900 recall@2: 0.8100 recall@3: 0.9000 ] Test set [f1score@1: 0.5900 f1score@2: 0.5400 f1score@3: 0.4500 ] Test set [accuracy@1: 0.5900 accuracy@2: 0.8100 accuracy@3: 0.9000 ] 
+2024-03-27 10:15:57,436 - [Epoch 103 / 1000] rec_loss: 1.0542 cl_loss: 0.0000 
+2024-03-27 10:15:57,728 - Epoch 103 Test set [precision@1: 0.6300 precision@2: 0.4100 precision@3: 0.3000 ] Test set [recall@1: 0.6300 recall@2: 0.8200 recall@3: 0.9000 ] Test set [f1score@1: 0.6300 f1score@2: 0.5500 f1score@3: 0.4500 ] Test set [accuracy@1: 0.6300 accuracy@2: 0.8200 accuracy@3: 0.9000 ] 
+2024-03-27 10:15:58,425 - [Epoch 104 / 1000] rec_loss: 1.0596 cl_loss: 0.0000 
+2024-03-27 10:15:58,719 - Epoch 104 Test set [precision@1: 0.6000 precision@2: 0.4100 precision@3: 0.3100 ] Test set [recall@1: 0.6000 recall@2: 0.8300 recall@3: 0.9200 ] Test set [f1score@1: 0.6000 f1score@2: 0.5500 f1score@3: 0.4600 ] Test set [accuracy@1: 0.6000 accuracy@2: 0.8300 accuracy@3: 0.9200 ] 
+2024-03-27 10:15:59,389 - [Epoch 105 / 1000] rec_loss: 1.1049 cl_loss: 0.0000 
+2024-03-27 10:15:59,685 - Epoch 105 Test set [precision@1: 0.6100 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6100 recall@2: 0.8900 recall@3: 0.9200 ] Test set [f1score@1: 0.6100 f1score@2: 0.5900 f1score@3: 0.4600 ] Test set [accuracy@1: 0.6100 accuracy@2: 0.8900 accuracy@3: 0.9200 ] 
+2024-03-27 10:16:00,378 - [Epoch 106 / 1000] rec_loss: 1.1158 cl_loss: 0.0000 
+2024-03-27 10:16:00,672 - Epoch 106 Test set [precision@1: 0.6100 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6100 recall@2: 0.8700 recall@3: 0.9300 ] Test set [f1score@1: 0.6100 f1score@2: 0.5800 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6100 accuracy@2: 0.8700 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:01,330 - [Epoch 107 / 1000] rec_loss: 1.1421 cl_loss: 0.0000 
+2024-03-27 10:16:01,625 - Epoch 107 Test set [precision@1: 0.6000 precision@2: 0.4600 precision@3: 0.3100 ] Test set [recall@1: 0.6000 recall@2: 0.9200 recall@3: 0.9300 ] Test set [f1score@1: 0.6000 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6000 accuracy@2: 0.9200 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:02,298 - [Epoch 108 / 1000] rec_loss: 1.1227 cl_loss: 0.0000 
+2024-03-27 10:16:02,594 - Epoch 108 Test set [precision@1: 0.5800 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.5800 recall@2: 0.8700 recall@3: 0.9300 ] Test set [f1score@1: 0.5800 f1score@2: 0.5800 f1score@3: 0.4700 ] Test set [accuracy@1: 0.5800 accuracy@2: 0.8700 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:03,269 - [Epoch 109 / 1000] rec_loss: 1.1363 cl_loss: 0.0000 
+2024-03-27 10:16:03,567 - Epoch 109 Test set [precision@1: 0.6200 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6200 recall@2: 0.8800 recall@3: 0.9300 ] Test set [f1score@1: 0.6200 f1score@2: 0.5900 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6200 accuracy@2: 0.8800 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:04,237 - [Epoch 110 / 1000] rec_loss: 0.9952 cl_loss: 0.0000 
+2024-03-27 10:16:04,532 - Epoch 110 Test set [precision@1: 0.6300 precision@2: 0.4500 precision@3: 0.3100 ] Test set [recall@1: 0.6300 recall@2: 0.9000 recall@3: 0.9300 ] Test set [f1score@1: 0.6300 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6300 accuracy@2: 0.9000 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:05,211 - [Epoch 111 / 1000] rec_loss: 1.0350 cl_loss: 0.0000 
+2024-03-27 10:16:05,545 - Epoch 111 Test set [precision@1: 0.5600 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.5600 recall@2: 0.8700 recall@3: 0.9300 ] Test set [f1score@1: 0.5600 f1score@2: 0.5800 f1score@3: 0.4700 ] Test set [accuracy@1: 0.5600 accuracy@2: 0.8700 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:06,291 - [Epoch 112 / 1000] rec_loss: 1.0530 cl_loss: 0.0000 
+2024-03-27 10:16:06,627 - Epoch 112 Test set [precision@1: 0.6400 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6400 recall@2: 0.8800 recall@3: 0.9300 ] Test set [f1score@1: 0.6400 f1score@2: 0.5900 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6400 accuracy@2: 0.8800 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:07,364 - [Epoch 113 / 1000] rec_loss: 1.1830 cl_loss: 0.0000 
+2024-03-27 10:16:07,673 - Epoch 113 Test set [precision@1: 0.6700 precision@2: 0.4300 precision@3: 0.3100 ] Test set [recall@1: 0.6700 recall@2: 0.8600 recall@3: 0.9300 ] Test set [f1score@1: 0.6700 f1score@2: 0.5700 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6700 accuracy@2: 0.8600 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:08,428 - [Epoch 114 / 1000] rec_loss: 1.0749 cl_loss: 0.0000 
+2024-03-27 10:16:08,744 - Epoch 114 Test set [precision@1: 0.6700 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6700 recall@2: 0.8900 recall@3: 0.9400 ] Test set [f1score@1: 0.6700 f1score@2: 0.5900 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6700 accuracy@2: 0.8900 accuracy@3: 0.9400 ] 
+2024-03-27 10:16:09,439 - [Epoch 115 / 1000] rec_loss: 1.0301 cl_loss: 0.0000 
+2024-03-27 10:16:09,751 - Epoch 115 Test set [precision@1: 0.6400 precision@2: 0.4100 precision@3: 0.3100 ] Test set [recall@1: 0.6400 recall@2: 0.8200 recall@3: 0.9200 ] Test set [f1score@1: 0.6400 f1score@2: 0.5500 f1score@3: 0.4600 ] Test set [accuracy@1: 0.6400 accuracy@2: 0.8200 accuracy@3: 0.9200 ] 
+2024-03-27 10:16:10,461 - [Epoch 116 / 1000] rec_loss: 1.0418 cl_loss: 0.0000 
+2024-03-27 10:16:10,777 - Epoch 116 Test set [precision@1: 0.6500 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6500 recall@2: 0.8700 recall@3: 0.9300 ] Test set [f1score@1: 0.6500 f1score@2: 0.5800 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6500 accuracy@2: 0.8700 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:11,532 - [Epoch 117 / 1000] rec_loss: 0.9885 cl_loss: 0.0000 
+2024-03-27 10:16:11,864 - Epoch 117 Test set [precision@1: 0.6600 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6600 recall@2: 0.8900 recall@3: 0.9300 ] Test set [f1score@1: 0.6600 f1score@2: 0.5900 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6600 accuracy@2: 0.8900 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:12,604 - [Epoch 118 / 1000] rec_loss: 1.0625 cl_loss: 0.0000 
+2024-03-27 10:16:12,966 - Epoch 118 Test set [precision@1: 0.6000 precision@2: 0.4300 precision@3: 0.3100 ] Test set [recall@1: 0.6000 recall@2: 0.8600 recall@3: 0.9300 ] Test set [f1score@1: 0.6000 f1score@2: 0.5700 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6000 accuracy@2: 0.8600 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:13,656 - [Epoch 119 / 1000] rec_loss: 0.9979 cl_loss: 0.0000 
+2024-03-27 10:16:13,973 - Epoch 119 Test set [precision@1: 0.5900 precision@2: 0.4100 precision@3: 0.3100 ] Test set [recall@1: 0.5900 recall@2: 0.8100 recall@3: 0.9300 ] Test set [f1score@1: 0.5900 f1score@2: 0.5400 f1score@3: 0.4700 ] Test set [accuracy@1: 0.5900 accuracy@2: 0.8100 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:14,688 - [Epoch 120 / 1000] rec_loss: 1.0360 cl_loss: 0.0000 
+2024-03-27 10:16:15,029 - Epoch 120 Test set [precision@1: 0.6300 precision@2: 0.4500 precision@3: 0.3100 ] Test set [recall@1: 0.6300 recall@2: 0.9000 recall@3: 0.9300 ] Test set [f1score@1: 0.6300 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6300 accuracy@2: 0.9000 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:15,808 - [Epoch 121 / 1000] rec_loss: 1.0442 cl_loss: 0.0000 
+2024-03-27 10:16:16,135 - Epoch 121 Test set [precision@1: 0.7000 precision@2: 0.4500 precision@3: 0.3100 ] Test set [recall@1: 0.7000 recall@2: 0.9000 recall@3: 0.9300 ] Test set [f1score@1: 0.7000 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7000 accuracy@2: 0.9000 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:16,871 - [Epoch 122 / 1000] rec_loss: 1.0066 cl_loss: 0.0000 
+2024-03-27 10:16:17,223 - Epoch 122 Test set [precision@1: 0.6800 precision@2: 0.4600 precision@3: 0.3100 ] Test set [recall@1: 0.6800 recall@2: 0.9100 recall@3: 0.9300 ] Test set [f1score@1: 0.6800 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6800 accuracy@2: 0.9100 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:17,996 - [Epoch 123 / 1000] rec_loss: 0.9152 cl_loss: 0.0000 
+2024-03-27 10:16:18,344 - Epoch 123 Test set [precision@1: 0.5900 precision@2: 0.4300 precision@3: 0.3100 ] Test set [recall@1: 0.5900 recall@2: 0.8600 recall@3: 0.9300 ] Test set [f1score@1: 0.5900 f1score@2: 0.5700 f1score@3: 0.4700 ] Test set [accuracy@1: 0.5900 accuracy@2: 0.8600 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:19,126 - [Epoch 124 / 1000] rec_loss: 1.0390 cl_loss: 0.0000 
+2024-03-27 10:16:19,438 - Epoch 124 Test set [precision@1: 0.6100 precision@2: 0.4600 precision@3: 0.3100 ] Test set [recall@1: 0.6100 recall@2: 0.9100 recall@3: 0.9300 ] Test set [f1score@1: 0.6100 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6100 accuracy@2: 0.9100 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:20,120 - [Epoch 125 / 1000] rec_loss: 0.9936 cl_loss: 0.0000 
+2024-03-27 10:16:20,428 - Epoch 125 Test set [precision@1: 0.6900 precision@2: 0.4300 precision@3: 0.3100 ] Test set [recall@1: 0.6900 recall@2: 0.8600 recall@3: 0.9300 ] Test set [f1score@1: 0.6900 f1score@2: 0.5700 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6900 accuracy@2: 0.8600 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:21,206 - [Epoch 126 / 1000] rec_loss: 0.9347 cl_loss: 0.0000 
+2024-03-27 10:16:21,546 - Epoch 126 Test set [precision@1: 0.7200 precision@2: 0.4500 precision@3: 0.3100 ] Test set [recall@1: 0.7200 recall@2: 0.9000 recall@3: 0.9300 ] Test set [f1score@1: 0.7200 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7200 accuracy@2: 0.9000 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:22,303 - [Epoch 127 / 1000] rec_loss: 0.9413 cl_loss: 0.0000 
+2024-03-27 10:16:22,649 - Epoch 127 Test set [precision@1: 0.7100 precision@2: 0.4600 precision@3: 0.3100 ] Test set [recall@1: 0.7100 recall@2: 0.9100 recall@3: 0.9400 ] Test set [f1score@1: 0.7100 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7100 accuracy@2: 0.9100 accuracy@3: 0.9400 ] 
+2024-03-27 10:16:23,557 - [Epoch 128 / 1000] rec_loss: 1.0048 cl_loss: 0.0000 
+2024-03-27 10:16:23,919 - Epoch 128 Test set [precision@1: 0.6700 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6700 recall@2: 0.8800 recall@3: 0.9300 ] Test set [f1score@1: 0.6700 f1score@2: 0.5900 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6700 accuracy@2: 0.8800 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:24,716 - [Epoch 129 / 1000] rec_loss: 0.9694 cl_loss: 0.0000 
+2024-03-27 10:16:25,019 - Epoch 129 Test set [precision@1: 0.6800 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6800 recall@2: 0.8900 recall@3: 0.9400 ] Test set [f1score@1: 0.6800 f1score@2: 0.5900 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6800 accuracy@2: 0.8900 accuracy@3: 0.9400 ] 
+2024-03-27 10:16:25,723 - [Epoch 130 / 1000] rec_loss: 0.8716 cl_loss: 0.0000 
+2024-03-27 10:16:26,049 - Epoch 130 Test set [precision@1: 0.6700 precision@2: 0.4400 precision@3: 0.3100 ] Test set [recall@1: 0.6700 recall@2: 0.8900 recall@3: 0.9400 ] Test set [f1score@1: 0.6700 f1score@2: 0.5900 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6700 accuracy@2: 0.8900 accuracy@3: 0.9400 ] 
+2024-03-27 10:16:26,798 - [Epoch 131 / 1000] rec_loss: 0.8446 cl_loss: 0.0000 
+2024-03-27 10:16:27,133 - Epoch 131 Test set [precision@1: 0.6900 precision@2: 0.4500 precision@3: 0.3100 ] Test set [recall@1: 0.6900 recall@2: 0.9000 recall@3: 0.9400 ] Test set [f1score@1: 0.6900 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6900 accuracy@2: 0.9000 accuracy@3: 0.9400 ] 
+2024-03-27 10:16:27,924 - [Epoch 132 / 1000] rec_loss: 0.8797 cl_loss: 0.0000 
+2024-03-27 10:16:28,254 - Epoch 132 Test set [precision@1: 0.6800 precision@2: 0.4500 precision@3: 0.3200 ] Test set [recall@1: 0.6800 recall@2: 0.9000 recall@3: 0.9500 ] Test set [f1score@1: 0.6800 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.6800 accuracy@2: 0.9000 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:29,054 - [Epoch 133 / 1000] rec_loss: 0.9105 cl_loss: 0.0000 
+2024-03-27 10:16:29,427 - Epoch 133 Test set [precision@1: 0.7100 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7100 recall@2: 0.9100 recall@3: 0.9500 ] Test set [f1score@1: 0.7100 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7100 accuracy@2: 0.9100 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:30,263 - [Epoch 134 / 1000] rec_loss: 0.9165 cl_loss: 0.0000 
+2024-03-27 10:16:30,669 - Epoch 134 Test set [precision@1: 0.7200 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7200 recall@2: 0.9200 recall@3: 0.9600 ] Test set [f1score@1: 0.7200 f1score@2: 0.6100 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7200 accuracy@2: 0.9200 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:31,431 - [Epoch 135 / 1000] rec_loss: 0.8188 cl_loss: 0.0000 
+2024-03-27 10:16:31,754 - Epoch 135 Test set [precision@1: 0.7200 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7200 recall@2: 0.9200 recall@3: 0.9600 ] Test set [f1score@1: 0.7200 f1score@2: 0.6100 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7200 accuracy@2: 0.9200 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:32,452 - [Epoch 136 / 1000] rec_loss: 0.8887 cl_loss: 0.0000 
+2024-03-27 10:16:32,824 - Epoch 136 Test set [precision@1: 0.7000 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7000 recall@2: 0.9100 recall@3: 0.9600 ] Test set [f1score@1: 0.7000 f1score@2: 0.6100 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7000 accuracy@2: 0.9100 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:33,633 - [Epoch 137 / 1000] rec_loss: 0.7954 cl_loss: 0.0000 
+2024-03-27 10:16:33,977 - Epoch 137 Test set [precision@1: 0.7000 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7000 recall@2: 0.9200 recall@3: 0.9600 ] Test set [f1score@1: 0.7000 f1score@2: 0.6100 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7000 accuracy@2: 0.9200 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:34,682 - [Epoch 138 / 1000] rec_loss: 0.8189 cl_loss: 0.0000 
+2024-03-27 10:16:34,975 - Epoch 138 Test set [precision@1: 0.7200 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7200 recall@2: 0.9100 recall@3: 0.9500 ] Test set [f1score@1: 0.7200 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7200 accuracy@2: 0.9100 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:35,649 - [Epoch 139 / 1000] rec_loss: 0.8207 cl_loss: 0.0000 
+2024-03-27 10:16:35,964 - Epoch 139 Test set [precision@1: 0.7300 precision@2: 0.4600 precision@3: 0.3100 ] Test set [recall@1: 0.7300 recall@2: 0.9100 recall@3: 0.9400 ] Test set [f1score@1: 0.7300 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7300 accuracy@2: 0.9100 accuracy@3: 0.9400 ] 
+2024-03-27 10:16:36,644 - [Epoch 140 / 1000] rec_loss: 0.7944 cl_loss: 0.0000 
+2024-03-27 10:16:36,957 - Epoch 140 Test set [precision@1: 0.7800 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7800 recall@2: 0.9100 recall@3: 0.9500 ] Test set [f1score@1: 0.7800 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7800 accuracy@2: 0.9100 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:37,643 - [Epoch 141 / 1000] rec_loss: 0.8513 cl_loss: 0.0000 
+2024-03-27 10:16:37,956 - Epoch 141 Test set [precision@1: 0.7400 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7400 recall@2: 0.9100 recall@3: 0.9700 ] Test set [f1score@1: 0.7400 f1score@2: 0.6100 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7400 accuracy@2: 0.9100 accuracy@3: 0.9700 ] 
+2024-03-27 10:16:38,598 - [Epoch 142 / 1000] rec_loss: 0.7779 cl_loss: 0.0000 
+2024-03-27 10:16:38,893 - Epoch 142 Test set [precision@1: 0.7000 precision@2: 0.4500 precision@3: 0.3100 ] Test set [recall@1: 0.7000 recall@2: 0.9000 recall@3: 0.9300 ] Test set [f1score@1: 0.7000 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7000 accuracy@2: 0.9000 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:39,529 - [Epoch 143 / 1000] rec_loss: 0.8596 cl_loss: 0.0000 
+2024-03-27 10:16:39,818 - Epoch 143 Test set [precision@1: 0.7100 precision@2: 0.4500 precision@3: 0.3200 ] Test set [recall@1: 0.7100 recall@2: 0.9000 recall@3: 0.9600 ] Test set [f1score@1: 0.7100 f1score@2: 0.6000 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7100 accuracy@2: 0.9000 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:40,459 - [Epoch 144 / 1000] rec_loss: 0.7577 cl_loss: 0.0000 
+2024-03-27 10:16:40,744 - Epoch 144 Test set [precision@1: 0.7000 precision@2: 0.4500 precision@3: 0.3200 ] Test set [recall@1: 0.7000 recall@2: 0.9000 recall@3: 0.9500 ] Test set [f1score@1: 0.7000 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7000 accuracy@2: 0.9000 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:41,379 - [Epoch 145 / 1000] rec_loss: 0.7143 cl_loss: 0.0000 
+2024-03-27 10:16:41,672 - Epoch 145 Test set [precision@1: 0.7500 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7500 recall@2: 0.9100 recall@3: 0.9600 ] Test set [f1score@1: 0.7500 f1score@2: 0.6100 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7500 accuracy@2: 0.9100 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:42,316 - [Epoch 146 / 1000] rec_loss: 0.7705 cl_loss: 0.0000 
+2024-03-27 10:16:42,600 - Epoch 146 Test set [precision@1: 0.7800 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7800 recall@2: 0.9500 recall@3: 0.9500 ] Test set [f1score@1: 0.7800 f1score@2: 0.6300 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7800 accuracy@2: 0.9500 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:43,251 - [Epoch 147 / 1000] rec_loss: 0.6920 cl_loss: 0.0000 
+2024-03-27 10:16:43,543 - Epoch 147 Test set [precision@1: 0.7700 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7700 recall@2: 0.9400 recall@3: 0.9500 ] Test set [f1score@1: 0.7700 f1score@2: 0.6300 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7700 accuracy@2: 0.9400 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:44,210 - [Epoch 148 / 1000] rec_loss: 0.7753 cl_loss: 0.0000 
+2024-03-27 10:16:44,541 - Epoch 148 Test set [precision@1: 0.7400 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7400 recall@2: 0.9400 recall@3: 0.9500 ] Test set [f1score@1: 0.7400 f1score@2: 0.6300 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7400 accuracy@2: 0.9400 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:45,182 - [Epoch 149 / 1000] rec_loss: 0.6842 cl_loss: 0.0000 
+2024-03-27 10:16:45,482 - Epoch 149 Test set [precision@1: 0.7400 precision@2: 0.4500 precision@3: 0.3200 ] Test set [recall@1: 0.7400 recall@2: 0.9000 recall@3: 0.9500 ] Test set [f1score@1: 0.7400 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7400 accuracy@2: 0.9000 accuracy@3: 0.9500 ] 
+2024-03-27 10:16:46,150 - [Epoch 150 / 1000] rec_loss: 0.7439 cl_loss: 0.0000 
+2024-03-27 10:16:46,436 - Epoch 150 Test set [precision@1: 0.7500 precision@2: 0.4500 precision@3: 0.3100 ] Test set [recall@1: 0.7500 recall@2: 0.9000 recall@3: 0.9300 ] Test set [f1score@1: 0.7500 f1score@2: 0.6000 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7500 accuracy@2: 0.9000 accuracy@3: 0.9300 ] 
+2024-03-27 10:16:47,068 - [Epoch 151 / 1000] rec_loss: 0.8337 cl_loss: 0.0000 
+2024-03-27 10:16:47,359 - Epoch 151 Test set [precision@1: 0.7100 precision@2: 0.4600 precision@3: 0.3100 ] Test set [recall@1: 0.7100 recall@2: 0.9100 recall@3: 0.9400 ] Test set [f1score@1: 0.7100 f1score@2: 0.6100 f1score@3: 0.4700 ] Test set [accuracy@1: 0.7100 accuracy@2: 0.9100 accuracy@3: 0.9400 ] 
+2024-03-27 10:16:47,995 - [Epoch 152 / 1000] rec_loss: 0.9330 cl_loss: 0.0000 
+2024-03-27 10:16:48,285 - Epoch 152 Test set [precision@1: 0.8200 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.8200 recall@2: 0.9100 recall@3: 0.9600 ] Test set [f1score@1: 0.8200 f1score@2: 0.6100 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8200 accuracy@2: 0.9100 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:48,922 - [Epoch 153 / 1000] rec_loss: 0.7384 cl_loss: 0.0000 
+2024-03-27 10:16:49,205 - Epoch 153 Test set [precision@1: 0.7600 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7600 recall@2: 0.9300 recall@3: 0.9700 ] Test set [f1score@1: 0.7600 f1score@2: 0.6200 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7600 accuracy@2: 0.9300 accuracy@3: 0.9700 ] 
+2024-03-27 10:16:49,896 - [Epoch 154 / 1000] rec_loss: 0.8250 cl_loss: 0.0000 
+2024-03-27 10:16:50,205 - Epoch 154 Test set [precision@1: 0.7500 precision@2: 0.4400 precision@3: 0.3200 ] Test set [recall@1: 0.7500 recall@2: 0.8900 recall@3: 0.9600 ] Test set [f1score@1: 0.7500 f1score@2: 0.5900 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7500 accuracy@2: 0.8900 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:50,941 - [Epoch 155 / 1000] rec_loss: 0.8096 cl_loss: 0.0000 
+2024-03-27 10:16:51,242 - Epoch 155 Test set [precision@1: 0.7800 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7800 recall@2: 0.9400 recall@3: 0.9600 ] Test set [f1score@1: 0.7800 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7800 accuracy@2: 0.9400 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:51,923 - [Epoch 156 / 1000] rec_loss: 0.6815 cl_loss: 0.0000 
+2024-03-27 10:16:52,207 - Epoch 156 Test set [precision@1: 0.8400 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8400 recall@2: 0.9300 recall@3: 0.9600 ] Test set [f1score@1: 0.8400 f1score@2: 0.6200 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8400 accuracy@2: 0.9300 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:52,907 - [Epoch 157 / 1000] rec_loss: 0.5755 cl_loss: 0.0000 
+2024-03-27 10:16:53,209 - Epoch 157 Test set [precision@1: 0.7900 precision@2: 0.4600 precision@3: 0.3200 ] Test set [recall@1: 0.7900 recall@2: 0.9200 recall@3: 0.9600 ] Test set [f1score@1: 0.7900 f1score@2: 0.6100 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7900 accuracy@2: 0.9200 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:53,886 - [Epoch 158 / 1000] rec_loss: 0.6846 cl_loss: 0.0000 
+2024-03-27 10:16:54,178 - Epoch 158 Test set [precision@1: 0.8100 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8100 recall@2: 0.9400 recall@3: 0.9600 ] Test set [f1score@1: 0.8100 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8100 accuracy@2: 0.9400 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:54,900 - [Epoch 159 / 1000] rec_loss: 0.6690 cl_loss: 0.0000 
+2024-03-27 10:16:55,203 - Epoch 159 Test set [precision@1: 0.7700 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7700 recall@2: 0.9400 recall@3: 0.9600 ] Test set [f1score@1: 0.7700 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7700 accuracy@2: 0.9400 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:55,877 - [Epoch 160 / 1000] rec_loss: 0.8157 cl_loss: 0.0000 
+2024-03-27 10:16:56,185 - Epoch 160 Test set [precision@1: 0.7700 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7700 recall@2: 0.9400 recall@3: 0.9600 ] Test set [f1score@1: 0.7700 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7700 accuracy@2: 0.9400 accuracy@3: 0.9600 ] 
+2024-03-27 10:16:56,868 - [Epoch 161 / 1000] rec_loss: 0.6524 cl_loss: 0.0000 
+2024-03-27 10:16:57,176 - Epoch 161 Test set [precision@1: 0.8000 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8000 recall@2: 0.9500 recall@3: 0.9700 ] Test set [f1score@1: 0.8000 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8000 accuracy@2: 0.9500 accuracy@3: 0.9700 ] 
+2024-03-27 10:16:57,880 - [Epoch 162 / 1000] rec_loss: 0.5790 cl_loss: 0.0000 
+2024-03-27 10:16:58,184 - Epoch 162 Test set [precision@1: 0.7800 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7800 recall@2: 0.9300 recall@3: 0.9700 ] Test set [f1score@1: 0.7800 f1score@2: 0.6200 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7800 accuracy@2: 0.9300 accuracy@3: 0.9700 ] 
+2024-03-27 10:16:58,993 - [Epoch 163 / 1000] rec_loss: 0.7055 cl_loss: 0.0000 
+2024-03-27 10:16:59,362 - Epoch 163 Test set [precision@1: 0.8200 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8200 recall@2: 0.9400 recall@3: 0.9700 ] Test set [f1score@1: 0.8200 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8200 accuracy@2: 0.9400 accuracy@3: 0.9700 ] 
+2024-03-27 10:17:00,084 - [Epoch 164 / 1000] rec_loss: 0.6492 cl_loss: 0.0000 
+2024-03-27 10:17:00,418 - Epoch 164 Test set [precision@1: 0.8400 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8400 recall@2: 0.9500 recall@3: 0.9700 ] Test set [f1score@1: 0.8400 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8400 accuracy@2: 0.9500 accuracy@3: 0.9700 ] 
+2024-03-27 10:17:01,115 - [Epoch 165 / 1000] rec_loss: 0.6212 cl_loss: 0.0000 
+2024-03-27 10:17:01,422 - Epoch 165 Test set [precision@1: 0.7600 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.7600 recall@2: 0.9500 recall@3: 0.9700 ] Test set [f1score@1: 0.7600 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.7600 accuracy@2: 0.9500 accuracy@3: 0.9700 ] 
+2024-03-27 10:17:02,103 - [Epoch 166 / 1000] rec_loss: 0.5793 cl_loss: 0.0000 
+2024-03-27 10:17:02,445 - Epoch 166 Test set [precision@1: 0.8000 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8000 recall@2: 0.9500 recall@3: 0.9700 ] Test set [f1score@1: 0.8000 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8000 accuracy@2: 0.9500 accuracy@3: 0.9700 ] 
+2024-03-27 10:17:03,314 - [Epoch 167 / 1000] rec_loss: 0.6027 cl_loss: 0.0000 
+2024-03-27 10:17:03,666 - Epoch 167 Test set [precision@1: 0.8700 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8700 recall@2: 0.9500 recall@3: 0.9600 ] Test set [f1score@1: 0.8700 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8700 accuracy@2: 0.9500 accuracy@3: 0.9600 ] 
+2024-03-27 10:17:04,414 - [Epoch 168 / 1000] rec_loss: 0.5621 cl_loss: 0.0000 
+2024-03-27 10:17:04,764 - Epoch 168 Test set [precision@1: 0.8800 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8800 recall@2: 0.9500 recall@3: 0.9700 ] Test set [f1score@1: 0.8800 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8800 accuracy@2: 0.9500 accuracy@3: 0.9700 ] 
+2024-03-27 10:17:05,502 - [Epoch 169 / 1000] rec_loss: 0.5368 cl_loss: 0.0000 
+2024-03-27 10:17:05,802 - Epoch 169 Test set [precision@1: 0.8700 precision@2: 0.4700 precision@3: 0.3200 ] Test set [recall@1: 0.8700 recall@2: 0.9400 recall@3: 0.9700 ] Test set [f1score@1: 0.8700 f1score@2: 0.6300 f1score@3: 0.4800 ] Test set [accuracy@1: 0.8700 accuracy@2: 0.9400 accuracy@3: 0.9700 ] 
+2024-03-27 10:17:06,604 - [Epoch 170 / 1000] rec_loss: 0.5956 cl_loss: 0.0000 
+2024-03-27 10:17:06,904 - Epoch 170 Test set [precision@1: 0.8700 precision@2: 0.4700 precision@3: 0.3300 ] Test set [recall@1: 0.8700 recall@2: 0.9400 recall@3: 0.9800 ] Test set [f1score@1: 0.8700 f1score@2: 0.6300 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8700 accuracy@2: 0.9400 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:07,616 - [Epoch 171 / 1000] rec_loss: 0.6300 cl_loss: 0.0000 
+2024-03-27 10:17:07,914 - Epoch 171 Test set [precision@1: 0.8100 precision@2: 0.4800 precision@3: 0.3300 ] Test set [recall@1: 0.8100 recall@2: 0.9600 recall@3: 0.9900 ] Test set [f1score@1: 0.8100 f1score@2: 0.6400 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8100 accuracy@2: 0.9600 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:08,600 - [Epoch 172 / 1000] rec_loss: 0.6384 cl_loss: 0.0000 
+2024-03-27 10:17:08,920 - Epoch 172 Test set [precision@1: 0.8700 precision@2: 0.4800 precision@3: 0.3300 ] Test set [recall@1: 0.8700 recall@2: 0.9600 recall@3: 0.9900 ] Test set [f1score@1: 0.8700 f1score@2: 0.6400 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8700 accuracy@2: 0.9600 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:09,591 - [Epoch 173 / 1000] rec_loss: 0.6630 cl_loss: 0.0000 
+2024-03-27 10:17:09,876 - Epoch 173 Test set [precision@1: 0.8900 precision@2: 0.4700 precision@3: 0.3300 ] Test set [recall@1: 0.8900 recall@2: 0.9500 recall@3: 0.9900 ] Test set [f1score@1: 0.8900 f1score@2: 0.6300 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8900 accuracy@2: 0.9500 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:10,597 - [Epoch 174 / 1000] rec_loss: 0.5285 cl_loss: 0.0000 
+2024-03-27 10:17:10,917 - Epoch 174 Test set [precision@1: 0.9000 precision@2: 0.4700 precision@3: 0.3300 ] Test set [recall@1: 0.9000 recall@2: 0.9500 recall@3: 0.9900 ] Test set [f1score@1: 0.9000 f1score@2: 0.6300 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9000 accuracy@2: 0.9500 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:11,618 - [Epoch 175 / 1000] rec_loss: 0.7702 cl_loss: 0.0000 
+2024-03-27 10:17:11,923 - Epoch 175 Test set [precision@1: 0.9000 precision@2: 0.4800 precision@3: 0.3300 ] Test set [recall@1: 0.9000 recall@2: 0.9600 recall@3: 0.9900 ] Test set [f1score@1: 0.9000 f1score@2: 0.6400 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9000 accuracy@2: 0.9600 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:12,592 - [Epoch 176 / 1000] rec_loss: 0.5046 cl_loss: 0.0000 
+2024-03-27 10:17:12,905 - Epoch 176 Test set [precision@1: 0.8900 precision@2: 0.4800 precision@3: 0.3300 ] Test set [recall@1: 0.8900 recall@2: 0.9600 recall@3: 0.9900 ] Test set [f1score@1: 0.8900 f1score@2: 0.6400 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8900 accuracy@2: 0.9600 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:13,585 - [Epoch 177 / 1000] rec_loss: 0.6399 cl_loss: 0.0000 
+2024-03-27 10:17:13,900 - Epoch 177 Test set [precision@1: 0.8900 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.8900 recall@2: 0.9700 recall@3: 0.9900 ] Test set [f1score@1: 0.8900 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8900 accuracy@2: 0.9700 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:14,639 - [Epoch 178 / 1000] rec_loss: 0.5481 cl_loss: 0.0000 
+2024-03-27 10:17:14,953 - Epoch 178 Test set [precision@1: 0.8900 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.8900 recall@2: 0.9700 recall@3: 0.9800 ] Test set [f1score@1: 0.8900 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8900 accuracy@2: 0.9700 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:15,602 - [Epoch 179 / 1000] rec_loss: 0.5280 cl_loss: 0.0000 
+2024-03-27 10:17:15,894 - Epoch 179 Test set [precision@1: 0.8900 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.8900 recall@2: 0.9800 recall@3: 0.9800 ] Test set [f1score@1: 0.8900 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8900 accuracy@2: 0.9800 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:16,563 - [Epoch 180 / 1000] rec_loss: 0.5236 cl_loss: 0.0000 
+2024-03-27 10:17:16,852 - Epoch 180 Test set [precision@1: 0.8900 precision@2: 0.4800 precision@3: 0.3300 ] Test set [recall@1: 0.8900 recall@2: 0.9600 recall@3: 0.9800 ] Test set [f1score@1: 0.8900 f1score@2: 0.6400 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8900 accuracy@2: 0.9600 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:17,520 - [Epoch 181 / 1000] rec_loss: 0.5621 cl_loss: 0.0000 
+2024-03-27 10:17:17,807 - Epoch 181 Test set [precision@1: 0.9000 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9000 recall@2: 0.9700 recall@3: 0.9800 ] Test set [f1score@1: 0.9000 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9000 accuracy@2: 0.9700 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:18,459 - [Epoch 182 / 1000] rec_loss: 0.5718 cl_loss: 0.0000 
+2024-03-27 10:17:18,752 - Epoch 182 Test set [precision@1: 0.9000 precision@2: 0.4800 precision@3: 0.3300 ] Test set [recall@1: 0.9000 recall@2: 0.9600 recall@3: 0.9800 ] Test set [f1score@1: 0.9000 f1score@2: 0.6400 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9000 accuracy@2: 0.9600 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:19,415 - [Epoch 183 / 1000] rec_loss: 0.5049 cl_loss: 0.0000 
+2024-03-27 10:17:19,697 - Epoch 183 Test set [precision@1: 0.9200 precision@2: 0.4800 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9600 recall@3: 0.9800 ] Test set [f1score@1: 0.9200 f1score@2: 0.6400 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9600 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:20,350 - [Epoch 184 / 1000] rec_loss: 0.5579 cl_loss: 0.0000 
+2024-03-27 10:17:20,655 - Epoch 184 Test set [precision@1: 0.9200 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9700 recall@3: 0.9800 ] Test set [f1score@1: 0.9200 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9700 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:21,289 - [Epoch 185 / 1000] rec_loss: 0.4867 cl_loss: 0.0000 
+2024-03-27 10:17:21,582 - Epoch 185 Test set [precision@1: 0.9100 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9100 recall@2: 0.9800 recall@3: 0.9800 ] Test set [f1score@1: 0.9100 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9100 accuracy@2: 0.9800 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:22,214 - [Epoch 186 / 1000] rec_loss: 0.5572 cl_loss: 0.0000 
+2024-03-27 10:17:22,509 - Epoch 186 Test set [precision@1: 0.9100 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9100 recall@2: 0.9800 recall@3: 0.9800 ] Test set [f1score@1: 0.9100 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9100 accuracy@2: 0.9800 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:23,155 - [Epoch 187 / 1000] rec_loss: 0.4718 cl_loss: 0.0000 
+2024-03-27 10:17:23,444 - Epoch 187 Test set [precision@1: 0.9200 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9700 recall@3: 0.9800 ] Test set [f1score@1: 0.9200 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9700 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:24,085 - [Epoch 188 / 1000] rec_loss: 0.5381 cl_loss: 0.0000 
+2024-03-27 10:17:24,462 - Epoch 188 Test set [precision@1: 0.9100 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9100 recall@2: 0.9800 recall@3: 0.9800 ] Test set [f1score@1: 0.9100 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9100 accuracy@2: 0.9800 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:25,167 - [Epoch 189 / 1000] rec_loss: 0.5549 cl_loss: 0.0000 
+2024-03-27 10:17:25,495 - Epoch 189 Test set [precision@1: 0.9300 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9300 recall@2: 0.9800 recall@3: 0.9800 ] Test set [f1score@1: 0.9300 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9300 accuracy@2: 0.9800 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:26,294 - [Epoch 190 / 1000] rec_loss: 0.5450 cl_loss: 0.0000 
+2024-03-27 10:17:26,596 - Epoch 190 Test set [precision@1: 0.9300 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9300 recall@2: 0.9800 recall@3: 0.9800 ] Test set [f1score@1: 0.9300 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9300 accuracy@2: 0.9800 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:27,302 - [Epoch 191 / 1000] rec_loss: 0.4744 cl_loss: 0.0000 
+2024-03-27 10:17:27,608 - Epoch 191 Test set [precision@1: 0.9300 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9300 recall@2: 0.9800 recall@3: 0.9800 ] Test set [f1score@1: 0.9300 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9300 accuracy@2: 0.9800 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:28,264 - [Epoch 192 / 1000] rec_loss: 0.3939 cl_loss: 0.0000 
+2024-03-27 10:17:28,564 - Epoch 192 Test set [precision@1: 0.9200 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9800 recall@3: 0.9800 ] Test set [f1score@1: 0.9200 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9800 accuracy@3: 0.9800 ] 
+2024-03-27 10:17:29,225 - [Epoch 193 / 1000] rec_loss: 0.6350 cl_loss: 0.0000 
+2024-03-27 10:17:29,523 - Epoch 193 Test set [precision@1: 0.9000 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9000 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9000 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9000 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:30,191 - [Epoch 194 / 1000] rec_loss: 0.4747 cl_loss: 0.0000 
+2024-03-27 10:17:30,487 - Epoch 194 Test set [precision@1: 0.9000 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9000 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9000 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9000 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:31,177 - [Epoch 195 / 1000] rec_loss: 0.4959 cl_loss: 0.0000 
+2024-03-27 10:17:31,467 - Epoch 195 Test set [precision@1: 0.9000 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9000 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9000 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9000 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:32,319 - [Epoch 196 / 1000] rec_loss: 0.4676 cl_loss: 0.0000 
+2024-03-27 10:17:32,684 - Epoch 196 Test set [precision@1: 0.9100 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9100 recall@2: 0.9800 recall@3: 1.0000 ] Test set [f1score@1: 0.9100 f1score@2: 0.6500 f1score@3: 0.5000 ] Test set [accuracy@1: 0.9100 accuracy@2: 0.9800 accuracy@3: 1.0000 ] 
+2024-03-27 10:17:33,525 - [Epoch 197 / 1000] rec_loss: 0.3995 cl_loss: 0.0000 
+2024-03-27 10:17:33,901 - Epoch 197 Test set [precision@1: 0.9200 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9200 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:34,621 - [Epoch 198 / 1000] rec_loss: 0.3912 cl_loss: 0.0000 
+2024-03-27 10:17:34,963 - Epoch 198 Test set [precision@1: 0.9200 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9200 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:35,648 - [Epoch 199 / 1000] rec_loss: 0.4572 cl_loss: 0.0000 
+2024-03-27 10:17:35,942 - Epoch 199 Test set [precision@1: 0.9200 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9200 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:36,640 - [Epoch 200 / 1000] rec_loss: 0.4475 cl_loss: 0.0000 
+2024-03-27 10:17:36,939 - Epoch 200 Test set [precision@1: 0.9100 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9100 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9100 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9100 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:37,593 - [Epoch 201 / 1000] rec_loss: 0.5280 cl_loss: 0.0000 
+2024-03-27 10:17:37,889 - Epoch 201 Test set [precision@1: 0.8900 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.8900 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.8900 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.8900 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:38,568 - [Epoch 202 / 1000] rec_loss: 0.4451 cl_loss: 0.0000 
+2024-03-27 10:17:38,927 - Epoch 202 Test set [precision@1: 0.9200 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9200 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:39,689 - [Epoch 203 / 1000] rec_loss: 0.4753 cl_loss: 0.0000 
+2024-03-27 10:17:40,006 - Epoch 203 Test set [precision@1: 0.9200 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9200 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9200 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9200 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:40,703 - [Epoch 204 / 1000] rec_loss: 0.3668 cl_loss: 0.0000 
+2024-03-27 10:17:41,006 - Epoch 204 Test set [precision@1: 0.9400 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9400 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9400 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9400 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:41,664 - [Epoch 205 / 1000] rec_loss: 0.3447 cl_loss: 0.0000 
+2024-03-27 10:17:41,964 - Epoch 205 Test set [precision@1: 0.9300 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9300 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9300 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9300 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:42,662 - [Epoch 206 / 1000] rec_loss: 0.3491 cl_loss: 0.0000 
+2024-03-27 10:17:43,001 - Epoch 206 Test set [precision@1: 0.9400 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9400 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9400 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9400 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:43,731 - [Epoch 207 / 1000] rec_loss: 0.4300 cl_loss: 0.0000 
+2024-03-27 10:17:44,037 - Epoch 207 Test set [precision@1: 0.9300 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9300 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9300 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9300 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:44,769 - [Epoch 208 / 1000] rec_loss: 0.4780 cl_loss: 0.0000 
+2024-03-27 10:17:45,065 - Epoch 208 Test set [precision@1: 0.9300 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9300 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9300 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9300 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:45,740 - [Epoch 209 / 1000] rec_loss: 0.3966 cl_loss: 0.0000 
+2024-03-27 10:17:46,036 - Epoch 209 Test set [precision@1: 0.9400 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9400 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9400 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9400 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:46,736 - [Epoch 210 / 1000] rec_loss: 0.3426 cl_loss: 0.0000 
+2024-03-27 10:17:47,040 - Epoch 210 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:47,721 - [Epoch 211 / 1000] rec_loss: 0.3797 cl_loss: 0.0000 
+2024-03-27 10:17:48,015 - Epoch 211 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:48,705 - [Epoch 212 / 1000] rec_loss: 0.3746 cl_loss: 0.0000 
+2024-03-27 10:17:49,019 - Epoch 212 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:49,722 - [Epoch 213 / 1000] rec_loss: 0.3213 cl_loss: 0.0000 
+2024-03-27 10:17:50,039 - Epoch 213 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:50,745 - [Epoch 214 / 1000] rec_loss: 0.2708 cl_loss: 0.0000 
+2024-03-27 10:17:51,068 - Epoch 214 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:51,773 - [Epoch 215 / 1000] rec_loss: 0.5721 cl_loss: 0.0000 
+2024-03-27 10:17:52,088 - Epoch 215 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:52,792 - [Epoch 216 / 1000] rec_loss: 0.3552 cl_loss: 0.0000 
+2024-03-27 10:17:53,110 - Epoch 216 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:53,828 - [Epoch 217 / 1000] rec_loss: 0.2529 cl_loss: 0.0000 
+2024-03-27 10:17:54,165 - Epoch 217 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:54,916 - [Epoch 218 / 1000] rec_loss: 0.4309 cl_loss: 0.0000 
+2024-03-27 10:17:55,257 - Epoch 218 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:55,986 - [Epoch 219 / 1000] rec_loss: 0.5065 cl_loss: 0.0000 
+2024-03-27 10:17:56,324 - Epoch 219 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:57,080 - [Epoch 220 / 1000] rec_loss: 0.2515 cl_loss: 0.0000 
+2024-03-27 10:17:57,425 - Epoch 220 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:58,164 - [Epoch 221 / 1000] rec_loss: 0.3304 cl_loss: 0.0000 
+2024-03-27 10:17:58,560 - Epoch 221 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:17:59,301 - [Epoch 222 / 1000] rec_loss: 0.4184 cl_loss: 0.0000 
+2024-03-27 10:17:59,619 - Epoch 222 Test set [precision@1: 0.9700 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9700 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9700 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9700 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:00,300 - [Epoch 223 / 1000] rec_loss: 0.3042 cl_loss: 0.0000 
+2024-03-27 10:18:00,589 - Epoch 223 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:01,415 - [Epoch 224 / 1000] rec_loss: 0.2674 cl_loss: 0.0000 
+2024-03-27 10:18:01,784 - Epoch 224 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:02,468 - [Epoch 225 / 1000] rec_loss: 0.2544 cl_loss: 0.0000 
+2024-03-27 10:18:02,786 - Epoch 225 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:03,477 - [Epoch 226 / 1000] rec_loss: 0.2760 cl_loss: 0.0000 
+2024-03-27 10:18:03,869 - Epoch 226 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 1.0000 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.5000 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 1.0000 ] 
+2024-03-27 10:18:04,596 - [Epoch 227 / 1000] rec_loss: 0.3676 cl_loss: 0.0000 
+2024-03-27 10:18:04,905 - Epoch 227 Test set [precision@1: 0.9400 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9400 recall@2: 0.9800 recall@3: 1.0000 ] Test set [f1score@1: 0.9400 f1score@2: 0.6500 f1score@3: 0.5000 ] Test set [accuracy@1: 0.9400 accuracy@2: 0.9800 accuracy@3: 1.0000 ] 
+2024-03-27 10:18:05,603 - [Epoch 228 / 1000] rec_loss: 0.3528 cl_loss: 0.0000 
+2024-03-27 10:18:05,908 - Epoch 228 Test set [precision@1: 0.9400 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9400 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9400 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9400 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:06,629 - [Epoch 229 / 1000] rec_loss: 0.2633 cl_loss: 0.0000 
+2024-03-27 10:18:06,922 - Epoch 229 Test set [precision@1: 0.9500 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:07,591 - [Epoch 230 / 1000] rec_loss: 0.3194 cl_loss: 0.0000 
+2024-03-27 10:18:07,891 - Epoch 230 Test set [precision@1: 0.9500 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:08,585 - [Epoch 231 / 1000] rec_loss: 0.3368 cl_loss: 0.0000 
+2024-03-27 10:18:08,875 - Epoch 231 Test set [precision@1: 0.9500 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:09,554 - [Epoch 232 / 1000] rec_loss: 0.3406 cl_loss: 0.0000 
+2024-03-27 10:18:09,845 - Epoch 232 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:10,564 - [Epoch 233 / 1000] rec_loss: 0.3760 cl_loss: 0.0000 
+2024-03-27 10:18:10,849 - Epoch 233 Test set [precision@1: 0.9500 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9500 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9500 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9500 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:11,559 - [Epoch 234 / 1000] rec_loss: 0.3821 cl_loss: 0.0000 
+2024-03-27 10:18:11,865 - Epoch 234 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:12,615 - [Epoch 235 / 1000] rec_loss: 0.1953 cl_loss: 0.0000 
+2024-03-27 10:18:12,919 - Epoch 235 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:13,591 - [Epoch 236 / 1000] rec_loss: 0.3913 cl_loss: 0.0000 
+2024-03-27 10:18:13,913 - Epoch 236 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:14,684 - [Epoch 237 / 1000] rec_loss: 0.8845 cl_loss: 0.0000 
+2024-03-27 10:18:14,991 - Epoch 237 Test set [precision@1: 0.9700 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9700 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9700 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9700 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:15,699 - [Epoch 238 / 1000] rec_loss: 0.2131 cl_loss: 0.0000 
+2024-03-27 10:18:15,995 - Epoch 238 Test set [precision@1: 0.9600 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:16,698 - [Epoch 239 / 1000] rec_loss: 0.4251 cl_loss: 0.0000 
+2024-03-27 10:18:16,998 - Epoch 239 Test set [precision@1: 0.9600 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:17,663 - [Epoch 240 / 1000] rec_loss: 0.4258 cl_loss: 0.0000 
+2024-03-27 10:18:17,995 - Epoch 240 Test set [precision@1: 0.9700 precision@2: 0.4900 precision@3: 0.3300 ] Test set [recall@1: 0.9700 recall@2: 0.9800 recall@3: 0.9900 ] Test set [f1score@1: 0.9700 f1score@2: 0.6500 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9700 accuracy@2: 0.9800 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:18,714 - [Epoch 241 / 1000] rec_loss: 0.3225 cl_loss: 0.0000 
+2024-03-27 10:18:19,072 - Epoch 241 Test set [precision@1: 0.9700 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9700 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9700 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9700 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:19,756 - [Epoch 242 / 1000] rec_loss: 0.2459 cl_loss: 0.0000 
+2024-03-27 10:18:20,045 - Epoch 242 Test set [precision@1: 0.9700 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9700 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9700 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9700 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:20,686 - [Epoch 243 / 1000] rec_loss: 0.3147 cl_loss: 0.0000 
+2024-03-27 10:18:20,978 - Epoch 243 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:21,616 - [Epoch 244 / 1000] rec_loss: 0.2700 cl_loss: 0.0000 
+2024-03-27 10:18:21,908 - Epoch 244 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:22,576 - [Epoch 245 / 1000] rec_loss: 0.2921 cl_loss: 0.0000 
+2024-03-27 10:18:22,877 - Epoch 245 Test set [precision@1: 0.9600 precision@2: 0.5000 precision@3: 0.3300 ] Test set [recall@1: 0.9600 recall@2: 0.9900 recall@3: 0.9900 ] Test set [f1score@1: 0.9600 f1score@2: 0.6600 f1score@3: 0.4900 ] Test set [accuracy@1: 0.9600 accuracy@2: 0.9900 accuracy@3: 0.9900 ] 
+2024-03-27 10:18:23,567 - [Epoch 246 / 1000] rec_loss: 0.3116 cl_loss: 0.0000 
