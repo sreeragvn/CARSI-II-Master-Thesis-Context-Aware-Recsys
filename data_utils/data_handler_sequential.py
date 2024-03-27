@@ -90,7 +90,7 @@ class DataHandlerSequential:
     def _read_csv_static_context(self, csv_file):
         try:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
-            context = context.drop(['datetime', 'session'], axis=1)
+            context = context.drop(['datetime', 'session', 'car_id'], axis=1)
             context = context.astype(int)
             self.static_context_embedding_size = context.drop(columns=['window_id']).max(axis=0).tolist()
             context_dict = {}
