@@ -101,22 +101,22 @@ class Metric(object):
         for k in ks:
             precision = torchmetrics.Precision(num_classes = self._num_classes+1, 
                                                top_k=k, average='micro', 
-                                               task='multiclass')(output, target)
+                                               task='multiclass').to(configs['device'])(output, target)
             metrics['precision'].append(round(precision.item(), 2))
 
             recall = torchmetrics.Recall(num_classes = self._num_classes+1, 
                                                top_k=k, average='micro', 
-                                               task='multiclass')(output, target)
+                                               task='multiclass').to(configs['device'])(output, target)
             metrics['recall'].append(round(recall.item(), 2))
 
             f1_score = torchmetrics.F1Score(num_classes = self._num_classes+1, 
                                                top_k=k, average='micro', 
-                                               task='multiclass')(output, target)
+                                               task='multiclass').to(configs['device'])(output, target)
             metrics['f1score'].append(round(f1_score.item(), 2))
 
             accuracy = torchmetrics.Accuracy(num_classes = self._num_classes+1, 
                                                top_k=k, average='micro', 
-                                               task='multiclass')(output, target)
+                                               task='multiclass').to(configs['device'])(output, target)
             metrics['accuracy'].append(round(accuracy.item(), 2))
 
         return metrics
