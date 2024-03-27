@@ -46,7 +46,7 @@ class CL4SRec(BaseModel):
         self.mask_default = self.mask_correlated_samples(batch_size=self.batch_size)
 
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(p=0.2)
+        self.dropout = nn.Dropout(p=0.3)
         
         #static context encoder
         self.static_embedding  = static_context_encoder(self.static_context_max_token, 8, 32, 16, 8)
@@ -66,8 +66,11 @@ class CL4SRec(BaseModel):
                                                                       self.dropout_rate) 
                                                                       for _ in range(self.n_layers)])
             self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size, 128)
+            self.sasrecbn1 = nn.BatchNorm1d(128)
             self.sasrec_fc_layer2 = nn.Linear(128, 128) 
+            self.sasrecbn2 = nn.BatchNorm1d(128)
             self.sasrec_fc_layer3 = nn.Linear(128, 64) 
+            self.sasrecbn3 = nn.BatchNorm1d(64)
         else:
             print('mention the interaction encoder - sasrec or lstm')
 
@@ -93,7 +96,7 @@ class CL4SRec(BaseModel):
         # FCs after concatenation layer
         fc_layers = []
         for _ in range(2):
-            fc_layers.extend([nn.Linear(input_size, output_size), self.relu, self.dropout])
+            fc_layers.extend([nn.Linear(input_size, output_size), nn.BatchNorm1d(output_size), nn.ReLU(), nn.Dropout(p=0.3)])
             input_size = 64
             output_size = 32
         fc_layers.append(nn.Linear(32, self.emb_size))
@@ -150,9 +153,9 @@ class CL4SRec(BaseModel):
             # print(all_tokens_except_last.size())
             sasrec_out = x.view(x.size(0), -1)
             
-            sasrec_out = self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out)))
-            sasrec_out = self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out)))
-            sasrec_out = self.dropout(self.relu(self.sasrec_fc_layer3(sasrec_out)))
+            sasrec_out = self.sasrecbn1(self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out))))
+            sasrec_out = self.sasrecbn2(self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out))))
+            sasrec_out = self.sasrecbn3(self.dropout(self.relu(self.sasrec_fc_layer3(sasrec_out))))
             # sasrec_out = x[:, -1, :]
 
         batch_context = batch_context.to(sasrec_out.dtype)
