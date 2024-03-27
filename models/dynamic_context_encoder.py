@@ -17,6 +17,7 @@ class LSTM_contextEncoder(nn.Module):
         self.fc2 = nn.Linear(hidden_size // 2, emb_size)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.2)
+        self.apply(weights_init)
     def forward(self, x):
         x = x.permute(0, 2, 1)
         _,(h_n, _) = self.lstm(x)
@@ -59,6 +60,7 @@ class TransformerEncoder_DynamicContext(nn.Module):
             nn.Linear(feed_forward_size, hidden_dim)
         )
         self.fc_out1 = nn.Linear(hidden_dim, 64)
+        self.apply(weights_init)
 
     def positional_encoding(self):
         pe = t.zeros(self.seq_len, self.hidden_dim) # positional encoding 
@@ -98,3 +100,15 @@ class TransformerEncoder_DynamicContext(nn.Module):
         print(x.size())
         # x = F.adaptive_avg_pool1d(x.transpose(1, 2), 64).transpose(1, 2)
         return x
+    
+
+def weights_init(m):
+    if isinstance(m, nn.Linear):
+        nn.init.xavier_normal_(m.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.constant_(m.bias.data, 0.0)
+    elif isinstance(m, nn.LSTM):
+        for name, param in m.named_parameters():
+            if 'weight' in name:
+                nn.init.xavier_normal_(param.data)
+            elif 'bias' in name:
+                nn.init.constant_(param.data, 0.0)
