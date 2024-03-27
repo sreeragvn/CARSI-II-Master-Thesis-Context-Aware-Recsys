@@ -137,7 +137,6 @@ class CL4SRec(BaseModel):
             if isinstance(module, nn.Linear) and module.bias is not None:
                 module.bias.data.zero_()
 
-
     def forward(self, batch_seqs,batch_context, batch_static_context):
         # interaction_encoder options are lstm, sasrec, durorec
         if configs['model']['interaction_encoder'] == 'lstm':
