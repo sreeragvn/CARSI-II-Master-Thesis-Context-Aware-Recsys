@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import pickle
 from torchmetrics.classification import MulticlassConfusionMatrix
+import torchmetrics
 class Metric(object):
 
     def __init__(self):
@@ -15,43 +16,37 @@ class Metric(object):
         self._num_classes = len(list(_label_mapping.keys()))
         self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes+1).to(configs['device'])
 
-    def precision_at_k(output, target, k=3):
-        _, indices = torch.topk(output, k, dim=1)
-        correct = torch.sum(indices == target.view(-1, 1))
-        precision = correct.float() / (k * target.size(0))
-        return precision.item()
-    
     # def metric_call(self, true_labels, predicted_labels):
 
     #     path_to_metrics = 'results_metrics'
     #     with open(configs['train']['parameter_label_mapping_path'], 'rb') as f:
     #             _label_mapping = pickle.load(f)
     #     _num_classes = len(list(_label_mapping.keys()))
-    #     # metrics per class to dataframe
+    #     metrics per class to dataframe
     #     accuracy = Accuracy(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
     #     f1 = F1Score(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
     #     precision = Precision(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
     #     recall = Recall(task="multiclass", average=None, num_classes=_num_classes).to(configs['device'])
     #     conf_matrix = ConfusionMatrix(task="multiclass", num_classes=_num_classes).to(configs['device'])
 
-    #     # acc_list = accuracy(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
-    #     # f1_list = f1(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
-    #     # precision_list = precision(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
-    #     # recall_list = recall(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
-    #     # cm = conf_matrix(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     acc_list = accuracy(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     f1_list = f1(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     precision_list = precision(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     recall_list = recall(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
+    #     cm = conf_matrix(torch.tensor(true_labels), torch.tensor(predicted_labels)).tolist()
 
     #     acc = np.mean(accuracy(true_labels, predicted_labels).cpu().numpy())
     #     f1 = np.mean(f1(true_labels, predicted_labels).cpu().numpy())
     #     precision = np.mean(precision(true_labels, predicted_labels).cpu().numpy())
     #     recall = np.mean(recall(true_labels, predicted_labels).cpu().numpy())
-    #     # cm = conf_matrix(true_labels, predicted_labels).tolist()
+    #     cm = conf_matrix(true_labels, predicted_labels).tolist()
 
-    #     # metrics_data = [acc_list, f1_list, recall_list, precision_list]
+    #     metrics_data = [acc_list, f1_list, recall_list, precision_list]
     #     results = {'Accuracy': acc, 'F1Score': f1, 'Recall': recall, "Precision": precision}
-    #     # metrics_df = pd.DataFrame(metrics_data, columns=_label_mapping.keys(), index=index_names)
-    #     # metrics_df.to_csv(os.path.join(path_to_metrics, "class_metrics.csv"))
-    #     # cm_df = pd.DataFrame(cm, columns=_label_mapping.keys(), index=_label_mapping.keys())
-    #     # cm_df.to_csv(os.path.join(path_to_metrics, "confusion_matrix.csv"))
+    #     metrics_df = pd.DataFrame(metrics_data, columns=_label_mapping.keys(), index=index_names)
+    #     metrics_df.to_csv(os.path.join(path_to_metrics, "class_metrics.csv"))
+    #     cm_df = pd.DataFrame(cm, columns=_label_mapping.keys(), index=_label_mapping.keys())
+    #     cm_df.to_csv(os.path.join(path_to_metrics, "confusion_matrix.csv"))
     #     return results
 
     def metrics_calc(self, target, output):
@@ -91,6 +86,41 @@ class Metric(object):
         for metric in metrics:
             metrics[metric] = np.array(metrics[metric])
         return metrics
+
+    def metrics_calc_torch(self, target, output):
+        # print( target.size(), output.size())
+        # print(self._num_classes)
+        # print(output)
+
+        ks = self.k 
+        metrics = {'precision': [],
+                'recall': [],
+                'f1score': [],
+                'accuracy': []}
+
+        for k in ks:
+            precision = torchmetrics.Precision(num_classes = self._num_classes+1, 
+                                               top_k=k, average='micro', 
+                                               task='multiclass')(output, target)
+            metrics['precision'].append(round(precision.item(), 2))
+
+            recall = torchmetrics.Recall(num_classes = self._num_classes+1, 
+                                               top_k=k, average='micro', 
+                                               task='multiclass')(output, target)
+            metrics['recall'].append(round(recall.item(), 2))
+
+            f1_score = torchmetrics.F1Score(num_classes = self._num_classes+1, 
+                                               top_k=k, average='micro', 
+                                               task='multiclass')(output, target)
+            metrics['f1score'].append(round(f1_score.item(), 2))
+
+            accuracy = torchmetrics.Accuracy(num_classes = self._num_classes+1, 
+                                               top_k=k, average='micro', 
+                                               task='multiclass')(output, target)
+            metrics['accuracy'].append(round(accuracy.item(), 2))
+
+        return metrics
+
     
     def eval_new(self, model, test_dataloader, test):
         true_labels = torch.empty(0).to(configs['device'])
@@ -110,7 +140,7 @@ class Metric(object):
             true_labels = torch.cat((true_labels, batch_last_items), dim=0).to(configs['device'])
             pred_labels = torch.cat((pred_labels, predicted_labels), dim=0).to(configs['device'])
             pred_scores = torch.cat((pred_scores, batch_pred), dim=0).to(configs['device'])
-        metrics_data = self.metrics_calc(true_labels, pred_scores)
+        metrics_data = self.metrics_calc_torch(true_labels, pred_scores)
         if test and not configs['train']['model_test_run'] and configs['train']['conf_mat']:
             cm = self.cm(pred_scores, true_labels)
             conf_matrix_np = cm.cpu().numpy()

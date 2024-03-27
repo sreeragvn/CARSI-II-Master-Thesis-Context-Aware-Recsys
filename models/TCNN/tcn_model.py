@@ -67,19 +67,20 @@ class TCNModel(nn.Module):
         # out = self.decoder(out)
         return out
         
-
 class FlattenLinear(nn.Module):
     def __init__(self, input_size, hidden_sizes, output_size, dropout_p=0.1):
         super(FlattenLinear, self).__init__()
         layers = []
-        # Add input layer with dropout
+        # Add input layer with batch normalization and dropout
         layers.append(nn.Linear(input_size, hidden_sizes[0]))
+        layers.append(nn.BatchNorm1d(hidden_sizes[0]))  # Add batch normalization
         layers.append(nn.ReLU())  # Add activation function
         layers.append(nn.Dropout(dropout_p))  # Add dropout
         
-        # Add hidden layers with dropout
+        # Add hidden layers with batch normalization and dropout
         for i in range(len(hidden_sizes) - 1):
             layers.append(nn.Linear(hidden_sizes[i], hidden_sizes[i+1]))
+            layers.append(nn.BatchNorm1d(hidden_sizes[i+1]))  # Add batch normalization
             layers.append(nn.ReLU())  # Add activation function
             layers.append(nn.Dropout(dropout_p))  # Add dropout
         
@@ -89,12 +90,12 @@ class FlattenLinear(nn.Module):
         # Create sequential model
         self.model = nn.Sequential(*layers)
         self.init_weights()
-    
+
     def init_weights(self):
-        for layer in self.model:
-            if isinstance(layer, nn.Linear):
-                nn.init.xavier_uniform_(layer.weight)
-                nn.init.constant_(layer.bias, 0.0)
-    
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.xavier_normal_(module.weight.data)
+                nn.init.constant_(module.bias.data, 0.0)
+
     def forward(self, x):
         return self.model(x)
