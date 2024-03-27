@@ -57,7 +57,7 @@ class TCNModel(nn.Module):
             num_input, num_channels, kernel_size=kernel_size, dropout=dropout)
         self.dropout = nn.Dropout(dropout)
         # self.decoder = nn.Linear(num_channels[-1], 1)
-        self.fc = FlattenLinear(2000, [1024, 512, 256, 128], 64, dropout_p=0.2)
+        self.fc = FlattenLinear(2000, [1024, 512, 256, 128], 64, dropout_p=0.3)
 
     def forward(self, x):
         # out = self.tcn(x)[:, :, -1]
