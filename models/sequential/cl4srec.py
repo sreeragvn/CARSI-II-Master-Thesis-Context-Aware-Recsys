@@ -47,9 +47,6 @@ class CL4SRec(BaseModel):
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=0.3)
-        
-        #static context encoder
-        self.static_embedding  = static_context_encoder(self.static_context_max_token, 8, 32, 16, 8)
 
         # interaction Encoder( # interaction_encoder options are lstm, sasrec, durorec)
         if model_config['interaction_encoder'] == 'lstm':
@@ -65,6 +62,8 @@ class CL4SRec(BaseModel):
                                                                       self.inner_size, 
                                                                       self.dropout_rate) 
                                                                       for _ in range(self.n_layers)])
+            # parameters initialization
+            self.apply(self._init_weights)
             self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size, 128)
             self.sasrecbn1 = nn.BatchNorm1d(128)
             self.sasrec_fc_layer2 = nn.Linear(128, 128) 
@@ -73,6 +72,9 @@ class CL4SRec(BaseModel):
             self.sasrecbn3 = nn.BatchNorm1d(64)
         else:
             print('mention the interaction encoder - sasrec or lstm')
+        
+        #static context encoder
+        self.static_embedding  = static_context_encoder(self.static_context_max_token, 8, 32, 16, 8)
 
         # dynamic Context Encoder
         if model_config['context_encoder'] == 'lstm':
@@ -118,8 +120,7 @@ class CL4SRec(BaseModel):
         self.cl_loss_func = nn.CrossEntropyLoss()
         self.val_loss_func = nn.CrossEntropyLoss()
 
-        # parameters initialization
-        self.apply(self._init_weights)
+        
 
     def count_parameters(self):
         # Count the total number of parameters in the model
@@ -127,15 +128,15 @@ class CL4SRec(BaseModel):
 
     def _init_weights(self, module):
         """ Initialize the weights """
-        if isinstance(module, (nn.Embedding)):
-            module.weight.data.normal_(mean=0.0, std=0.02)
-        if isinstance(module, (nn.Linear)):
-            nn.init.xavier_uniform_(module.weight.data)
-            if module.bias is not None:
+        if module in [self.emb_layer, *self.transformer_layers]:
+            if isinstance(module, (nn.Linear, nn.Embedding)):
+                module.weight.data.normal_(mean=0.0, std=0.02)
+            elif isinstance(module, nn.LayerNorm):
                 module.bias.data.zero_()
-        elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
+                module.weight.data.fill_(1.0)
+            if isinstance(module, nn.Linear) and module.bias is not None:
+                module.bias.data.zero_()
+
 
     def forward(self, batch_seqs,batch_context, batch_static_context):
         # interaction_encoder options are lstm, sasrec, durorec
