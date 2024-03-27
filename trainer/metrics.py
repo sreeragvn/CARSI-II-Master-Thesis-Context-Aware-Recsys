@@ -76,8 +76,12 @@ class Metric(object):
             metrics['recall'].append(round(recall.item(), 2))
 
             # F1 score at k
-            f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-            metrics['f1score'].append(round(f1_score.item(), 2))
+            if (precision + recall) > 0:
+                f1_score = (2 * precision * recall) / (precision + recall)
+                metrics['f1score'].append(round(f1_score.item(), 2))   
+            else:
+                f1_score = 0
+                metrics['f1score'].append(f1_score) 
 
             # Accuracy at k
             accuracy = correct.float() / target.size(0)
