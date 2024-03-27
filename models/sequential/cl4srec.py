@@ -91,7 +91,7 @@ class CL4SRec(BaseModel):
                                                                      num_heads=8,)
             input_size = 6400 + 2 * self.emb_size
         elif model_config['context_encoder'] == 'tempcnn':
-            self.context_encoder = TCNModel(self.dynamic_context_feat_num, num_channels=[20] * 2, kernel_size=3, dropout=0.25)
+            self.context_encoder = TCNModel(self.dynamic_context_feat_num, num_channels=[80, 50, 25], kernel_size=3, dropout=0.25)
             input_size = 136
             output_size = 64
 
