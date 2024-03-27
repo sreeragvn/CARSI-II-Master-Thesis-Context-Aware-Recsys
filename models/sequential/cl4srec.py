@@ -74,7 +74,7 @@ class CL4SRec(BaseModel):
             print('mention the interaction encoder - sasrec or lstm')
         
         #static context encoder
-        self.static_embedding  = static_context_encoder(self.static_context_max_token, 8, 32, 16, 8)
+        self.static_embedding  = static_context_encoder(self.static_context_max_token)
 
         # dynamic Context Encoder
         if model_config['context_encoder'] == 'lstm':
@@ -92,7 +92,7 @@ class CL4SRec(BaseModel):
             input_size = 6400 + 2 * self.emb_size
         elif model_config['context_encoder'] == 'tempcnn':
             self.context_encoder = TCNModel(self.dynamic_context_feat_num, num_channels=[80, 50, 25], kernel_size=3, dropout=0.25)
-            input_size = 136
+            input_size = 140
             output_size = 64
 
         # FCs after concatenation layer
@@ -163,7 +163,6 @@ class CL4SRec(BaseModel):
         context_output = self.context_encoder(batch_context)
 
         static_context = self.static_embedding(batch_static_context)
-
         context = torch.cat((context_output, static_context), dim=1)
         if configs['model']['encoder_combine'] == 'concat':
             out = torch.cat((sasrec_out, context), dim=1)
