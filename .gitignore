@@ -1,6 +1,7 @@
 # folders
 data/
 datasets/sequential/aug
+datasets/sequential/fix
 datasets/sequential/non_aug
 datasets/sequential/undersampling
 dump/
