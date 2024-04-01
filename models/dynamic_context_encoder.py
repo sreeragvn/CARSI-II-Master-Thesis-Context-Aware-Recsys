@@ -73,8 +73,8 @@ class TransformerEncoder_DynamicContext(nn.Module):
     def forward(self, x_cont):
         
         # Embedding + Positional
-        print(x_cont.size())
-        print(self.input_embedding.weight.shape)
+        # print(x_cont.size())
+        # print(self.input_embedding.weight.shape)
         x = self.input_embedding(x_cont)
         self.pos_enc = self.pos_enc.to(x.device)
         x += self.pos_enc
@@ -97,7 +97,7 @@ class TransformerEncoder_DynamicContext(nn.Module):
         # shape: N, num_features, 64
         x = t.flatten(x, start_dim=1)
         self.output_dim = x.size(1)
-        print(x.size())
+        # print(x.size())
         # x = F.adaptive_avg_pool1d(x.transpose(1, 2), 64).transpose(1, 2)
         return x
     

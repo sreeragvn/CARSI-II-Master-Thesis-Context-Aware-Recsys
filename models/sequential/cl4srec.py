@@ -11,6 +11,7 @@ from torch import nn
 from config.configurator import configs
 import pickle
 from ..TCNN.tcn_model import TCNModel
+import torch.nn.functional as F
 
 
 class CL4SRec(BaseModel):
@@ -63,13 +64,11 @@ class CL4SRec(BaseModel):
                                                                       self.dropout_rate) 
                                                                       for _ in range(self.n_layers)])
             # parameters initialization
+            self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size//2, 64)
+            self.sasrecbn1 = nn.BatchNorm1d(64)
+            self.sasrec_fc_layer2 = nn.Linear(64, 64) 
+            self.sasrecbn2 = nn.BatchNorm1d(64)
             self.apply(self._init_weights)
-            self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size, 128)
-            self.sasrecbn1 = nn.BatchNorm1d(128)
-            self.sasrec_fc_layer2 = nn.Linear(128, 128) 
-            self.sasrecbn2 = nn.BatchNorm1d(128)
-            self.sasrec_fc_layer3 = nn.Linear(128, 64) 
-            self.sasrecbn3 = nn.BatchNorm1d(64)
         else:
             print('mention the interaction encoder - sasrec or lstm')
         
@@ -112,16 +111,15 @@ class CL4SRec(BaseModel):
         # Loss Function
         if configs['train']['model_test_run'] or not configs['train']['weighted_loss_fn']:
             self.loss_func = nn.CrossEntropyLoss()
+            self.val_loss_func = nn.CrossEntropyLoss()
         else:
             with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
                 _class_w = pickle.load(f)
                 # _class_w = _class_w[1:]
             self.loss_func = nn.CrossEntropyLoss(_class_w)
+            self.val_loss_func = nn.CrossEntropyLoss(_class_w)
         self.cl_loss_func = nn.CrossEntropyLoss()
-        self.val_loss_func = nn.CrossEntropyLoss()
-
         
-
     def count_parameters(self):
         # Count the total number of parameters in the model
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
@@ -147,7 +145,8 @@ class CL4SRec(BaseModel):
             x = self.emb_layer(batch_seqs)
             for transformer in self.transformer_layers:
                 x = transformer(x, mask)
-
+            # print(x.size())
+            x =  F.avg_pool1d(x, kernel_size=2)
             # all_tokens_except_last = x[:, :-1, :]
             # last_token = x[:, -1, :]
             # print(all_tokens_except_last.size())
@@ -155,7 +154,6 @@ class CL4SRec(BaseModel):
             
             sasrec_out = self.sasrecbn1(self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out))))
             sasrec_out = self.sasrecbn2(self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out))))
-            sasrec_out = self.sasrecbn3(self.dropout(self.relu(self.sasrec_fc_layer3(sasrec_out))))
             # sasrec_out = x[:, -1, :]
 
         batch_context = batch_context.to(sasrec_out.dtype)

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
+import torch.nn.functional as F
 
 
 class TemporalBlock(nn.Module):
@@ -57,13 +58,15 @@ class TCNModel(nn.Module):
             num_input, num_channels, kernel_size=kernel_size, dropout=dropout)
         self.dropout = nn.Dropout(dropout)
         # self.decoder = nn.Linear(num_channels[-1], 1)
-        self.fc = FlattenLinear(2500, [1024, 512, 256, 128], 64, dropout_p=0.4)
+        self.fc = FlattenLinear(625, [256, 128], 64, dropout_p=0.4)
 
     def forward(self, x):
         # out = self.tcn(x)[:, :, -1]
         # x = x.permute(0, 2, 1)
         # print(x.size())
-        out = self.tcn(x).view(x.size(0), -1)
+        out = self.tcn(x)
+        out =  F.avg_pool1d(out, kernel_size=4)
+        out = out.view(x.size(0), -1)
         out = self.fc(out)
         # out = self.dropout(out)
         # out = self.decoder(out)

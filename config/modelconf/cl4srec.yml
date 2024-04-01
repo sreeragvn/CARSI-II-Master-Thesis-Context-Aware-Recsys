@@ -28,7 +28,7 @@ test:
 
 data:
   type: sequential
-  name: aug
+  name: fix
   seq_aug: false
   dynamic_context_window_length: 100
 

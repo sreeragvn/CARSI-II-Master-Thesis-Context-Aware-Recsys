@@ -42,7 +42,7 @@ class DataHandlerSequential:
             # skip header
             line = f.readline()
             while line:
-                uid, seq, last_item, time_delta_seq, _ = line.strip().split('\t')
+                uid, seq, last_item, time_delta_seq, _, _ = line.strip().split('\t')
                 seq = seq.split(' ')
                 seq = [int(item) for item in seq]
                 time_delta_seq = time_delta_seq.split(' ')
@@ -71,10 +71,9 @@ class DataHandlerSequential:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
             max_length = context['window_id'].value_counts().max()
             self.max_dynamic_context_length = max(self.max_dynamic_context_length, max_length)
-            context = context.drop(['datetime', 'session'], axis=1)
+            context = context.drop(['datetime', 'session', 'wind_id'], axis=1)
             # context['window_id'] = context.groupby('window_id').ngroup()
             # context['window_id'] = context['window_id'] - context['window_id'].min()
-
             context_dict = {}
             for window_id, group in context.groupby('window_id'):
                 context_dict[window_id] = {
@@ -90,7 +89,7 @@ class DataHandlerSequential:
     def _read_csv_static_context(self, csv_file):
         try:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
-            context = context.drop(['datetime', 'session', 'car_id'], axis=1)
+            context = context.drop(['datetime', 'session', 'car_id', 'wind_id'], axis=1)
             context = context.astype(int)
             self.static_context_embedding_size = context.drop(columns=['window_id']).max(axis=0).tolist()
             context_dict = {}
