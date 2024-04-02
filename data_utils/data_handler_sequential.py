@@ -32,7 +32,7 @@ class DataHandlerSequential:
         self.tst_static_context_file = path.join(predir, 'static_context/test.csv')
 
         self.max_item_id = 0
-        self.max_dynamic_context_length = 0
+        self.max_dynamic_context_length = configs['data']['dynamic_context_window_length']
         self.static_context_embedding_size = 0
 
     def _read_tsv_to_user_seqs(self, tsv_file):
@@ -59,7 +59,7 @@ class DataHandlerSequential:
         small_dict = {}
         count = 0
         for key, value in data.items():
-            if count < 100:
+            if count < configs['train']['test_run_sample_no']:
                 small_dict[key] = value
                 count += 1
             else:
@@ -70,7 +70,7 @@ class DataHandlerSequential:
         try:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
             max_length = context['window_id'].value_counts().max()
-            self.max_dynamic_context_length = max(self.max_dynamic_context_length, max_length)
+            self.max_dynamic_context_length = min(self.max_dynamic_context_length, max_length)
             context = context.drop(['datetime', 'session', 'wind_id'], axis=1)
             # context['window_id'] = context.groupby('window_id').ngroup()
             # context['window_id'] = context['window_id'] - context['window_id'].min()
@@ -113,7 +113,7 @@ class DataHandlerSequential:
         configs['data']['user_num'] = user_num
         # item originally starts with 1
         configs['data']['item_num'] = self.max_item_id
-        configs['data']['max_context_length'] = self.max_dynamic_context_length
+        configs['data']['dynamic_context_window_length'] = self.max_dynamic_context_length
         configs['data']['dynamic_context_feat_num'] = len(list(dynamic_context_data[list(dynamic_context_data.keys())[0]].keys()))
         configs['data']['static_context_feat_num'] = len(list(static_context_data[list(static_context_data.keys())[0]].keys()))
         configs['data']['static_context_max']  = self.static_context_embedding_size
@@ -139,9 +139,8 @@ class DataHandlerSequential:
         dynamic_context_test =  self._read_csv_dynamic_context(self.tst_dynamic_context_file)
         static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
         static_context_test =  self._read_csv_static_context(self.tst_static_context_file)
-
         if configs['train']['model_test_run']:
-            user_seqs_train  = {key: value[:100] for key, value in user_seqs_train.items()}
+            user_seqs_train  = {key: value[:configs['train']['test_run_sample_no']] for key, value in user_seqs_train.items()}
             user_seqs_test = user_seqs_train
             dynamic_context_test = dynamic_context_train
             static_context_test = static_context_train
@@ -162,4 +161,4 @@ class DataHandlerSequential:
         self.test_dataloader = data.DataLoader(
             tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
         self.train_dataloader = data.DataLoader(
-            trn_data, batch_size=configs['train']['batch_size'], shuffle=True, num_workers=0)
+            trn_data, batch_size=configs['train']['batch_size'], shuffle=False, num_workers=0)

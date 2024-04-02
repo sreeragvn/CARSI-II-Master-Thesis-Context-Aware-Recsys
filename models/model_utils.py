@@ -113,7 +113,6 @@ class Flatten_layers(nn.Module):
         
         # Initialize a list to hold layers
         layers = []
-        
         # Define the initial linear layer with input size and 64 output neurons
         layers.append(nn.Linear(input_size, input_size // 2))
         layers.append(nn.BatchNorm1d(input_size // 2))

@@ -80,26 +80,28 @@ class Flatten_layers(nn.Module):
         super(Flatten_layers, self).__init__()
         self.emb_size = emb_size
         self.dropout_p = dropout_p
-
         # Initialize a list to hold layers
         layers = []
-        
         # Define the initial linear layer with input size and 64 output neurons
-        layers.append(nn.Linear(input_size, input_size // 2))
-        layers.append(nn.BatchNorm1d(input_size // 2))
-        layers.append(nn.ReLU())
-        layers.append(nn.Dropout(p=self.dropout_p))
-        input_size = input_size // 2
-        
-        # Loop to dynamically create layers and reduce neuron count by half until reaching 64 neurons
-        while input_size > self.emb_size:
-            output_size = max(self.emb_size, input_size // 2)  # Ensure output size doesn't go below 64
-            layers.append(nn.Linear(input_size, output_size))
-            layers.append(nn.BatchNorm1d(output_size))
+        if input_size//2 > self.emb_size and input_size > self.emb_size :
+            layers.append(nn.Linear(input_size, input_size // 2))
+            layers.append(nn.BatchNorm1d(input_size // 2))
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(p=self.dropout_p))
-            input_size = output_size
-
+            input_size = input_size // 2
+        # Loop to dynamically create layers and reduce neuron count by half until reaching 64 neurons
+            while input_size > self.emb_size:
+                output_size = max(self.emb_size, input_size // 2)  # Ensure output size doesn't go below 64
+                layers.append(nn.Linear(input_size, output_size))
+                layers.append(nn.BatchNorm1d(output_size))
+                layers.append(nn.ReLU())
+                layers.append(nn.Dropout(p=self.dropout_p))
+                input_size = output_size
+        else:
+            layers.append(nn.Linear(input_size, self.emb_size))
+            layers.append(nn.BatchNorm1d(self.emb_size))
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(p=self.dropout_p))
         # Define the sequential module to hold all layers
         self.layers = nn.Sequential(*layers)
         self.init_weights()

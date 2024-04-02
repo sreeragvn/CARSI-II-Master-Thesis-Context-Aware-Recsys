@@ -97,7 +97,23 @@ class Trainer(object):
             # self.optimizer.zero_grad()
             if not configs['train']['gradient_accumulation']: 
                 self.optimizer.zero_grad()
-            batch_data = list(map(lambda x: x.long().to(configs['device']), tem))
+            # print(tem)
+            batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
+                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
+                                  , tem))
+            # _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, _ = batch_data
+            # print(batch_seqs.size())
+            
+            # print(combined_tensor.size())
+            # print([x.size() for x in batch_dynamic_context])
+            # print(batch_dynamic_context)
+            # print(batch_dynamic_context[0, 1, :])
+            # print(batch_dynamic_context[0, 2, :])
+            # print(batch_dynamic_context[0, 3, :])
+            # print(batch_dynamic_context[0, 4, :])
+            # print(batch_dynamic_context[0, 5, :])
+            # print(batch_dynamic_context[0, 6, :])
+            # print(batch_dynamic_context[0, 7, :])
             loss, loss_dict = model.cal_loss(batch_data)
             ep_loss += loss.item()
             loss.backward()
@@ -127,7 +143,9 @@ class Trainer(object):
         total_val_loss = 0
         with torch.no_grad():
             for i, val_tem in enumerate(test_loader):
-                val_batch_data = list(map(lambda x: x.long().to(configs['device']), val_tem))
+                val_batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
+                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
+                                  , tem))
                 val_loss, val_loss_dict = model.val_cal_loss(val_batch_data)
                 total_val_loss += val_loss.item()
 

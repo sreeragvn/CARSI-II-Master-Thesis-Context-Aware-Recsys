@@ -167,8 +167,9 @@ class CL4SRec(BaseModel):
             # sasrec_out = self.sasrecbn1(self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out))))
             # sasrec_out = self.sasrecbn2(self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out))))
             # # # sasrec_out = x[:, -1, :]
-
-        batch_context = batch_context.to(sasrec_out.dtype)
+        # print(len(batch_context))
+        # batch_context = torch.stack(batch_context, dim=1)
+        # batch_context = batch_context.to(sasrec_out.dtype)
         context_output = self.context_encoder(batch_context)
 
         static_context = self.static_embedding(batch_static_context)
