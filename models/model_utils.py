@@ -90,7 +90,7 @@ class TransformerEmbedding(nn.Module):
         :param dropout: dropout rate
         """
         super().__init__()
-        self.token_emb = nn.Embedding(item_num, emb_size, padding_idx=0)
+        self.token_emb = nn.Embedding(item_num, emb_size, scale_grad_by_freq=True, padding_idx=0)
         self.position_emb = nn.Embedding(max_len, emb_size)
         self.dropout = nn.Dropout(p=dropout)
         self.emb_size = emb_size
@@ -100,3 +100,47 @@ class TransformerEmbedding(nn.Module):
         pos_emb = self.position_emb.weight.unsqueeze(0).repeat(batch_size, 1, 1)
         x = self.token_emb(batch_seqs) + pos_emb
         return self.dropout(x)
+    
+class Flatten_layers(nn.Module):
+    def __init__(self, input_size, emb_size, dropout_p=0.5):
+        super(Flatten_layers, self).__init__()
+        # self.max_len = max_len
+        self.emb_size = emb_size
+        self.dropout_p = dropout_p
+
+        # Calculate the initial input size
+        # input_size = (self.max_len) * self.emb_size
+        
+        # Initialize a list to hold layers
+        layers = []
+        
+        # Define the initial linear layer with input size and 64 output neurons
+        layers.append(nn.Linear(input_size, input_size // 2))
+        layers.append(nn.BatchNorm1d(input_size // 2))
+        layers.append(nn.ReLU())
+        layers.append(nn.Dropout(p=self.dropout_p))
+        input_size = input_size // 2
+        
+        # Loop to dynamically create layers and reduce neuron count by half until reaching 64 neurons
+        while input_size > self.emb_size:
+            output_size = max(self.emb_size, input_size // 2)  # Ensure output size doesn't go below 64
+            layers.append(nn.Linear(input_size, output_size))
+            layers.append(nn.BatchNorm1d(output_size))
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(p=self.dropout_p))
+            input_size = output_size
+
+        # Define the sequential module to hold all layers
+        self.layers = nn.Sequential(*layers)
+        self.init_weights()
+
+    def init_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.xavier_normal_(module.weight.data)
+                nn.init.constant_(module.bias.data, 0.0)
+
+    def forward(self, x):
+        # Forward pass logic
+        x = self.layers(x)
+        return x

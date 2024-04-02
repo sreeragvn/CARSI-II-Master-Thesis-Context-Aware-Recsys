@@ -1,9 +1,9 @@
 import math
 import random
 from models.base_model import BaseModel
-from models.model_utils import TransformerLayer, TransformerEmbedding
+from models.model_utils import TransformerLayer, TransformerEmbedding, Flatten_layers
 from models.interaction_encoder import  LSTM_interactionEncoder
-from models.dynamic_context_encoder import TransformerEncoder_DynamicContext, LSTM_contextEncoder
+from models.dynamic_context_encoder import LSTM_contextEncoder
 from models.static_context_encoder import static_context_encoder
 import numpy as np
 import torch
@@ -34,11 +34,17 @@ class CL4SRec(BaseModel):
         self.n_layers = model_config['n_layers']
         self.n_heads = model_config['n_heads']
         self.inner_size = 4 * self.emb_size
-        self.dropout_rate = model_config['dropout_rate']
+        self.dropout_rate_trans = model_config['dropout_rate_trans']
+        self.dropout_rate_tcn = model_config['dropout_rate_tcn']
+        self.dropout_rate_fc_tcn = model_config['dropout_rate_fc_tcn']
+        self.dropout_rate_fc_trans = model_config['dropout_rate_fc_trans']
+        self.dropout_rate_fc_concat = model_config['dropout_rate_fc_concat']
+        self.dropout_rate_fc_static = model_config['dropout_rate_fc_static']
         self.batch_size = train_config['batch_size']
         self.lmd = model_config['lmd']
         self.tau = model_config['tau']
         self.dynamic_context_feat_num = data_config['dynamic_context_feat_num']
+        self.dynamic_context_window_size = data_config['dynamic_context_window_length']
         self.lstm_hidden_size = lstm_config['hidden_size']
         self.lstm_num_layers = lstm_config['num_layers']
         self.static_context_max_token = data_config['static_context_max']
@@ -51,23 +57,25 @@ class CL4SRec(BaseModel):
 
         # interaction Encoder( # interaction_encoder options are lstm, sasrec, durorec)
         if model_config['interaction_encoder'] == 'lstm':
-            self.interaction_encoder = LSTM_interactionEncoder(self.item_num + 2, 
+            self.interaction_encoder = LSTM_interactionEncoder(self.item_num + 1, 
                                                             self.emb_size, 
                                                             self.lstm_hidden_size, 
                                                             self.lstm_num_layers)
         elif model_config['interaction_encoder'] == 'sasrec':
-            self.emb_layer = TransformerEmbedding(self.item_num + 2, 
+            self.emb_layer = TransformerEmbedding(self.item_num + 1, 
                                                   self.emb_size, self.max_len)
             self.transformer_layers = nn.ModuleList([TransformerLayer(self.emb_size, 
                                                                       self.n_heads, 
                                                                       self.inner_size, 
-                                                                      self.dropout_rate) 
+                                                                      self.dropout_rate_trans) 
                                                                       for _ in range(self.n_layers)])
             # parameters initialization
-            self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size//2, 64)
-            self.sasrecbn1 = nn.BatchNorm1d(64)
-            self.sasrec_fc_layer2 = nn.Linear(64, 64) 
-            self.sasrecbn2 = nn.BatchNorm1d(64)
+            # self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size, 64)
+            # # self.sasrec_fc_layer1 = nn.Linear((self.max_len)* self.emb_size//2, 64)
+            # self.sasrecbn1 = nn.BatchNorm1d(64)
+            # self.sasrec_fc_layer2 = nn.Linear(64, 64) 
+            # self.sasrecbn2 = nn.BatchNorm1d(64)
+            self.fclayers_sasrec = Flatten_layers((self.max_len) * self.emb_size, self.emb_size)
             self.apply(self._init_weights)
         else:
             print('mention the interaction encoder - sasrec or lstm')
@@ -83,25 +91,29 @@ class CL4SRec(BaseModel):
                                                        self.emb_size
                                                        )
             input_size = 88
-        elif model_config['context_encoder'] == 'transformer':
-            self.context_encoder = TransformerEncoder_DynamicContext(self.dynamic_context_feat_num, # num_features_continuous
-                                                                     data_config['dynamic_context_window_length'],
-                                                                     hidden_dim=self.emb_size, # d_model
-                                                                     num_heads=8,)
-            input_size = 6400 + 2 * self.emb_size
+        # elif model_config['context_encoder'] == 'transformer':
+        #     self.context_encoder = TransformerEncoder_DynamicContext(self.dynamic_context_feat_num, # num_features_continuous
+        #                                                              data_config['dynamic_context_window_length'],
+        #                                                              hidden_dim=self.emb_size, # d_model
+        #                                                              num_heads=8,)
+        #     input_size = 6400 + 2 * self.emb_size
         elif model_config['context_encoder'] == 'tempcnn':
-            self.context_encoder = TCNModel(self.dynamic_context_feat_num, num_channels=[80, 50, 25], kernel_size=3, dropout=0.25)
-            input_size = 140
-            output_size = 64
+            self.context_encoder = TCNModel(self.dynamic_context_feat_num, 
+                                            self.dynamic_context_window_size,
+                                            num_channels=[80, 50, 25], 
+                                            emb_size=self.emb_size, kernel_size=3, dropout=0.25)
+            input_size = 2 * self.embedding_size + 12
+            # output_size = self.embedding_size
 
         # FCs after concatenation layer
-        fc_layers = []
-        for _ in range(2):
-            fc_layers.extend([nn.Linear(input_size, output_size), nn.BatchNorm1d(output_size), nn.ReLU(), nn.Dropout(p=0.3)])
-            input_size = 64
-            output_size = 32
-        fc_layers.append(nn.Linear(32, self.emb_size))
-        self.fc_layers = nn.Sequential(*fc_layers)
+        # fc_layers = []
+        # for _ in range(2):
+        #     fc_layers.extend([nn.Linear(input_size, output_size), nn.BatchNorm1d(output_size), nn.ReLU(), nn.Dropout(p=0.3)])
+        #     input_size = 64
+        #     output_size = 32
+        # fc_layers.append(nn.Linear(32, self.emb_size))
+        # self.fc_layers = nn.Sequential(*fc_layers)
+        self.fc_layers_concat = Flatten_layers(input_size, self.emb_size)
 
         # Combine 3 encoder outputs - Attention or concatenation
         if configs['model']['encoder_combine'] == 'attention':
@@ -146,15 +158,16 @@ class CL4SRec(BaseModel):
             for transformer in self.transformer_layers:
                 x = transformer(x, mask)
             # print(x.size())
-            x =  F.avg_pool1d(x, kernel_size=2)
+            # x =  F.avg_pool1d(x, kernel_size=2)
             # all_tokens_except_last = x[:, :-1, :]
             # last_token = x[:, -1, :]
             # print(all_tokens_except_last.size())
             sasrec_out = x.view(x.size(0), -1)
+            sasrec_out = self.fclayers_sasrec(sasrec_out)
             
-            sasrec_out = self.sasrecbn1(self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out))))
-            sasrec_out = self.sasrecbn2(self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out))))
-            # sasrec_out = x[:, -1, :]
+            # sasrec_out = self.sasrecbn1(self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out))))
+            # sasrec_out = self.sasrecbn2(self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out))))
+            # # # sasrec_out = x[:, -1, :]
 
         batch_context = batch_context.to(sasrec_out.dtype)
         context_output = self.context_encoder(batch_context)
@@ -163,7 +176,7 @@ class CL4SRec(BaseModel):
         context = torch.cat((context_output, static_context), dim=1)
         if configs['model']['encoder_combine'] == 'concat':
             out = torch.cat((sasrec_out, context), dim=1)
-            out = self.fc_layers(out)
+            out = self.fc_layers_concat(out)
         if configs['model']['encoder_combine'] == 'attention':
             context = self.fc_context_dim_red(context)
             out, _ = self.multi_head_attention(sasrec_out, context, context)
@@ -177,7 +190,7 @@ class CL4SRec(BaseModel):
         if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
         else:
-            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
+            test_item_emb = self.emb_layer.token_emb.weight
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
         loss = self.loss_func(logits, batch_last_items)
 
