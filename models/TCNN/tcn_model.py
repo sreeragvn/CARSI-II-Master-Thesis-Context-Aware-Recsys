@@ -53,13 +53,14 @@ class TemporalConvNet(nn.Module):
 
 class TCNModel(nn.Module):
     def __init__(self, num_input, dynamic_context_window_size,
-                 num_channels, emb_size, kernel_size=2, dropout=0.2):
+                 num_channels, emb_size, dropout_fc, 
+                 kernel_size=2, dropout=0.2):
         super(TCNModel, self).__init__()
         self.tcn = TemporalConvNet(
             num_input, num_channels, kernel_size=kernel_size, dropout=dropout)
         self.dropout = nn.Dropout(dropout)
         # self.decoder = nn.Linear(num_channels[-1], 1)
-        self.fc = Flatten_layers(num_channels[-1]*dynamic_context_window_size, emb_size, dropout_p=0.4)
+        self.fc = Flatten_layers(num_channels[-1]*dynamic_context_window_size, emb_size, dropout_p=dropout_fc)
 
     def forward(self, x):
         # out = self.tcn(x)[:, :, -1]
