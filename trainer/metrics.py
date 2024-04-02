@@ -39,7 +39,9 @@ class Metric(object):
         for _, tem in enumerate(test_dataloader):
             if not isinstance(tem, list):
                 tem = [tem]
-            batch_data = list(map(lambda x: x.long().to(configs['device']), tem))
+            batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
+                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
+                                  , tem))
             _, _, batch_last_items, _, _, _, _  = batch_data
             with torch.no_grad():
                 batch_pred = model.full_predict(batch_data)

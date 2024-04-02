@@ -6,6 +6,7 @@ optimizer:
 
 train:
   model_test_run: true
+  test_run_sample_no: 100
   weighted_loss_fn: true
   epoch: 1000
   batch_size: 64
@@ -13,7 +14,7 @@ train:
   log_loss: true
   test_step: 1
   reproducible: true
-  seed: 2023
+  seed: 12
   tensorboard: true
   conf_mat: true
   ssl: false
