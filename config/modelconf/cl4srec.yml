@@ -35,12 +35,14 @@ data:
 model:
   name: cl4srec
   context_encoder: tempcnn
+  tcn_num_channels: [80, 50, 25]
+  tcn_kernel_size: 3
   interaction_encoder: sasrec
-  dropout_rate_trans: 0.1
-  dropout_rate_tcn: 0.1
-  dropout_rate_fc_tcn: 0.1
-  dropout_rate_fc_trans: 0.1
-  dropout_rate_fc_concat: 0.1
+  dropout_rate_trans: 0.3
+  dropout_rate_tcn: 0.25
+  dropout_rate_fc_tcn: 0.4
+  dropout_rate_fc_trans: 0.5
+  dropout_rate_fc_concat: 0.3
   dropout_rate_fc_static: 0.1
   n_layers: 2
   embedding_size: 786

@@ -11,7 +11,7 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0.0)
 
 class static_context_encoder(nn.Module):
-    def __init__(self, vocab_sizes):
+    def __init__(self, vocab_sizes, dropout_rate_fc_static):
         super(static_context_encoder, self).__init__()
         self.embedding_layers = nn.ModuleList() 
         self.embedding_layers.append(CyclicalEmbedding(max_value_scale=12, month = True)) #  months
@@ -21,7 +21,7 @@ class static_context_encoder(nn.Module):
                                                     embedding_dim=2) 
                                                     for max_val in  vocab_sizes[-3:]])# last 3 values are the non cyclical one
         self.bn = nn.BatchNorm1d(12) 
-        self.dropout = nn.Dropout(p=0.2)
+        self.dropout = nn.Dropout(p=dropout_rate_fc_static)
         self.relu = nn.ReLU()
         self.apply(weights_init)
 
