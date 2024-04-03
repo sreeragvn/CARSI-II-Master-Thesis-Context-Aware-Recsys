@@ -13,7 +13,6 @@ import pickle
 from ..TCNN.tcn_model import TCNModel
 import torch.nn.functional as F
 
-
 class CL4SRec(BaseModel):
     r"""
     SASRec is the first sequential recommender based on self-attentive mechanism.
@@ -120,7 +119,8 @@ class CL4SRec(BaseModel):
         #     self.multi_head_attention = nn.MultiheadAttention(self.emb_size, self.n_heads)
 
         # Loss Function
-        if configs['train']['model_test_run'] or not configs['train']['weighted_loss_fn']:
+        # if configs['train']['model_test_run'] or not configs['train']['weighted_loss_fn']:
+        if not configs['train']['weighted_loss_fn']:
             self.loss_func = nn.CrossEntropyLoss()
             self.val_loss_func = nn.CrossEntropyLoss()
         else:
@@ -163,7 +163,6 @@ class CL4SRec(BaseModel):
             # print(all_tokens_except_last.size())
             sasrec_out = x.view(x.size(0), -1)
             sasrec_out = self.fc_layers_sasrec(sasrec_out)
-            
             # sasrec_out = self.sasrecbn1(self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out))))
             # sasrec_out = self.sasrecbn2(self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out))))
             # # # sasrec_out = x[:, -1, :]
@@ -214,7 +213,6 @@ class CL4SRec(BaseModel):
                 'rec_loss': loss.item(),
                 'cl_loss': cl_loss,
             }
-
         return loss + cl_loss, loss_dict
 
     def val_cal_loss(self, val_batch_data):

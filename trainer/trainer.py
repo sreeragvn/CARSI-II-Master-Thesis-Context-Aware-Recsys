@@ -19,13 +19,14 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 import torch.optim.lr_scheduler as lr_scheduler
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.lr_scheduler import LambdaLR
+from torch.utils.tensorboard import SummaryWriter
 
-configs['test']['save_path'] = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+configs['test']['save_path'] = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))+ str(' ') +configs['train']['experiment_name']
 
 if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
     timestr = configs['test']['save_path']
-    from torch.utils.tensorboard import SummaryWriter
     writer = SummaryWriter(log_dir=f'runs/{timestr}')
+    configs['test']['tensorboard'] = writer
 else:
     writer = DisabledSummaryWriter()
 
@@ -241,15 +242,23 @@ class Trainer(object):
         model.eval()
         if configs['test']['train_eval']:
             eval_result = self.metric.eval(model, self.data_handler.train_dataloader)
-            # writer.add_scalar('HR/train', eval_result[configs['train']['metrics'][0]][0], epoch_idx)
+            for i, k in enumerate(configs['test']['k']):
+                for metric in configs['test']['metrics']:
+                    writer.add_scalar(f'{metric}_top_{k}/train', eval_result[metric][i], epoch_idx)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='train set', epoch_idx=epoch_idx)
         if hasattr(self.data_handler, 'valid_dataloader'):
             eval_result = self.metric.eval(model, self.data_handler.valid_dataloader)
-            writer.add_scalar('HR/valid', eval_result[configs['valid']['metrics'][0]][0], epoch_idx)
+            for i, k in enumerate(configs['test']['k']):
+                for metric in configs['test']['metrics']:
+                    writer.add_scalar(f'{metric}_top_{k}/valid', eval_result[metric][i], epoch_idx)
+            # writer.add_scalar('HR/valid', eval_result[configs['test']['metrics'][0]][0], epoch_idx)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Validation set', epoch_idx=epoch_idx)
         elif hasattr(self.data_handler, 'test_dataloader'):
             eval_result = self.metric.eval(model, self.data_handler.test_dataloader)
-            writer.add_scalar('HR/test', eval_result[configs['test']['metrics'][0]][0], epoch_idx)
+            for i, k in enumerate(configs['test']['k']):
+                for metric in configs['test']['metrics']:
+                    writer.add_scalar(f'{metric}_top_{k}/test', eval_result[metric][i], epoch_idx)
+            # writer.add_scalar('HR/test', eval_result[configs['test']['metrics'][0]][0], epoch_idx)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set', epoch_idx=epoch_idx)
         else:
             raise NotImplemented

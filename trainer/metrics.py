@@ -1,3 +1,6 @@
+import io
+import itertools
+from matplotlib.patches import Rectangle
 import torch
 import numpy as np
 from config.configurator import configs
@@ -6,6 +9,11 @@ import os
 import pickle
 from torchmetrics.classification import MulticlassConfusionMatrix
 import torchmetrics
+import matplotlib.pyplot as plt
+from torchvision import transforms
+from PIL import Image
+import seaborn as sn
+import matplotlib.colors as mcolors
 
 class Metric(object):
     def __init__(self):
@@ -14,19 +22,21 @@ class Metric(object):
         with open(configs['train']['parameter_label_mapping_path'], 'rb') as f:
             self._label_mapping = pickle.load(f)
         self._num_classes = len(self._label_mapping)
+        # self.class_mapping = self._label_mapping
+        self._label_mapping['ignore'] = 0
+        self._label_mapping = dict(sorted(self._label_mapping.items(), key=lambda item: item[1]))
+        self.writer = configs['test']['tensorboard']
         self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes + 1).to(configs['device'])
 
     def metrics_calc_torch(self, target, output):
         metrics = {metric: [] for metric in self.metrics}
-
         for k in self.k:
             for metric_name in self.metrics:
                 if metric_name.lower() == 'f1score':
                     metric_func = torchmetrics.F1Score
                 else:
                     metric_func = getattr(torchmetrics, metric_name.capitalize())
-
-                metric = metric_func(num_classes=self._num_classes + 1, top_k=k, average='micro', task='multiclass').to(configs['device'])
+                metric = metric_func(num_classes=self._num_classes + 1, top_k=k, average='weighted', task='multiclass').to(configs['device'])
                 value = metric(output, target)
                 metrics[metric_name].append(round(value.item(), 2))
         return metrics
@@ -55,13 +65,63 @@ class Metric(object):
         pred_scores = torch.cat(pred_scores_list, dim=0)
 
         metrics_data = self.metrics_calc_torch(true_labels, pred_scores)
-        if test and not configs['train']['model_test_run'] and configs['train']['conf_mat']:
-            cm = self.cm(pred_scores, true_labels)
-            conf_matrix_np = cm.cpu().numpy()
+        if test and configs['train']['conf_mat']:
+            self.cm(pred_scores, true_labels)
+            computed_confusion = self.cm(pred_scores, true_labels).cpu().numpy()
+            im = self.plot_confusion_matrix(computed_confusion)
+            self.writer.add_image("val_confusion_matrix", im)
             cm_name = configs['test']['save_path']
-            np.savetxt(f'results_metrics/cm_{cm_name}.csv', conf_matrix_np, delimiter=',', fmt='%d')
+            file_path = 'results_metrics/'
+            if not os.path.exists(file_path):
+                os.makedirs(file_path)
+            np.savetxt(file_path+f'cm_{cm_name}.csv', computed_confusion, delimiter=',', fmt='%d')
         return metrics_data
 
+    class IntHandler:
+        def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+            x0, y0 = handlebox.xdescent, handlebox.ydescent
+            text = plt.matplotlib.text.Text(x0, y0, str(orig_handle))
+            handlebox.add_artist(text)
+            return text
+
+    def plot_confusion_matrix(self, computed_confusion):
+        """
+        Plot confusion matrix.
+        """
+        df_cm = pd.DataFrame(
+                computed_confusion,
+                index=self._label_mapping.values(),
+                columns=self._label_mapping.values(),
+            )
+        fig, ax = plt.subplots(figsize=(15, 7))
+        fig.subplots_adjust(left=0.05, right=.65)
+        sn.set(font_scale=1.2)
+
+        # Plot the confusion matrix without a heatmap palette
+        sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='d', ax=ax, cmap='Greens', cbar=False)
+
+        # Loop through the diagonal elements to add green background
+        for i in range(len(df_cm)):
+            ax.add_patch(Rectangle((i, i), 1, 1, fill=True, color='green', alpha=0.3))
+
+        # Loop through the texts to set text color
+        for text in ax.texts:
+            text.set_color('black')  # Set text color to black
+
+        ax.legend(
+            self._label_mapping.values(),
+            self._label_mapping.keys(),
+            handler_map={int: self.IntHandler()},
+            loc='upper left',
+            bbox_to_anchor=(1.2, 1)
+        )
+        buf = io.BytesIO()
+        plt.savefig(buf, format='jpeg', bbox_inches='tight')
+        buf.seek(0)
+        im = Image.open(buf)
+        im = transforms.ToTensor()(im)
+        return im
+    
     def eval(self, model, test_dataloader, test=False):
         # for most GNN models, you can have all embeddings ready at one forward
         # if 'eval_at_one_forward' in configs['test'] and configs['test']['eval_at_one_forward']:
@@ -111,7 +171,6 @@ class Metric(object):
         # print(metrics_data)
         # print(result)
         # return result
-
 
     # def metric_call(self, true_labels, predicted_labels):
 
