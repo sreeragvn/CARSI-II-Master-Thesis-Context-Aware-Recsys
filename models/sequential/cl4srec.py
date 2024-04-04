@@ -118,8 +118,6 @@ class CL4SRec(BaseModel):
         #     self.fc_context_dim_red = nn.Linear(72, 64)
         #     self.multi_head_attention = nn.MultiheadAttention(self.emb_size, self.n_heads)
 
-        # Loss Function
-        # if configs['train']['model_test_run'] or not configs['train']['weighted_loss_fn']:
         if not configs['train']['weighted_loss_fn']:
             self.loss_func = nn.CrossEntropyLoss()
             self.val_loss_func = nn.CrossEntropyLoss()
@@ -156,26 +154,23 @@ class CL4SRec(BaseModel):
             x = self.emb_layer(batch_seqs)
             for transformer in self.transformer_layers:
                 x = transformer(x, mask)
-            # print(x.size())
+            # print('sasrec out', x.size())
             # x =  F.avg_pool1d(x, kernel_size=2)
             # all_tokens_except_last = x[:, :-1, :]
             # last_token = x[:, -1, :]
-            # print(all_tokens_except_last.size())
             sasrec_out = x.view(x.size(0), -1)
+            # print('sasrec out flat', sasrec_out.size())
             sasrec_out = self.fc_layers_sasrec(sasrec_out)
-            # sasrec_out = self.sasrecbn1(self.dropout(self.relu(self.sasrec_fc_layer1(sasrec_out))))
-            # sasrec_out = self.sasrecbn2(self.dropout(self.relu(self.sasrec_fc_layer2(sasrec_out))))
-            # # # sasrec_out = x[:, -1, :]
-        # print(len(batch_context))
-        # batch_context = torch.stack(batch_context, dim=1)
-        # batch_context = batch_context.to(sasrec_out.dtype)
+            # print('sasrec out flat fc', sasrec_out.size())
         context_output = self.context_encoder(batch_context)
 
         static_context = self.static_embedding(batch_static_context)
         context = torch.cat((context_output, static_context), dim=1)
         if configs['model']['encoder_combine'] == 'concat':
             out = torch.cat((sasrec_out, context), dim=1)
+            # print('after concat', out.size())
             out = self.fc_layers_concat(out)
+            # print('after concat flatten fc', out.size())
         # elif configs['model']['encoder_combine'] == 'attention':
         #     context = self.fc_context_dim_red(context)
         #     out, _ = self.multi_head_attention(sasrec_out, context, context)
@@ -248,7 +243,6 @@ class CL4SRec(BaseModel):
 
     def full_predict(self, batch_data):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
-
         # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
         _, batch_seqs, _, _, batch_dynamic_context, batch_static_context, _  = batch_data
         # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
