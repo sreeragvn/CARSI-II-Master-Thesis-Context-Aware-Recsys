@@ -87,18 +87,7 @@ class Trainer(object):
             if not configs['train']['gradient_accumulation']: 
                 self.optimizer.zero_grad()
             batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
-                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
-                                  , tem))
-            # batch_data = []
-            # for i, x in enumerate(tem):
-            #     if not isinstance(x, list):
-            #         if i !=6:
-            #             batch_data.append(x.long().to(configs['device']))
-            #         else:
-            #             batch_data.append(x.float().to(configs['device']))
-            #     else:
-            #         stacked_tensor = torch.stack([t.float().to(configs['device']) for t in x], dim=1)
-            #         batch_data.append(stacked_tensor)
+                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1), tem))
 
             loss, loss_dict = model.cal_loss(batch_data)
             ep_loss += loss.item()
