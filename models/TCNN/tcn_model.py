@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
 import torch.nn.functional as F
+from ..model_utils import Flatten_layers
 
 
 class TemporalBlock(nn.Module):
@@ -59,93 +60,14 @@ class TCNModel(nn.Module):
         self.tcn = TemporalConvNet(
             num_input, num_channels, kernel_size=kernel_size, dropout=dropout)
         self.dropout = nn.Dropout(dropout)
-        # self.decoder = nn.Linear(num_channels[-1], 1)
         self.fc = Flatten_layers(num_channels[-1]*dynamic_context_window_size, emb_size, dropout_p=dropout_fc)
 
     def forward(self, x):
-        # out = self.tcn(x)[:, :, -1]
-        # x = x.permute(0, 2, 1)
-        # print(x.size())
         out = self.tcn(x)
+        # print('tcn ouput', out.size())
         # out =  F.avg_pool1d(out, kernel_size=4)
         out = out.view(x.size(0), -1)
+        # print('flat tcn out size', out.size())
         out = self.fc(out)
-        # out = self.dropout(out)
-        # out = self.decoder(out)
+        # print('tcn out after fc', out.size())
         return out
-
-
-class Flatten_layers(nn.Module):
-    def __init__(self, input_size,  emb_size, dropout_p=0.4):
-        super(Flatten_layers, self).__init__()
-        self.emb_size = emb_size
-        self.dropout_p = dropout_p
-        # Initialize a list to hold layers
-        layers = []
-        # Define the initial linear layer with input size and 64 output neurons
-        if input_size//2 > self.emb_size and input_size > self.emb_size :
-            layers.append(nn.Linear(input_size, input_size // 2))
-            layers.append(nn.BatchNorm1d(input_size // 2))
-            layers.append(nn.ReLU())
-            layers.append(nn.Dropout(p=self.dropout_p))
-            input_size = input_size // 2
-        # Loop to dynamically create layers and reduce neuron count by half until reaching 64 neurons
-            while input_size > self.emb_size:
-                output_size = max(self.emb_size, input_size // 2)  # Ensure output size doesn't go below 64
-                layers.append(nn.Linear(input_size, output_size))
-                layers.append(nn.BatchNorm1d(output_size))
-                layers.append(nn.ReLU())
-                layers.append(nn.Dropout(p=self.dropout_p))
-                input_size = output_size
-        else:
-            layers.append(nn.Linear(input_size, self.emb_size))
-            layers.append(nn.BatchNorm1d(self.emb_size))
-            layers.append(nn.ReLU())
-            layers.append(nn.Dropout(p=self.dropout_p))
-        # Define the sequential module to hold all layers
-        self.layers = nn.Sequential(*layers)
-        self.init_weights()
-
-    def init_weights(self):
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.xavier_normal_(module.weight.data)
-                nn.init.constant_(module.bias.data, 0.0)
-
-    def forward(self, x):
-        # Forward pass logic
-        x = self.layers(x)
-        return x
-    
-# class FlattenLinear(nn.Module):
-#     def __init__(self, input_size, hidden_sizes, output_size, dropout_p=0.1):
-#         super(FlattenLinear, self).__init__()
-#         layers = []
-#         # Add input layer with batch normalization and dropout
-#         layers.append(nn.Linear(input_size, hidden_sizes[0]))
-#         layers.append(nn.BatchNorm1d(hidden_sizes[0]))  # Add batch normalization
-#         layers.append(nn.ReLU())  # Add activation function
-#         layers.append(nn.Dropout(dropout_p))  # Add dropout
-        
-#         # Add hidden layers with batch normalization and dropout
-#         for i in range(len(hidden_sizes) - 1):
-#             layers.append(nn.Linear(hidden_sizes[i], hidden_sizes[i+1]))
-#             layers.append(nn.BatchNorm1d(hidden_sizes[i+1]))  # Add batch normalization
-#             layers.append(nn.ReLU())  # Add activation function
-#             layers.append(nn.Dropout(dropout_p))  # Add dropout
-        
-#         # Add output layer
-#         layers.append(nn.Linear(hidden_sizes[-1], output_size))
-        
-#         # Create sequential model
-#         self.model = nn.Sequential(*layers)
-#         self.init_weights()
-
-#     def init_weights(self):
-#         for module in self.modules():
-#             if isinstance(module, nn.Linear):
-#                 nn.init.xavier_normal_(module.weight.data)
-#                 nn.init.constant_(module.bias.data, 0.0)
-
-#     def forward(self, x):
-#         return self.model(x)

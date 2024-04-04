@@ -97,8 +97,6 @@ class SequentialDataset(data.Dataset):
             seq_i = self.seqs[idx]
             time_delta_i = self.time_delta[idx]
             padded_dynamic_context = self._process_context(self.dynamic_context[idx], context_type='dynamic')
-            # if idx == 0:
-            #     print(torch.LongTensor(padded_dynamic_context))
             padded_dynamic_context = [torch.DoubleTensor(x) for x in padded_dynamic_context]
             static_context= self._process_context(self.static_context[idx], context_type='static')
             if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:

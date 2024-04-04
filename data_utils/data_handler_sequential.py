@@ -72,8 +72,6 @@ class DataHandlerSequential:
             max_length = context['window_id'].value_counts().max()
             self.max_dynamic_context_length = min(self.max_dynamic_context_length, max_length)
             context = context.drop(['datetime', 'session', 'wind_id'], axis=1)
-            # context['window_id'] = context.groupby('window_id').ngroup()
-            # context['window_id'] = context['window_id'] - context['window_id'].min()
             context_dict = {}
             for window_id, group in context.groupby('window_id'):
                 context_dict[window_id] = {
