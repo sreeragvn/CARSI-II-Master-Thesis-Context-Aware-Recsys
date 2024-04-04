@@ -5,12 +5,12 @@ optimizer:
   weight_decay: 0
 
 train:
-  experiment_name: test
-  model_test_run: true
+  experiment_name: first run dense static context
+  model_test_run: false
   test_run_sample_no: 100
   weighted_loss_fn: true
-  epoch: 3
-  batch_size: 64
+  epoch: 1000
+  batch_size: 128
   save_model: true
   log_loss: true
   test_step: 1
@@ -25,7 +25,7 @@ train:
 test:
   metrics: [precision, recall, f1score, accuracy]
   k: [1, 2, 3]
-  batch_size: 64
+  batch_size: 128
   train_eval: true
 
 data:

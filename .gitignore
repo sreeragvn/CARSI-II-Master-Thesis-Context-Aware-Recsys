@@ -6,6 +6,7 @@ datasets/sequential/featengg
 datasets/sequential/non_aug
 datasets/sequential/undersampling
 dump/
+checkpoint/
 pretrain/
 __MACOSX/
 *.zip
