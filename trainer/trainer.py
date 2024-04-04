@@ -67,7 +67,7 @@ class Trainer(object):
             # ), lr=initial_lr, betas=(0.9, 0.98), eps=1e-09, weight_decay=optim_config['weight_decay'])
             self.optimizer = optim.Adam(model.parameters(
             ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
-            # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=10, factor=0.9, min_lr=1e-6)
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=10, factor=0.95, min_lr=1e-6)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
             # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
             # self.scheduler = LambdaLR(self.optimizer, lr_lambda)
@@ -117,7 +117,7 @@ class Trainer(object):
             for i, val_tem in enumerate(test_loader):
                 val_batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
                                   else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
-                                  , tem))
+                                  , val_tem))
                 val_loss, _ = model.val_cal_loss(val_batch_data)
                 total_val_loss += val_loss.item()
 
@@ -126,7 +126,8 @@ class Trainer(object):
         print('val_loss: ', round(avg_val_loss,3))
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
         writer.add_scalar('Loss/test', round(total_val_loss /test_step,3), epoch_idx)
-        # self.scheduler.step(avg_val_loss)
+        if configs['train']['scheduler']:
+           self.scheduler.step(avg_val_loss)
 
         # log loss
         if configs['train']['log_loss']:
