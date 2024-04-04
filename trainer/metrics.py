@@ -43,7 +43,6 @@ class Metric(object):
 
     def eval_new(self, model, test_dataloader, test=False):
         true_labels_list = []
-        pred_labels_list = []
         pred_scores_list = []
 
         for _, tem in enumerate(test_dataloader):
@@ -55,13 +54,10 @@ class Metric(object):
             _, _, batch_last_items, _, _, _, _, _  = batch_data
             with torch.no_grad():
                 batch_pred = model.full_predict(batch_data)
-            predicted_labels = batch_pred.max(1)[1]
             true_labels_list.append(batch_last_items)
-            pred_labels_list.append(predicted_labels)
             pred_scores_list.append(batch_pred)
 
         true_labels = torch.cat(true_labels_list, dim=0)
-        pred_labels = torch.cat(pred_labels_list, dim=0)
         pred_scores = torch.cat(pred_scores_list, dim=0)
 
         metrics_data = self.metrics_calc_torch(true_labels, pred_scores)
@@ -69,7 +65,7 @@ class Metric(object):
             self.cm(pred_scores, true_labels)
             computed_confusion = self.cm(pred_scores, true_labels).cpu().numpy()
             im = self.plot_confusion_matrix(computed_confusion)
-            self.writer.add_image(f"{configs['test']['data']}_confusion_matrix", im)
+            self.writer.add_image(f"confusion_matrix/{configs['test']['data']}", im)
             cm_name = configs['test']['save_path']
             file_path = 'results_metrics/'
             if not os.path.exists(file_path):
