@@ -61,21 +61,20 @@ class Metric(object):
         pred_scores = torch.cat(pred_scores_list, dim=0)
 
         metrics_data = self.metrics_calc_torch(true_labels, pred_scores)
-        if test and configs['train']['conf_mat']:
-            self.cm(pred_scores, true_labels)
-            computed_confusion = self.cm(pred_scores, true_labels).cpu().numpy()
-            im = self.plot_confusion_matrix(computed_confusion)
-            self.writer.add_image(f"confusion_matrix/{configs['test']['data']}", im)
-            cm_name = configs['test']['save_path']
-            file_path = 'results_metrics/'
-            if not os.path.exists(file_path):
-                os.makedirs(file_path)
-            np.savetxt(file_path+f'cm_{cm_name}.csv', computed_confusion, delimiter=',', fmt='%d')
-        return metrics_data
+        self.cm(pred_scores, true_labels)
+        computed_confusion = self.cm(pred_scores, true_labels).cpu().numpy()
+        im = self.plot_confusion_matrix(computed_confusion)
+            # self.writer.add_image(f"confusion_matrix/{configs['test']['data']}", im)
+            # cm_name = configs['test']['save_path']
+            # file_path = 'results_metrics/'
+            # if not os.path.exists(file_path):
+            #     os.makedirs(file_path)
+            # np.savetxt(file_path+f'cm_{cm_name}.csv', computed_confusion, delimiter=',', fmt='%d')
+        return metrics_data, im
 
     def eval(self, model, test_dataloader, test=False):
-        metrics_data = self.eval_new(model, test_dataloader, test)
-        return metrics_data
+        metrics_data, cm_im = self.eval_new(model, test_dataloader, test)
+        return metrics_data, cm_im
 
     def plot_confusion_matrix(self, computed_confusion):
         """
