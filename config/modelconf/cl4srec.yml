@@ -6,7 +6,7 @@ optimizer:
 
 train:
   experiment_name: test
-  model_test_run: false
+  model_test_run: true
   test_run_sample_no: 100
   weighted_loss_fn: true
   epoch: 3
