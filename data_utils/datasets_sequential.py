@@ -13,7 +13,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class SequentialDataset(data.Dataset):
-    def __init__(self, user_seqs, dynamic_context, static_context, mode='train', user_seqs_aug=None):
+    def __init__(self, user_seqs, dynamic_context, static_context, dense_static_context, mode='train', user_seqs_aug=None):
         self.mode = mode
 
         self.max_dynamic_context_length = configs['data']['dynamic_context_window_length']
@@ -23,6 +23,7 @@ class SequentialDataset(data.Dataset):
         self.user_history_time_delta_lists = {user: time_delta for user,
                                    time_delta in zip(user_seqs["uid"], user_seqs["time_delta"])}
         self.static_context = static_context
+        self.dense_static_context = dense_static_context
         self.dynamic_context = dynamic_context
         if user_seqs_aug is not None:
             self.uids = user_seqs_aug["uid"]
@@ -99,6 +100,8 @@ class SequentialDataset(data.Dataset):
             padded_dynamic_context = self._process_context(self.dynamic_context[idx], context_type='dynamic')
             padded_dynamic_context = [torch.DoubleTensor(x) for x in padded_dynamic_context]
             static_context= self._process_context(self.static_context[idx], context_type='static')
+            dense_static_context= self._process_context(self.dense_static_context[idx], context_type='static')
+
             if self.mode == 'train' and 'neg_samp' in configs['data'] and configs['data']['neg_samp']:
                 result = (
                     self.uids[idx],
@@ -107,6 +110,7 @@ class SequentialDataset(data.Dataset):
                     torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
                     padded_dynamic_context,
                     torch.LongTensor(static_context),
+                    dense_static_context,
                     len(seq_i),
                     self.negs[idx]
                 )
@@ -118,6 +122,7 @@ class SequentialDataset(data.Dataset):
                     torch.LongTensor(self._pad_time_delta(seq_i, time_delta_i)),
                     padded_dynamic_context,
                     torch.LongTensor(static_context),
+                    dense_static_context,
                     len(seq_i)
                 )
             

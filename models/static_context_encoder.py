@@ -19,16 +19,25 @@ class static_context_encoder(nn.Module):
         self.embedding_layers.append(CyclicalEmbedding(max_value_scale=24)) #  hour
         self.embedding_layers.extend([nn.Embedding(num_embeddings=max_val+1, 
                                                     embedding_dim=2) 
-                                                    for max_val in  vocab_sizes[-3:]])# last 3 values are the non cyclical one
-        self.bn = nn.BatchNorm1d(12) 
+                                                    for max_val in  vocab_sizes[-4:]])# last 3 values are the non cyclical one
+        self.linear = nn.Linear(3,3)
+        self.linear2 = nn.Linear(17,12)
+        self.bn1 = nn.BatchNorm1d(17) 
+        self.bn2 = nn.BatchNorm1d(12) 
         self.dropout = nn.Dropout(p=dropout_rate_fc_static)
         self.relu = nn.ReLU()
         self.apply(weights_init)
 
-    def forward(self, x):
+    def forward(self, x, z):
         embedded = [emb(x[:, i]) for i, emb in enumerate(self.embedding_layers)]
-        output = t.cat(embedded, dim=1)
-        output = self.bn(output)
+        embedded = t.cat(embedded, dim=1)
+        linear = self.linear(z)
+        output = t.cat((embedded, linear), dim=1)
+        output = self.bn1(output)
+        output = self.relu(output)
+        output = self.dropout(output)
+        output = self.linear2(output)
+        output = self.bn2(output)
         output = self.relu(output)
         output = self.dropout(output)
         return output

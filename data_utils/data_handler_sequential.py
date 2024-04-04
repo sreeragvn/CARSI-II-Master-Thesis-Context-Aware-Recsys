@@ -31,6 +31,10 @@ class DataHandlerSequential:
         self.val_static_context_file = path.join(predir, 'static_context/test.csv')
         self.tst_static_context_file = path.join(predir, 'static_context/test.csv')
 
+        self.trn_dense_static_context_file = path.join(predir, 'dense_static_context/train.csv')
+        self.val_dense_static_context_file = path.join(predir, 'dense_static_context/test.csv')
+        self.tst_dense_static_context_file = path.join(predir, 'dense_static_context/test.csv')
+
         self.max_item_id = 0
         self.max_dynamic_context_length = configs['data']['dynamic_context_window_length']
         self.static_context_embedding_size = 0
@@ -71,7 +75,7 @@ class DataHandlerSequential:
             context = pd.read_csv(csv_file, parse_dates=['datetime'])
             max_length = context['window_id'].value_counts().max()
             self.max_dynamic_context_length = min(self.max_dynamic_context_length, max_length)
-            context = context.drop(['datetime', 'session', 'wind_id'], axis=1)
+            context = context.drop(['datetime', 'session'], axis=1)
             context_dict = {}
             for window_id, group in context.groupby('window_id'):
                 context_dict[window_id] = {
@@ -86,8 +90,8 @@ class DataHandlerSequential:
         
     def _read_csv_static_context(self, csv_file):
         try:
-            context = pd.read_csv(csv_file, parse_dates=['datetime'])
-            context = context.drop(['datetime', 'session', 'car_id', 'wind_id'], axis=1)
+            context = pd.read_csv(csv_file)
+            context = context.drop(columns=['car_id', 'session', 'datetime'])
             context = context.astype(int)
             self.static_context_embedding_size = context.drop(columns=['window_id']).max(axis=0).tolist()
             context_dict = {}
@@ -95,17 +99,32 @@ class DataHandlerSequential:
                 session_key = row['window_id']
                 row_dict = row.drop('window_id').to_dict()
                 context_dict[session_key] = row_dict
-            
             if configs['train']['model_test_run']:
                 context_dict = self._sample_context_data(context_dict)
-
             return context_dict
         except Exception as e:
             print(f"Error reading static context CSV file: {e}")
             return None
         
-
-    def _set_statistics(self, user_seqs_train, user_seqs_test, dynamic_context_data, static_context_data):
+    def _read_csv_dense_static_context(self, csv_file):
+        try:
+            context = pd.read_csv(csv_file)
+            context = context.drop(columns=['session', 'datetime'])
+            # self.static_context_embedding_size = context.drop(columns=['window_id']).max(axis=0).tolist()
+            context_dict = {}
+            for index, row in context.iterrows():
+                session_key = row['window_id']
+                row_dict = row.drop('window_id').to_dict()
+                context_dict[session_key] = row_dict
+            if configs['train']['model_test_run']:
+                context_dict = self._sample_context_data(context_dict)
+            return context_dict
+        except Exception as e:
+            print(f"Error reading static context CSV file: {e}")
+            return None
+        
+        
+    def _set_statistics(self, user_seqs_train, user_seqs_test, dynamic_context_data, static_context_data, dense_static_context_test):
         user_num = max(max(user_seqs_train["uid"]), max(
             user_seqs_test["uid"])) + 1
         configs['data']['user_num'] = user_num
@@ -114,6 +133,12 @@ class DataHandlerSequential:
         configs['data']['dynamic_context_window_length'] = self.max_dynamic_context_length
         configs['data']['dynamic_context_feat_num'] = len(list(dynamic_context_data[list(dynamic_context_data.keys())[0]].keys()))
         configs['data']['static_context_feat_num'] = len(list(static_context_data[list(static_context_data.keys())[0]].keys()))
+        configs['data']['static_context_features'] = list(static_context_data[0].keys())
+        configs['data']['dense_static_context_features'] = list(dense_static_context_test[0].keys())
+        configs['data']['dynamic_context_features'] = list(dynamic_context_data[0].keys())
+        print('static context features', configs['data']['static_context_features'])
+        print('dynamic context features', configs['data']['dynamic_context_features'])
+        print('dense static context features', configs['data']['dense_static_context_features'])
         configs['data']['static_context_max']  = self.static_context_embedding_size
 
     # def _seq_aug(self, user_seqs):
@@ -137,13 +162,17 @@ class DataHandlerSequential:
         dynamic_context_test =  self._read_csv_dynamic_context(self.tst_dynamic_context_file)
         static_context_train =  self._read_csv_static_context(self.trn_static_context_file)
         static_context_test =  self._read_csv_static_context(self.tst_static_context_file)
+        dense_static_context_train =  self._read_csv_dense_static_context(self.trn_dense_static_context_file)
+        dense_static_context_test =  self._read_csv_dense_static_context(self.tst_dense_static_context_file)
+
         if configs['train']['model_test_run']:
             user_seqs_train  = {key: value[:configs['train']['test_run_sample_no']] for key, value in user_seqs_train.items()}
             user_seqs_test = user_seqs_train
             dynamic_context_test = dynamic_context_train
             static_context_test = static_context_train
+            dense_static_context_test = dense_static_context_train
 
-        self._set_statistics(user_seqs_train, user_seqs_test, dynamic_context_test, static_context_test)
+        self._set_statistics(user_seqs_train, user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
 
         # # seqeuntial augmentation: [1, 2, 3,] -> [1,2], [3]
         # if 'seq_aug' in configs['data'] and configs['data']['seq_aug']:
@@ -153,10 +182,10 @@ class DataHandlerSequential:
         #     trn_data = SequentialDataset(user_seqs_train)
 
         #Only implementing the case of no sequence augmentations _seq_aug
-        trn_data = SequentialDataset(user_seqs_train, dynamic_context_train, static_context_train)
-        tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test)
+        trn_data = SequentialDataset(user_seqs_train, dynamic_context_train, static_context_train, dense_static_context_train)
+        tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
 
         self.test_dataloader = data.DataLoader(
             tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
         self.train_dataloader = data.DataLoader(
-            trn_data, batch_size=configs['train']['batch_size'], shuffle=True, num_workers=0)
+            trn_data, batch_size=configs['train']['batch_size'], shuffle=False, num_workers=0)

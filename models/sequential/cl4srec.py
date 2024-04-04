@@ -144,7 +144,7 @@ class CL4SRec(BaseModel):
             if isinstance(module, nn.Linear) and module.bias is not None:
                 module.bias.data.zero_()
 
-    def forward(self, batch_seqs,batch_context, batch_static_context):
+    def forward(self, batch_seqs,batch_context, batch_static_context, batch_dense_static_context):
         # interaction_encoder options are lstm, sasrec, durorec
         if configs['model']['interaction_encoder'] == 'lstm':
             sasrec_out = self.interaction_encoder(batch_seqs)
@@ -164,7 +164,7 @@ class CL4SRec(BaseModel):
             # print('sasrec out flat fc', sasrec_out.size())
         context_output = self.context_encoder(batch_context)
 
-        static_context = self.static_embedding(batch_static_context)
+        static_context = self.static_embedding(batch_static_context, batch_dense_static_context)
         context = torch.cat((context_output, static_context), dim=1)
         if configs['model']['encoder_combine'] == 'concat':
             out = torch.cat((sasrec_out, context), dim=1)
@@ -177,8 +177,8 @@ class CL4SRec(BaseModel):
         return out
 
     def cal_loss(self, batch_data):
-        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, _ = batch_data
-        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
+        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, batch_dense_static_context, _ = batch_data
+        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, batch_dense_static_context)
 
         if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
@@ -211,8 +211,8 @@ class CL4SRec(BaseModel):
         return loss + cl_loss, loss_dict
 
     def val_cal_loss(self, val_batch_data):
-        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, _ = val_batch_data
-        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
+        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, batch_dense_static_context,  _ = val_batch_data
+        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, batch_dense_static_context)
 
         if configs['model']['interaction_encoder'] == 'lstm':
             test_item_emb = self.emb_layer.weight[:self.item_num+1]
@@ -229,7 +229,7 @@ class CL4SRec(BaseModel):
         return loss + cl_loss, loss_dict
 
     def predict(self, batch_data):
-        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, _  = batch_data
+        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context , batch_dense_static_context,  _  = batch_data
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         
         if configs['model']['interaction_encoder'] == 'lstm':
@@ -244,9 +244,9 @@ class CL4SRec(BaseModel):
     def full_predict(self, batch_data):
         # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
         # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
-        _, batch_seqs, _, _, batch_dynamic_context, batch_static_context, _  = batch_data
+        _, batch_seqs, _, _, batch_dynamic_context, batch_static_context, batch_dense_static_context,  _  = batch_data
         # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
-        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
+        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, batch_dense_static_context)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
     
         if configs['model']['interaction_encoder'] == 'lstm':
