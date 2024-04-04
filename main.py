@@ -15,7 +15,8 @@ def main():
 
     logger = Logger()
 
-    trainer = build_trainer(data_handler, logger)#
+    trainer = build_trainer(data_handler, logger)
+    
     if configs['train']['pretrain']:
         model = trainer.load_model(model)
 
