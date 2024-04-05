@@ -67,7 +67,7 @@ class Trainer(object):
             # ), lr=initial_lr, betas=(0.9, 0.98), eps=1e-09, weight_decay=optim_config['weight_decay'])
             self.optimizer = optim.Adam(model.parameters(
             ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
-            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=10, factor=0.95, min_lr=1e-6)
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.97, min_lr=1e-6)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
             # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
             # self.scheduler = LambdaLR(self.optimizer, lr_lambda)
@@ -78,7 +78,6 @@ class Trainer(object):
         #todo val loss and train loss are different in model test run where you have both dataset the same. check this.
         # train_dataloader.dataset.sample_negs()
         loss_log_dict = {}
-        loss_log_dict_val = {}
         ep_loss = 0
         steps = len(train_dataloader.dataset) // configs['train']['batch_size']
         model.train()
