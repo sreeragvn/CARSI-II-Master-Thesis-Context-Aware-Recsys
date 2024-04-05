@@ -118,12 +118,17 @@ class Trainer(object):
                                   else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
                                   , val_tem))
                 val_loss, _ = model.val_cal_loss(val_batch_data)
+                                  , val_tem))
+                val_loss, _ = model.val_cal_loss(val_batch_data)
                 total_val_loss += val_loss.item()
 
         test_step = len(test_loader.dataset) // configs['test']['batch_size']
         avg_val_loss = total_val_loss / len(test_loader)
         print('val_loss: ', round(avg_val_loss,3))
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
+        writer.add_scalar('Loss/test', round(total_val_loss /test_step,3), epoch_idx)
+        if configs['train']['scheduler']:
+           self.scheduler.step(avg_val_loss)
         writer.add_scalar('Loss/test', round(total_val_loss /test_step,3), epoch_idx)
         if configs['train']['scheduler']:
            self.scheduler.step(avg_val_loss)
@@ -148,6 +153,8 @@ class Trainer(object):
                     self.evaluate(model, epoch_idx)
                 current_lr = self.optimizer.param_groups[0]['lr']
                 print(f"Epoch {epoch_idx + 1}, Learning Rate: {current_lr}")
+                if train_config['train_checkpoints'] and epoch_idx % train_config['save_step'] == 0:
+                    self.save_model(model)
                 if train_config['train_checkpoints'] and epoch_idx % train_config['save_step'] == 0:
                     self.save_model(model)
             self.test(model)
@@ -201,12 +208,16 @@ class Trainer(object):
         if hasattr(self.data_handler, 'valid_dataloader'):
             eval_result, cm_im = self.metric.eval(model, self.data_handler.valid_dataloader)
             writer.add_image("confusion_matrix/valid", cm_im, epoch_idx)
+            eval_result, cm_im = self.metric.eval(model, self.data_handler.valid_dataloader)
+            writer.add_image("confusion_matrix/valid", cm_im, epoch_idx)
             for i, k in enumerate(configs['test']['k']):
                 for metric in configs['test']['metrics']:
                     writer.add_scalar(f'{metric}_top_{k}/valid', eval_result[metric][i], epoch_idx)
             # writer.add_scalar('HR/valid', eval_result[configs['test']['metrics'][0]][0], epoch_idx)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Validation set', epoch_idx=epoch_idx)
         elif hasattr(self.data_handler, 'test_dataloader'):
+            eval_result, cm_im = self.metric.eval(model, self.data_handler.test_dataloader)
+            writer.add_image("confusion_matrix/test", cm_im, epoch_idx)
             eval_result, cm_im = self.metric.eval(model, self.data_handler.test_dataloader)
             writer.add_image("confusion_matrix/test", cm_im, epoch_idx)
             for i, k in enumerate(configs['test']['k']):
@@ -224,9 +235,12 @@ class Trainer(object):
         model.eval()
         
         eval_result, _ = self.metric.eval(model, self.data_handler.train_dataloader, test=True)
+        
+        eval_result, _ = self.metric.eval(model, self.data_handler.train_dataloader, test=True)
         self.logger.log_eval(eval_result, configs['test']['k'], data_type='Train set')
         configs['test']['data']="test"
         if hasattr(self.data_handler, 'test_dataloader'):
+            eval_result, _ = self.metric.eval(model, self.data_handler.test_dataloader, test=True)
             eval_result, _ = self.metric.eval(model, self.data_handler.test_dataloader, test=True)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set')
         else:
