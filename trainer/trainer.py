@@ -117,6 +117,7 @@ class Trainer(object):
                 val_batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
                                   else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
                                   , val_tem))
+                                  , val_tem))
                 val_loss, _ = model.val_cal_loss(val_batch_data)
                 total_val_loss += val_loss.item()
 
