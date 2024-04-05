@@ -118,8 +118,6 @@ class Trainer(object):
                                   else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
                                   , val_tem))
                 val_loss, _ = model.val_cal_loss(val_batch_data)
-                                  , val_tem))
-                val_loss, _ = model.val_cal_loss(val_batch_data)
                 total_val_loss += val_loss.item()
 
         test_step = len(test_loader.dataset) // configs['test']['batch_size']
