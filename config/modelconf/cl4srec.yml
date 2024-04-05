@@ -7,9 +7,10 @@ optimizer:
 train:
   experiment_name: test
   model_test_run: true
-  test_run_sample_no: 100
+  standard_test: True
+  test_run_sample_no: 64
   weighted_loss_fn: true
-  epoch: 3
+  epoch: 100
   scheduler: True
   batch_size: 64
   save_model: true
@@ -18,7 +19,6 @@ train:
   reproducible: true
   seed: 12
   tensorboard: true
-  conf_mat: true
   ssl: false
   gradient_accumulation: false
   accumulation_steps: 4
@@ -32,6 +32,7 @@ test:
   k: [1, 2, 3]
   batch_size: 64
   train_eval: true
+  log_loss: true
 
 data:
   type: sequential

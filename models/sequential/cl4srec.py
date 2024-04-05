@@ -120,13 +120,11 @@ class CL4SRec(BaseModel):
 
         if not configs['train']['weighted_loss_fn']:
             self.loss_func = nn.CrossEntropyLoss()
-            self.val_loss_func = nn.CrossEntropyLoss()
         else:
             with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
                 _class_w = pickle.load(f)
                 # _class_w = _class_w[1:]
             self.loss_func = nn.CrossEntropyLoss(_class_w)
-            self.val_loss_func = nn.CrossEntropyLoss(_class_w)
         self.cl_loss_func = nn.CrossEntropyLoss()
         
     def count_parameters(self):
@@ -208,24 +206,6 @@ class CL4SRec(BaseModel):
                 'rec_loss': loss.item(),
                 'cl_loss': cl_loss,
             }
-        return loss + cl_loss, loss_dict
-
-    def val_cal_loss(self, val_batch_data):
-        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, batch_dense_static_context,  _ = val_batch_data
-        seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, batch_dense_static_context)
-
-        if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        else:
-            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
-        logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
-        loss = self.val_loss_func(logits, batch_last_items)
-
-        cl_loss = 0
-        loss_dict = {
-            'rec_loss': loss.item(),
-            'cl_loss': cl_loss,
-        }
         return loss + cl_loss, loss_dict
 
     def predict(self, batch_data):

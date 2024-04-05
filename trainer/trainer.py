@@ -109,30 +109,53 @@ class Trainer(object):
                     loss_log_dict[loss_name] = _loss_train
                 else:
                     loss_log_dict[loss_name] += _loss_train
+        
+        writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
+
+        string_to_append = "_train"
+        train_loss_log_dict = {key + string_to_append: value for key, value in loss_log_dict.items()}
+
+        if configs['train']['log_loss']:
+            self.logger.log_loss(epoch_idx, train_loss_log_dict)
+        else:
+            self.logger.log_loss(epoch_idx, train_loss_log_dict, save_to_log=False)
+
+        if configs['train']['scheduler']:
+           self.scheduler.step(train_loss_log_dict['rec_loss_train'])
+
+    def evaluate_val_loss(self, model, epoch_idx):
 
         test_loader = self.data_handler.test_dataloader
-        total_val_loss = 0
+        #todo val loss and train loss are different in model test run where you have both dataset the same. check this.
+        loss_log_dict = {}
+        ep_loss = 0
+        steps = len(test_loader.dataset) // configs['test']['batch_size']
+
+        model.eval()
         with torch.no_grad():
-            for i, val_tem in enumerate(test_loader):
-                val_batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
-                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1)
-                                  , val_tem))
-                val_loss, _ = model.val_cal_loss(val_batch_data)
-                total_val_loss += val_loss.item()
+            for i, tem in enumerate(test_loader):
+                batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
+                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1), tem))
 
-        test_step = len(test_loader.dataset) // configs['test']['batch_size']
-        avg_val_loss = total_val_loss / len(test_loader)
-        print('val_loss: ', round(avg_val_loss,3))
-        writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
-        writer.add_scalar('Loss/test', round(total_val_loss /test_step,3), epoch_idx)
-        if configs['train']['scheduler']:
-           self.scheduler.step(avg_val_loss)
+                loss, loss_dict = model.cal_loss(batch_data)
+                ep_loss += loss.item()
+                    
+                for loss_name in loss_dict:
+                    _loss_train = float(loss_dict[loss_name]) / len(test_loader)
+                    if loss_name not in loss_log_dict:
+                        loss_log_dict[loss_name] = _loss_train
+                    else:
+                        loss_log_dict[loss_name] += _loss_train
 
-        # log loss
-        if configs['train']['log_loss']:
-            self.logger.log_loss(epoch_idx, loss_log_dict)
-        else:
-            self.logger.log_loss(epoch_idx, loss_log_dict, save_to_log=False)
+            writer.add_scalar('Loss/test', ep_loss / steps, epoch_idx)
+
+            string_to_append = "_test"
+            test_loss_log_dict = {key + string_to_append: value for key, value in loss_log_dict.items()}
+
+            if configs['test']['log_loss']:
+                self.logger.log_loss(epoch_idx, test_loss_log_dict)
+            else:
+                self.logger.log_loss(epoch_idx, test_loss_log_dict, save_to_log=False)
 
     @log_exceptions
     def train(self, model):
@@ -144,6 +167,7 @@ class Trainer(object):
         if not train_config['early_stop']:
             for epoch_idx in range(train_config['epoch']):
                 self.train_epoch(model, epoch_idx)
+                self.evaluate_val_loss(model, epoch_idx)
                 if epoch_idx % train_config['test_step'] == 0:
                     self.evaluate(model, epoch_idx)
                 current_lr = self.optimizer.param_groups[0]['lr']
@@ -193,7 +217,6 @@ class Trainer(object):
         model.eval()
         if configs['test']['train_eval']:
             eval_result, cm_im = self.metric.eval(model, self.data_handler.train_dataloader)
-            print(eval_result)
             writer.add_image("confusion_matrix/train", cm_im, epoch_idx)
             for i, k in enumerate(configs['test']['k']):
                 for metric in configs['test']['metrics']:

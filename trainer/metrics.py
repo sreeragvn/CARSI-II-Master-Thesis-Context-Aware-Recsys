@@ -25,7 +25,7 @@ class Metric(object):
         # self.class_mapping = self._label_mapping
         self._label_mapping['ignore'] = 0
         self._label_mapping = dict(sorted(self._label_mapping.items(), key=lambda item: item[1]))
-        self.writer = configs['test']['tensorboard']
+        # self.writer = configs['test']['tensorboard']
         self.cm = MulticlassConfusionMatrix(num_classes=self._num_classes + 1).to(configs['device'])
 
     def metrics_calc_torch(self, target, output):

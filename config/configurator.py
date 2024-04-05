@@ -28,6 +28,18 @@ def parse_configure():
         config_data = f.read()
         configs = yaml.safe_load(config_data)
 
+        if configs['train']['standard_test'] and configs['train']['model_test_run']:
+             configs['train']['experiment_name'] = 'test'
+             configs['train']['test_run_sample_no'] = 64
+             configs['train']['batch_size'] =  64
+             configs['train']['epoch'] =  3
+             configs['test']['batch_size'] = 64
+             configs['train']['save_model'] = False
+             configs['train']['tensorboard'] = False
+             configs['train']['ssl'] = False
+             configs['train']['pretrain'] = False
+             configs['train']['train_checkpoints'] = False
+
         # model name
         configs['model']['name'] = configs['model']['name'].lower()
 
