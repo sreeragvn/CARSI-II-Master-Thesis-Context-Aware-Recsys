@@ -20,10 +20,11 @@ class static_context_encoder(nn.Module):
         self.embedding_layers.extend([nn.Embedding(num_embeddings=max_val+1, 
                                                     embedding_dim=2) 
                                                     for max_val in  vocab_sizes[3:]])# last 3 values are the non cyclical one
+        output_size = 32
         self.linear = nn.Linear(3,3)
-        self.linear2 = nn.Linear(39,32)
-        self.bn1 = nn.BatchNorm1d(39) 
-        self.bn2 = nn.BatchNorm1d(32) 
+        self.linear2 = nn.Linear(len(vocab_sizes)*2+3,output_size)
+        self.bn1 = nn.BatchNorm1d(len(vocab_sizes)*2+3) 
+        self.bn2 = nn.BatchNorm1d(output_size) 
         self.dropout = nn.Dropout(p=dropout_rate_fc_static) 
         self.relu = nn.ReLU()
         self.apply(weights_init)
