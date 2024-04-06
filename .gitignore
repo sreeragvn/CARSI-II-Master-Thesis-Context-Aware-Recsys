@@ -1,15 +1,15 @@
 # folders
 data/
-datasets/sequential/aug
-datasets/sequential/fix
-datasets/sequential/featengg
-datasets/sequential/non_aug
-datasets/sequential/undersampling
+datasets/
 dump/
 checkpoint/
 pretrain/
 __MACOSX/
 *.zip
+.DS_Store
+log/
+runs/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

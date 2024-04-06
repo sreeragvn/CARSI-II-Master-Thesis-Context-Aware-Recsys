@@ -76,44 +76,97 @@ class Metric(object):
         metrics_data, cm_im = self.eval_new(model, test_dataloader, test)
         return metrics_data, cm_im
 
+    # def plot_confusion_matrix(self, computed_confusion):
+    #     """
+    #     Plot confusion matrix.
+    #     """
+    #     df_cm = pd.DataFrame(
+    #             computed_confusion,
+    #             index=self._label_mapping.values(),
+    #             columns=self._label_mapping.values(),
+    #         )
+    #     fig, ax = plt.subplots(figsize=(15, 7))
+    #     fig.subplots_adjust(left=0.05, right=.65)
+    #     sn.set(font_scale=1.2)
+
+    #     # Plot the confusion matrix without a heatmap palette
+    #     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='d', ax=ax, cmap='Greens', cbar=False)
+
+    #     # Loop through the diagonal elements to add green background
+    #     for i in range(len(df_cm)):
+    #         ax.add_patch(Rectangle((i, i), 1, 1, fill=True, color='green', alpha=0.3))
+
+    #     # Loop through the texts to set text color
+    #     for text in ax.texts:
+    #         text.set_color('black')  # Set text color to black
+
+    #     ax.legend(
+    #         self._label_mapping.values(),
+    #         self._label_mapping.keys(),
+    #         handler_map={int: self.IntHandler()},
+    #         loc='upper left',
+    #         bbox_to_anchor=(1.2, 1)
+    #     )
+    #     buf = io.BytesIO()
+    #     plt.savefig(buf, format='jpeg', bbox_inches='tight')
+    #     plt.close() 
+    #     buf.seek(0)
+    #     im = Image.open(buf)
+    #     im = transforms.ToTensor()(im)
+    #     return im
+
     def plot_confusion_matrix(self, computed_confusion):
         """
         Plot confusion matrix.
         """
         df_cm = pd.DataFrame(
-                computed_confusion,
-                index=self._label_mapping.values(),
-                columns=self._label_mapping.values(),
-            )
-        fig, ax = plt.subplots(figsize=(15, 7))
+            computed_confusion,
+            index=self._label_mapping.values(),
+            columns=self._label_mapping.values(),
+        )
+        fig, ax = plt.subplots(figsize=(11, 7))
         fig.subplots_adjust(left=0.05, right=.65)
         sn.set(font_scale=1.2)
 
         # Plot the confusion matrix without a heatmap palette
-        sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='d', ax=ax, cmap='Greens', cbar=False)
+        sn.heatmap(df_cm, annot=True, annot_kws={"size": 14}, fmt='d', ax=ax, cmap='Greens', cbar=False)
 
-        # Loop through the diagonal elements to add green background
+        # Loop through the elements to add green background for non-zero numbers
         for i in range(len(df_cm)):
             ax.add_patch(Rectangle((i, i), 1, 1, fill=True, color='green', alpha=0.3))
+            for j in range(len(df_cm)):
+                value = df_cm.iloc[i, j]
+                if value != 0 and i !=j:
+                    # Calculate darkness of green based on the numerical value
+                    alpha = min(0.3 + 0.7 * (value / df_cm.values.max()), 1.0)
+                    ax.add_patch(Rectangle((j, i), 1, 1, fill=True, color=(1, 1, 0, alpha)))
+                elif i ==j:
+                    ax.add_patch(Rectangle((i, j), 1, 1, fill=True, color=(0, 1, 0), alpha=0.5))
+
 
         # Loop through the texts to set text color
         for text in ax.texts:
             text.set_color('black')  # Set text color to black
+
+        ax.set_xlabel('Predicted Labels')
+        ax.set_ylabel('True Labels')
 
         ax.legend(
             self._label_mapping.values(),
             self._label_mapping.keys(),
             handler_map={int: self.IntHandler()},
             loc='upper left',
-            bbox_to_anchor=(1.2, 1)
+            bbox_to_anchor=(1.01, 1)
         )
+        plt.tight_layout()
         buf = io.BytesIO()
         plt.savefig(buf, format='jpeg', bbox_inches='tight')
+        plt.close() 
         buf.seek(0)
         im = Image.open(buf)
         im = transforms.ToTensor()(im)
         return im
-    
+
     class IntHandler:
         def legend_artist(self, legend, orig_handle, fontsize, handlebox):
             x0, y0 = handlebox.xdescent, handlebox.ydescent

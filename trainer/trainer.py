@@ -54,7 +54,7 @@ class Trainer(object):
         # final_lr = optim_config['final_lr']
         # total_epochs = configs['train']['epoch']
         # gamma = (final_lr / initial_lr) ** (1 / total_epochs)
-        gamma = 0.999
+        gamma = optim_config['gamma']
         warmup_steps = int(configs['train']['epoch'] * 0.4)
         d_model = configs['model']['embedding_size']
 
@@ -67,7 +67,7 @@ class Trainer(object):
             # ), lr=initial_lr, betas=(0.9, 0.98), eps=1e-09, weight_decay=optim_config['weight_decay'])
             self.optimizer = optim.Adam(model.parameters(
             ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
-            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=0.97, min_lr=1e-6)
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=gamma, min_lr=1e-6)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
             # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
             # self.scheduler = LambdaLR(self.optimizer, lr_lambda)

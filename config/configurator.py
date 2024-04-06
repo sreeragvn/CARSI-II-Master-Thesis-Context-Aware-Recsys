@@ -32,10 +32,10 @@ def parse_configure():
              configs['train']['experiment_name'] = 'test'
              configs['train']['test_run_sample_no'] = 64
              configs['train']['batch_size'] =  64
-             configs['train']['epoch'] =  3
+             configs['train']['epoch'] =  10
              configs['test']['batch_size'] = 64
              configs['train']['save_model'] = False
-             configs['train']['tensorboard'] = False
+             configs['train']['tensorboard'] = True
              configs['train']['ssl'] = False
              configs['train']['pretrain'] = False
              configs['train']['train_checkpoints'] = False
