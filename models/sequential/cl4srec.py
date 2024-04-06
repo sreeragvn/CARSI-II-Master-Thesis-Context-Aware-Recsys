@@ -19,7 +19,6 @@ class CL4SRec(BaseModel):
     """
     def __init__(self, data_handler):
         super(CL4SRec, self).__init__(data_handler)
-        # # Todo should we embed everything to same space or different space ? how do we select the embedding size ?
         # Extract configuration parameters
         data_config = configs['data']
         model_config = configs['model']
@@ -106,7 +105,7 @@ class CL4SRec(BaseModel):
                                             kernel_size=self.tcn_kernel_size, 
                                             dropout=self.dropout_rate_tcn,
                                             dropout_fc = self.dropout_rate_fc_tcn)
-            input_size_fc_concat = 2 * self.embedding_size + 12
+            input_size_fc_concat = 2 * self.embedding_size + 32
 
         # FCs after concatenation layer
         self.fc_layers_concat = Flatten_layers(input_size = input_size_fc_concat, 
@@ -315,9 +314,7 @@ class CL4SRec(BaseModel):
         ## a list of number of non zero elements in each sequence
         lengths = batch_seqs.count_nonzero(dim=1).tolist()
 
-        ## TODO
-        # set the following parameter as a param loaded from yaml file
-        min_time_reorder = 0.5 #min
+        min_time_reorder = configs['train']['min_time_reorder']
 
         aug_seq1 = []
         aug_len1 = []

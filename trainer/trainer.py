@@ -109,6 +109,9 @@ class Trainer(object):
                     loss_log_dict[loss_name] = _loss_train
                 else:
                     loss_log_dict[loss_name] += _loss_train
+            
+            if configs['train']['scheduler']:
+                self.scheduler.step(loss_log_dict['rec_loss'])
         
         writer.add_scalar('Loss/train', ep_loss / steps, epoch_idx)
 
@@ -120,13 +123,9 @@ class Trainer(object):
         else:
             self.logger.log_loss(epoch_idx, train_loss_log_dict, save_to_log=False)
 
-        if configs['train']['scheduler']:
-           self.scheduler.step(train_loss_log_dict['rec_loss_train'])
-
     def evaluate_val_loss(self, model, epoch_idx):
 
         test_loader = self.data_handler.test_dataloader
-        #todo val loss and train loss are different in model test run where you have both dataset the same. check this.
         loss_log_dict = {}
         ep_loss = 0
         steps = len(test_loader.dataset) // configs['test']['batch_size']

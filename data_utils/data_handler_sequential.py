@@ -91,9 +91,13 @@ class DataHandlerSequential:
     def _read_csv_static_context(self, csv_file):
         try:
             context = pd.read_csv(csv_file)
-            context = context.drop(columns=['car_id', 'session', 'datetime'])
+            context = context.drop(columns=['car_id', 'session'])
             context = context.astype(int)
-            self.static_context_embedding_size = context.drop(columns=['window_id']).max(axis=0).tolist()
+            static_context_vocab_size = context.drop(columns=['window_id']).max(axis=0).tolist()
+            if self.static_context_embedding_size != 0:
+                self.static_context_embedding_size = [max(x, y) for x, y in zip(static_context_vocab_size, self.static_context_embedding_size)]
+            else:
+                self.static_context_embedding_size = static_context_vocab_size
             context_dict = {}
             for index, row in context.iterrows():
                 session_key = row['window_id']
