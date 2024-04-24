@@ -1,11 +1,12 @@
 # folders
 data/
-datasets/sequential/aug
-datasets/sequential/non_aug
-datasets/sequential/undersampling
+datasets/
+checkpoint/
 dump/
 pretrain/
 __MACOSX/
+log/
+runs/
 *.zip
 
 # Byte-compiled / optimized / DLL files
