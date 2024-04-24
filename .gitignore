@@ -1,10 +1,9 @@
 # folders
 data/
-datasets/sequential/aug
-datasets/sequential/fix
-datasets/sequential/featengg
-datasets/sequential/non_aug
-datasets/sequential/undersampling
+datasets/
+log/
+runs/
+checkpoint/
 dump/
 pretrain/
 __MACOSX/
