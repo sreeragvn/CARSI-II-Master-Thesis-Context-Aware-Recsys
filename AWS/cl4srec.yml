@@ -6,11 +6,11 @@ optimizer:
   gamma: 0.9995
 
 train:
-  experiment_name: test with new loss function
+  experiment_name: Status features weighted loss embed 512
   model_test_run: false
   standard_test: True
   test_run_sample_no: 100
-  weighted_loss_fn: false
+  weighted_loss_fn: true
   epoch: 1000
   scheduler: false
   batch_size: 256
@@ -24,8 +24,8 @@ train:
   min_time_reorder: 0.5
   gradient_accumulation: false
   accumulation_steps: 4
-  pretrain: true
-  pretrain_path: checkpoint/cl4srec/cl4srec-featengg-2024-04-06_19-17 test with new loss function.pth
+  pretrain: false
+  pretrain_path: checkpoint/cl4srec/cl4srec-fix-2024-04-06_12-42 non weighted loss embed 64.pth
   train_checkpoints: true
   save_step: 100
 
@@ -55,7 +55,7 @@ model:
   dropout_rate_fc_concat: 0.4
   dropout_rate_fc_static: 0.1
   n_layers: 2
-  embedding_size: 64
+  embedding_size: 512
   n_heads: 2
   max_seq_len: 10
   lmd: 0.1
@@ -63,7 +63,7 @@ model:
   encoder_combine: concat
 
 lstm:
-  hidden_size: 512
+  hidden_size: 64
   num_layers: 2
 
 tune:

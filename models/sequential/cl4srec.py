@@ -11,7 +11,8 @@ from torch import nn
 from config.configurator import configs
 import pickle
 from ..TCNN.tcn_model import TCNModel
-import torch.nn.functional as F
+import torch.nn.functional as F#
+from ..loss_function import FocalLoss
 
 class CL4SRec(BaseModel):
     r"""
@@ -118,12 +119,14 @@ class CL4SRec(BaseModel):
         #     self.multi_head_attention = nn.MultiheadAttention(self.emb_size, self.n_heads)
 
         if not configs['train']['weighted_loss_fn']:
-            self.loss_func = nn.CrossEntropyLoss()
+            # self.loss_func = nn.CrossEntropyLoss()
+            self.loss_func = FocalLoss(gamma=2, reduction='mean')
         else:
             with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
                 _class_w = pickle.load(f)
                 # _class_w = _class_w[1:]
-            self.loss_func = nn.CrossEntropyLoss(_class_w)
+            # self.loss_func = nn.CrossEntropyLoss(_class_w)
+            self.loss_func = FocalLoss(alpha=_class_w, gamma=2, reduction='mean')
         self.cl_loss_func = nn.CrossEntropyLoss()
         
     def count_parameters(self):
