@@ -1,5 +1,10 @@
 # folders
 data/
+checkpoint/
+datasets/
+log/
+runs/
+pretrain/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
