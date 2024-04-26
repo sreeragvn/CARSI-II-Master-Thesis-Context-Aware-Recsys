@@ -23,7 +23,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 configs['test']['save_path'] = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))+ str(' ') +configs['experiment']['experiment_name']
 
-if 'tensorboard' in configs['train'] and configs['experiment']['tensorboard']:
+if 'tensorboard' in configs['experiment'] and configs['experiment']['tensorboard']:
     timestr = configs['test']['save_path']
     writer = SummaryWriter(log_dir=f'runs/{timestr}')
     configs['test']['tensorboard'] = writer
@@ -31,8 +31,8 @@ else:
     writer = DisabledSummaryWriter()
 
 def init_seed():
-    if 'reproducible' in configs['train']:
-        if configs['train']['reproducible']:
+    if 'reproducible' in configs['experiment']:
+        if configs['experiment']['reproducible']:
             seed = configs['experiment']['seed']
         random.seed(seed)
         np.random.seed(seed)
@@ -212,7 +212,6 @@ class Trainer(object):
 
     @log_exceptions
     def evaluate(self, model, epoch_idx=None):
-
         model.eval()
         if configs['test']['train_eval']:
             eval_result, cm_im = self.metric.eval(model, self.data_handler.train_dataloader)
@@ -281,11 +280,12 @@ class Trainer(object):
                     '{}/{}-{}.pth'.format(save_dir_path, model_name, now_para_str)))
 
     def load_model(self, model):
-        if 'pretrain_path' in configs['train']:
+        if 'pretrain_path' in configs['experiment']:
             pretrain_path = configs['experiment']['pretrain_path']
-            model.load_state_dict(torch.load(pretrain_path))
+            module_path = "/".join(['checkpoint', configs['model']['name'], pretrain_path])
+            model.load_state_dict(torch.load(module_path))
             self.logger.log(
-                "Load model parameters from {}".format(pretrain_path))
+                "Load model parameters from {}".format(module_path))
             return model
         else:
-            raise KeyError("No pretrain_path in configs['train']")
+            raise KeyError("No module_path in configs['train']")

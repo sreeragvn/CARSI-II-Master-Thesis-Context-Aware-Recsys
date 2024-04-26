@@ -15,7 +15,7 @@ experiment:
   seed: 12
   tensorboard: true
   pretrain: false
-  pretrain_path: checkpoint/cl4srec/cl4srec-featengg-2024-04-06_19-17 test with new loss function.pth
+  pretrain_path: cl4rec-featengg-2024-04-26_19-26 focalloss witout grad acc.pth
 
 train:
   weighted_loss_fn: true
@@ -47,7 +47,7 @@ data:
   dynamic_context_window_length: 30
 
 model:
-  name: cl4srec
+  name: cl4rec
   context_encoder: tempcnn
   encoder_combine: concat
   tcn_num_channels: [80, 50, 25]

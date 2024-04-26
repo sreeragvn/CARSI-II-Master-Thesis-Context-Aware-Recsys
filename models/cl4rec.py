@@ -17,9 +17,9 @@ from models.dynamic_context_encoder.tcn_model import TCNModel
 from models.static_context_encoder.static_context_encoder import static_context_encoder
 from trainer.loss import loss_function
 
-class CL4SRec(BaseModel):
+class CL4Rec(BaseModel):
     def __init__(self, data_handler):
-        super(CL4SRec, self).__init__(data_handler)
+        super(CL4Rec, self).__init__(data_handler)
         # Extract configuration parameters
         data_config = configs['data']
         model_config = configs['model']
@@ -103,7 +103,7 @@ class CL4SRec(BaseModel):
         loss = self.loss_func(logits, batch_last_items)
 
         if configs['train']['ssl']:
-            aug_seq1, aug_seq2 = self._cl4srec_aug(batch_seqs, batch_time_deltas)
+            aug_seq1, aug_seq2 = self._cl4rec_aug(batch_seqs, batch_time_deltas)
             seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context)
             seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context)
             # Compute InfoNCE Loss (Contrastive Loss):
@@ -181,7 +181,7 @@ class CL4SRec(BaseModel):
         info_nce_loss = self.cl_loss_func(logits, labels)
         return info_nce_loss
 
-    def _cl4srec_aug(self, batch_seqs, batch_time_deltas_seqs):
+    def _cl4rec_aug(self, batch_seqs, batch_time_deltas_seqs):
         def item_crop(seq, length, eta=0.6):
             num_left = math.floor(length * eta)
             crop_begin = random.randint(0, length - num_left)
