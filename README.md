@@ -62,4 +62,4 @@ Configuration settings for each model are specified in a `yml` file, which inclu
 + `data`: Dataset specifications.
 + `model`: Model creation parameters and hyper-parameters.
 
-For more information, refer to the [SSLRec User Guide](https://github.com/HKUDS/SSLRec/).
+Thanks: [SSLRec User Guide](https://github.com/HKUDS/SSLRec/).
