@@ -5,29 +5,33 @@ optimizer:
   weight_decay: 0
   gamma: 0.9995
 
-train:
-  experiment_name: test with new loss function
+experiment:
   model_test_run: false
+  experiment_name: focalloss witout grad acc
   standard_test: True
   test_run_sample_no: 100
-  weighted_loss_fn: false
-  epoch: 1000
-  scheduler: false
-  batch_size: 256
   save_model: true
-  log_loss: true
-  test_step: 10
   reproducible: true
   seed: 12
   tensorboard: true
+  pretrain: false
+  pretrain_path: checkpoint/cl4srec/cl4srec-featengg-2024-04-06_19-17 test with new loss function.pth
+
+train:
+  weighted_loss_fn: true
+  epoch: 5000
+  scheduler: true
+  batch_size: 256
   ssl: false
   min_time_reorder: 0.5
   gradient_accumulation: false
-  accumulation_steps: 4
-  pretrain: true
-  pretrain_path: checkpoint/cl4srec/cl4srec-featengg-2024-04-06_19-17 test with new loss function.pth
+  accumulation_steps: 10
+  test_step: 10
   train_checkpoints: true
+  log_loss: true
   save_step: 100
+  focal_loss: true
+  focal_loss_gamma: 4
 
 test:
   metrics: [precision, recall, f1score, accuracy]
@@ -40,35 +44,32 @@ data:
   type: sequential
   name: featengg
   seq_aug: false
-  dynamic_context_window_length: 100
+  dynamic_context_window_length: 30
 
 model:
   name: cl4srec
   context_encoder: tempcnn
+  encoder_combine: concat
   tcn_num_channels: [80, 50, 25]
   tcn_kernel_size: 3
-  interaction_encoder: sasrec
-  dropout_rate_trans: 0.3
   dropout_rate_tcn: 0.1
   dropout_rate_fc_tcn: 0.4
-  dropout_rate_fc_trans: 0.4
+  dropout_rate_sasrec: 0.3
+  dropout_rate_fc_sasrec: 0.4
   dropout_rate_fc_concat: 0.4
   dropout_rate_fc_static: 0.1
-  n_layers: 2
-  embedding_size: 64
-  n_heads: 2
-  max_seq_len: 10
-  lmd: 0.1
-  tau: 1
-  encoder_combine: concat
-
-lstm:
-  hidden_size: 512
-  num_layers: 2
+  sasrec_n_layers: 2
+  item_embedding_size: 64
+  sasrec_n_heads: 2
+  sasrec_max_seq_len: 10
+  cl_lmd: 0.1
+  cl_tau: 1
+  lstm_hidden_size: 512
+  lstm_num_layers: 2
 
 tune:
   enable: false
-  hyperparameters: [dropout_rate, lmd, tau]
+  hyperparameters: [dropout_rate_sasrec, cl_lmd, cl_tau]
   dropout_rate: [0.1, 0.2, 0.3]
   lmd: [0.05, 0.1, 0.2]
   tau: [0.5, 0.7, 0.9]

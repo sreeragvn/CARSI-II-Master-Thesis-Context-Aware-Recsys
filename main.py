@@ -17,7 +17,7 @@ def main():
 
     trainer = build_trainer(data_handler, logger)
     
-    if configs['train']['pretrain']:
+    if configs['experiment']['pretrain']:
         model = trainer.load_model(model)
 
     best_model = trainer.train(model)

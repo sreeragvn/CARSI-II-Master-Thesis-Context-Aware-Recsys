@@ -28,7 +28,7 @@ class Logger(object):
         self.logger.setLevel(logging.INFO)
         # Determines the log file path based on whether tuning is enabled or not. Creates a file handler for logging.
         dataset_name = configs['data']['name']
-        exp_name = configs['train']['experiment_name']
+        exp_name = configs['experiment']['experiment_name']
         if not configs['tune']['enable']:
             log_file = logging.FileHandler('{}/{}_{}_{}.log'.format(log_dir_path, dataset_name, get_local_time(), exp_name), 'a', encoding='utf-8')
         else:

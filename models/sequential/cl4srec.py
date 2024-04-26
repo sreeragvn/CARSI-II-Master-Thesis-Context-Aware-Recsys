@@ -1,167 +1,85 @@
 import math
 import random
-from models.base_model import BaseModel
-from models.model_utils import TransformerLayer, TransformerEmbedding, Flatten_layers
-from models.interaction_encoder import  LSTM_interactionEncoder
-from models.dynamic_context_encoder import LSTM_contextEncoder
-from models.static_context_encoder import static_context_encoder
 import numpy as np
 import torch
 from torch import nn
-from config.configurator import configs
 import pickle
-from ..TCNN.tcn_model import TCNModel
-import torch.nn.functional as F#
-from ..loss_function import FocalLoss
+import torch.nn.functional as F
+
+from config.configurator import configs
+from models.base_model import BaseModel
+
+from models.interaction_encoder.sasrec import sasrec
+from models.utils import Flatten_layers
+from models.dynamic_context_encoder.lstm import lstm_context_encoder
+from models.dynamic_context_encoder.transformer import TransformerEncoder_DynamicContext
+from models.dynamic_context_encoder.tcn_model import TCNModel
+from models.static_context_encoder.static_context_encoder import static_context_encoder
+from trainer.loss import loss_function
 
 class CL4SRec(BaseModel):
-    r"""
-    SASRec is the first sequential recommender based on self-attentive mechanism.
-    """
     def __init__(self, data_handler):
         super(CL4SRec, self).__init__(data_handler)
         # Extract configuration parameters
         data_config = configs['data']
         model_config = configs['model']
         train_config = configs['train']
-        lstm_config = configs['lstm']
 
         self.item_num = data_config['item_num']
-        self.emb_size = model_config['embedding_size']
-        self.max_len = model_config['max_seq_len']
+        self.emb_size = model_config['item_embedding_size']
         self.mask_token = self.item_num + 1
-        self.n_layers = model_config['n_layers']
-        self.n_heads = model_config['n_heads']
-        self.inner_size = 4 * self.emb_size
 
-        self.dropout_rate_trans = model_config['dropout_rate_trans']
-        self.dropout_rate_tcn = model_config['dropout_rate_tcn']
-        self.dropout_rate_fc_tcn = model_config['dropout_rate_fc_tcn']
-        self.dropout_rate_fc_trans = model_config['dropout_rate_fc_trans']
         self.dropout_rate_fc_concat = model_config['dropout_rate_fc_concat']
-        self.dropout_rate_fc_static = model_config['dropout_rate_fc_static']
-
         self.batch_size = train_config['batch_size']
-        self.lmd = model_config['lmd']
-        self.tau = model_config['tau']
-
-        self.tcn_num_channels = model_config['tcn_num_channels']
-        self.tcn_kernel_size = model_config['tcn_kernel_size']
-        self.dynamic_context_feat_num = data_config['dynamic_context_feat_num']
-        self.dynamic_context_window_size = data_config['dynamic_context_window_length']
-        self.lstm_hidden_size = lstm_config['hidden_size']
-        self.lstm_num_layers = lstm_config['num_layers']
-
-        self.static_context_max_token = data_config['static_context_max']
-        self.static_context_num = data_config['static_context_feat_num']
-
+        
+        self.lmd = model_config['cl_lmd']
+        self.tau = model_config['cl_tau']
         self.mask_default = self.mask_correlated_samples(batch_size=self.batch_size)
 
-        # interaction Encoder( # interaction_encoder options are lstm, sasrec, durorec)
-        if model_config['interaction_encoder'] == 'lstm':
-            self.interaction_encoder = LSTM_interactionEncoder(num_items = self.item_num + 1,
-                                                               embedding_dim = self.emb_size,
-                                                               lstm_hidden_dim = self.lstm_hidden_size,
-                                                               num_layers = self.lstm_num_layers)
-        if model_config['interaction_encoder'] == 'sasrec':
-            self.emb_layer = TransformerEmbedding(item_num = self.item_num + 1, 
-                                                  emb_size= self.emb_size, 
-                                                  max_len = self.max_len)
-            
-            self.transformer_layers = nn.ModuleList([TransformerLayer(hidden_size = self.emb_size, 
-                                                                      num_heads = self.n_heads, 
-                                                                      feed_forward_size = self.inner_size, 
-                                                                      dropout_rate = self.dropout_rate_trans) 
-                                                                      for _ in range(self.n_layers)])
-            self.fc_layers_sasrec = Flatten_layers(input_size = (self.max_len) * self.emb_size, 
-                                                   emb_size = self.emb_size, 
-                                                   dropout_p = self.dropout_rate_fc_trans)
-            self.apply(self._init_weights)
-        else:
-            print('mention the interaction encoder - sasrec or lstm')
+        self._interaction_encoder()
+        self._dynamic_context_encoder(model_config)
+        self._static_context_encoder()
+        self._encoder_correlation()
+
+        self.loss_func, self.cl_loss_func = loss_function()
+
+    def _interaction_encoder(self):
+        self.interaction_encoder = sasrec()
         
-        #static context encoder
-        self.static_embedding  = static_context_encoder(vocab_sizes = self.static_context_max_token, 
-                                                        dropout_rate_fc_static = self.dropout_rate_fc_static)
+    def _static_context_encoder(self):
+        self.static_embedding  = static_context_encoder()
 
-        # dynamic Context Encoder
+    def _dynamic_context_encoder(self, model_config):
         if model_config['context_encoder'] == 'lstm':
-            self.context_encoder = LSTM_contextEncoder(input_size = self.dynamic_context_feat_num, 
-                                                       hidden_size = self.lstm_hidden_size, 
-                                                       num_layers = self.lstm_num_layers,
-                                                       emb_size = self.emb_size
-                                                       )
-            input_size_fc_concat = 88
-        # elif model_config['context_encoder'] == 'transformer':
-        #     self.context_encoder = TransformerEncoder_DynamicContext(self.dynamic_context_feat_num, # num_features_continuous
-        #                                                              data_config['dynamic_context_window_length'],
-        #                                                              hidden_dim=self.emb_size, # d_model
-        #                                                              num_heads=8,)
-        #     input_size = 6400 + 2 * self.emb_size
+            self.context_encoder = lstm_context_encoder()
+            self.input_size_fc_concat = 88
+        elif model_config['context_encoder'] == 'transformer':
+            self.context_encoder = TransformerEncoder_DynamicContext()
+            self.input_size_fc_concat = 6400 + 2 * self.emb_size
         elif model_config['context_encoder'] == 'tempcnn':
-            self.context_encoder = TCNModel(num_input = self.dynamic_context_feat_num, 
-                                            dynamic_context_window_size = self.dynamic_context_window_size,
-                                            num_channels=self.tcn_num_channels, 
-                                            emb_size=self.emb_size, 
-                                            kernel_size=self.tcn_kernel_size, 
-                                            dropout=self.dropout_rate_tcn,
-                                            dropout_fc = self.dropout_rate_fc_tcn)
-            input_size_fc_concat = 2 * self.embedding_size + 32
+            self.context_encoder = TCNModel()
+            self.input_size_fc_concat = 2 * self.embedding_size + 32
 
+    def _encoder_correlation(self):
+        if configs['model']['encoder_combine'] == 'concat':
         # FCs after concatenation layer
-        self.fc_layers_concat = Flatten_layers(input_size = input_size_fc_concat, 
-                                               emb_size = self.emb_size, 
-                                               dropout_p=self.dropout_rate_fc_concat)
+            self.fc_layers_concat = Flatten_layers(input_size = self.input_size_fc_concat, 
+                                                   emb_size = self.emb_size, 
+                                                   dropout_p=self.dropout_rate_fc_concat)
 
         # Combine 3 encoder outputs - Attention or concatenation
         # if configs['model']['encoder_combine'] == 'attention':
         #     self.fc_context_dim_red = nn.Linear(72, 64)
         #     self.multi_head_attention = nn.MultiheadAttention(self.emb_size, self.n_heads)
 
-        if not configs['train']['weighted_loss_fn']:
-            # self.loss_func = nn.CrossEntropyLoss()
-            self.loss_func = FocalLoss(gamma=2, reduction='mean')
-        else:
-            with open(configs['train']['parameter_class_weights_path'], 'rb') as f:
-                _class_w = pickle.load(f)
-                # _class_w = _class_w[1:]
-            # self.loss_func = nn.CrossEntropyLoss(_class_w)
-            self.loss_func = FocalLoss(alpha=_class_w, gamma=2, reduction='mean')
-        self.cl_loss_func = nn.CrossEntropyLoss()
-        
-    def count_parameters(self):
-        # Count the total number of parameters in the model
-        return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
-    def _init_weights(self, module):
-        """ Initialize the weights """
-        if module in [self.emb_layer, *self.transformer_layers]:
-            if isinstance(module, (nn.Linear, nn.Embedding)):
-                module.weight.data.normal_(mean=0.0, std=0.02)
-            elif isinstance(module, nn.LayerNorm):
-                module.bias.data.zero_()
-                module.weight.data.fill_(1.0)
-            if isinstance(module, nn.Linear) and module.bias is not None:
-                module.bias.data.zero_()
+    
+    def count_parameters(model):
+        # Count the total number of parameters in the model
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     def forward(self, batch_seqs,batch_context, batch_static_context, batch_dense_static_context):
-        # interaction_encoder options are lstm, sasrec, durorec
-        if configs['model']['interaction_encoder'] == 'lstm':
-            sasrec_out = self.interaction_encoder(batch_seqs)
-        elif configs['model']['interaction_encoder'] == 'sasrec':
-            mask = (batch_seqs > 0).unsqueeze(1).repeat(
-                1, batch_seqs.size(1), 1).unsqueeze(1)
-            x = self.emb_layer(batch_seqs)
-            for transformer in self.transformer_layers:
-                x = transformer(x, mask)
-            # print('sasrec out', x.size())
-            # x =  F.avg_pool1d(x, kernel_size=2)
-            # all_tokens_except_last = x[:, :-1, :]
-            # last_token = x[:, -1, :]
-            sasrec_out = x.view(x.size(0), -1)
-            # print('sasrec out flat', sasrec_out.size())
-            sasrec_out = self.fc_layers_sasrec(sasrec_out)
-            # print('sasrec out flat fc', sasrec_out.size())
+        sasrec_out = self.interaction_encoder(batch_seqs)
         context_output = self.context_encoder(batch_context)
 
         static_context = self.static_embedding(batch_static_context, batch_dense_static_context)
@@ -180,10 +98,7 @@ class CL4SRec(BaseModel):
         _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, batch_dense_static_context, _ = batch_data
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, batch_dense_static_context)
 
-        if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        else:
-            test_item_emb = self.emb_layer.token_emb.weight
+        test_item_emb = self.interaction_encoder.emb_layer.token_emb.weight
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
         loss = self.loss_func(logits, batch_last_items)
 
@@ -214,11 +129,7 @@ class CL4SRec(BaseModel):
         _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context , batch_dense_static_context,  _  = batch_data
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
         
-        if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer(batch_last_items)
-        else:
-            test_item_emb = self.emb_layer.token_emb(batch_last_items)
-        test_item_emb = self.emb_layer(batch_last_items)
+        test_item_emb = self.interaction_encoder.emb_layer.token_emb(batch_last_items)
 
         scores = torch.mul(logits, test_item_emb).sum(dim=1)  
         return scores
@@ -231,11 +142,8 @@ class CL4SRec(BaseModel):
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, batch_dense_static_context)
         # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
     
-        if configs['model']['interaction_encoder'] == 'lstm':
-            test_item_emb = self.emb_layer.weight[:self.item_num+1]
-        else:
-            test_item_emb = self.emb_layer.token_emb.weight[:self.item_num+1]
-        # test_item_emb = self.emb_layer.token_emb.weight[:self.item_num + 1]
+        test_item_emb = self.interaction_encoder.emb_layer.token_emb.weight[:self.item_num+1]
+        # test_item_emb = sasrec.emb_layer.token_emb.weight[:self.item_num + 1]
         # Return Predicted Scores:Returns the computed scores, which represent the predicted relevance or preference scores for each item in the vocabulary for the given batch of users and sequences.
         scores = torch.matmul(logits, test_item_emb.transpose(0, 1))
         return scores

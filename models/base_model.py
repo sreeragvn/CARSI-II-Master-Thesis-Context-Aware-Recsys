@@ -12,7 +12,7 @@ class BaseModel(nn.Module):
 		# put hyperparams you need into self.xx
 		self.user_num = configs['data']['user_num']
 		self.item_num = configs['data']['item_num']
-		self.embedding_size = configs['model']['embedding_size']
+		self.embedding_size = configs['model']['item_embedding_size']
 
 		# initialize parameters
 	

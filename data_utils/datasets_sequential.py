@@ -17,7 +17,7 @@ class SequentialDataset(data.Dataset):
         self.mode = mode
 
         self.max_dynamic_context_length = configs['data']['dynamic_context_window_length']
-        self.max_seq_len = configs['model']['max_seq_len']
+        self.max_seq_len = configs['model']['sasrec_max_seq_len']
         self.user_history_lists = {user: seq for user,
                                    seq in zip(user_seqs["uid"], user_seqs["item_seq"])}
         self.user_history_time_delta_lists = {user: time_delta for user,
@@ -58,10 +58,10 @@ class SequentialDataset(data.Dataset):
         return time_delta
 
     def _pad_context(self, lst):
-        if len(lst) < self.max_dynamic_context_length:
-            zeros_before = (self.max_dynamic_context_length - len(lst))
-            return [0] * zeros_before + lst
-        elif len(lst) > self.max_dynamic_context_length:
+        # if len(lst) < self.max_dynamic_context_length:
+        #     zeros_before = (self.max_dynamic_context_length - len(lst))
+        #     return [0] * zeros_before + lst
+        if len(lst) > self.max_dynamic_context_length:
             return lst[-self.max_dynamic_context_length:]
         else:
             return lst
@@ -125,13 +125,7 @@ class SequentialDataset(data.Dataset):
                     dense_static_context,
                     len(seq_i)
                 )
-            
-            # print("uid:", result[0])
-            # print("padded_seq shape:", result[1].shape)
-            # print("last_item:", result[2])
-            # print("padded_time_delta shape:", result[3].shape)
-            # print("context_values shape:", result[4].shape if len(result) > 4 else None)
-
+                
             return result
         except Exception as e:
             print("Error:", e)

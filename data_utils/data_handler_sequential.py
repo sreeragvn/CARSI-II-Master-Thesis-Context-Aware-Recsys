@@ -63,7 +63,7 @@ class DataHandlerSequential:
         small_dict = {}
         count = 0
         for key, value in data.items():
-            if count < configs['train']['test_run_sample_no']:
+            if count < configs['experiment']['test_run_sample_no']:
                 small_dict[key] = value
                 count += 1
             else:
@@ -81,7 +81,7 @@ class DataHandlerSequential:
                 context_dict[window_id] = {
                     column: group[column].tolist() for column in context.columns.difference(['window_id'])
                 }
-            if configs['train']['model_test_run']:
+            if configs['experiment']['model_test_run']:
                 context_dict = self._sample_context_data(context_dict)
             return context_dict
         except Exception as e:
@@ -103,7 +103,7 @@ class DataHandlerSequential:
                 session_key = row['window_id']
                 row_dict = row.drop('window_id').to_dict()
                 context_dict[session_key] = row_dict
-            if configs['train']['model_test_run']:
+            if configs['experiment']['model_test_run']:
                 context_dict = self._sample_context_data(context_dict)
             return context_dict
         except Exception as e:
@@ -120,7 +120,7 @@ class DataHandlerSequential:
                 session_key = row['window_id']
                 row_dict = row.drop('window_id').to_dict()
                 context_dict[session_key] = row_dict
-            if configs['train']['model_test_run']:
+            if configs['experiment']['model_test_run']:
                 context_dict = self._sample_context_data(context_dict)
             return context_dict
         except Exception as e:
@@ -169,8 +169,8 @@ class DataHandlerSequential:
         dense_static_context_train =  self._read_csv_dense_static_context(self.trn_dense_static_context_file)
         dense_static_context_test =  self._read_csv_dense_static_context(self.tst_dense_static_context_file)
 
-        if configs['train']['model_test_run']:
-            user_seqs_train  = {key: value[:configs['train']['test_run_sample_no']] for key, value in user_seqs_train.items()}
+        if configs['experiment']['model_test_run']:
+            user_seqs_train  = {key: value[:configs['experiment']['test_run_sample_no']] for key, value in user_seqs_train.items()}
             user_seqs_test = user_seqs_train
             dynamic_context_test = dynamic_context_train
             static_context_test = static_context_train
@@ -184,12 +184,12 @@ class DataHandlerSequential:
         #     trn_data = SequentialDataset(user_seqs_train, user_seqs_aug=user_seqs_aug)
         # else:
         #     trn_data = SequentialDataset(user_seqs_train)
-
         #Only implementing the case of no sequence augmentations _seq_aug
+
         trn_data = SequentialDataset(user_seqs_train, dynamic_context_train, static_context_train, dense_static_context_train)
         tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
 
         self.test_dataloader = data.DataLoader(
             tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
         self.train_dataloader = data.DataLoader(
-            trn_data, batch_size=configs['train']['batch_size'], shuffle=False, num_workers=0)
+            trn_data, batch_size=configs['train']['batch_size'], shuffle=True, num_workers=0)

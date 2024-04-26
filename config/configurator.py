@@ -3,43 +3,46 @@ import yaml
 import argparse
 import torch
 
-def parse_configure():
+def parse_arguments():
     parser = argparse.ArgumentParser(description='SSLRec')
     parser.add_argument('--model', type=str, default="CL4SRec",  help='Model name')
     parser.add_argument('--dataset', type=str, default=None, help='Dataset name')
     parser.add_argument('--device', type=str, default='cuda', help='cpu or cuda')
     parser.add_argument('--cuda', type=str, default='0', help='Device number')
     args = parser.parse_args()
+    return args
 
+def device_availability(args):
     if args.device == 'cuda' and not torch.cuda.is_available():
-                print("CUDA is not available. Switching to CPU.")
-                args.device = 'cpu'
-
+        print("CUDA is not available. Switching to CPU.")
+        args.device = 'cpu'
     if args.device == 'cuda':
         os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
 
-    if args.model == None:
-        raise Exception("Please provide the model name through --model.")
+def load_model_config(args):
     model_name = args.model.lower()
     if not os.path.exists('./config/modelconf/{}.yml'.format(model_name)):
         raise Exception("Please create the yaml file for your model first.")
 
     with open('./config/modelconf/{}.yml'.format(model_name), encoding='utf-8') as f:
         config_data = f.read()
-        configs = yaml.safe_load(config_data)
+        configs     = yaml.safe_load(config_data)
+        return configs
 
-        if configs['train']['standard_test'] and configs['train']['model_test_run']:
-             configs['train']['experiment_name'] = 'test'
-             configs['train']['test_run_sample_no'] = 64
-             configs['train']['batch_size'] =  64
-             configs['train']['epoch'] =  10
-             configs['test']['batch_size'] = 64
-             configs['train']['save_model'] = False
-             configs['train']['tensorboard'] = True
-             configs['train']['ssl'] = False
-             configs['train']['pretrain'] = False
-             configs['train']['train_checkpoints'] = False
-
+def update_configuration(configs, args):
+        if configs['experiment'].get('standard_test') and configs['experiment'].get('model_test_run'):
+            configs['experiment'].update({
+                'experiment_name': 'test',
+                'test_run_sample_no': 64,
+                'save_model': False,
+                'tensorboard': True,
+                'pretrain': False,
+                'train_checkpoints': False
+            })
+            configs['test']['batch_size'] = 64
+            configs['train']['batch_size'] = 64
+            configs['train']['epoch'] = 10
+            configs['train']['ssl'] = False
         # model name
         configs['model']['name'] = configs['model']['name'].lower()
 
@@ -66,9 +69,14 @@ def parse_configure():
                 configs['train']['early_stop'] = True
         else:
             configs['train']['early_stop'] = False
-
-
-
-        return configs
+    
+def parse_configure():
+    args = parse_arguments()
+    device_availability(args)
+    if args.model is None:
+        raise ValueError("Please specify a model name using the --model option.")
+    configs = load_model_config(args)
+    update_configuration(configs=configs, args=args)
+    return configs
 
 configs = parse_configure()

@@ -21,9 +21,9 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.tensorboard import SummaryWriter
 
-configs['test']['save_path'] = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))+ str(' ') +configs['train']['experiment_name']
+configs['test']['save_path'] = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))+ str(' ') +configs['experiment']['experiment_name']
 
-if 'tensorboard' in configs['train'] and configs['train']['tensorboard']:
+if 'tensorboard' in configs['train'] and configs['experiment']['tensorboard']:
     timestr = configs['test']['save_path']
     writer = SummaryWriter(log_dir=f'runs/{timestr}')
     configs['test']['tensorboard'] = writer
@@ -33,7 +33,7 @@ else:
 def init_seed():
     if 'reproducible' in configs['train']:
         if configs['train']['reproducible']:
-            seed = configs['train']['seed']
+            seed = configs['experiment']['seed']
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
@@ -55,11 +55,11 @@ class Trainer(object):
         # total_epochs = configs['train']['epoch']
         # gamma = (final_lr / initial_lr) ** (1 / total_epochs)
         gamma = optim_config['gamma']
-        warmup_steps = int(configs['train']['epoch'] * 0.4)
-        d_model = configs['model']['embedding_size']
+        # warmup_steps = int(configs['train']['epoch'] * 0.4)
+        # d_model = configs['model']['item_embedding_size']
 
-        def lr_lambda(step):
-            return (d_model ** -0.5) * min((step + 1) ** (-0.5), (step + 1) * warmup_steps ** (-1.5))
+        # def lr_lambda(step):
+        #     return (d_model ** -0.5) * min((step + 1) ** (-0.5), (step + 1) * warmup_steps ** (-1.5))
 
 
         if optim_config['name'] == 'adam':
@@ -257,7 +257,7 @@ class Trainer(object):
         return eval_result
 
     def save_model(self, model):
-        if configs['train']['save_model']:
+        if configs['experiment']['save_model']:
             model_state_dict = model.state_dict()
             model_name = configs['model']['name']
             data_name = configs['data']['name']
@@ -282,7 +282,7 @@ class Trainer(object):
 
     def load_model(self, model):
         if 'pretrain_path' in configs['train']:
-            pretrain_path = configs['train']['pretrain_path']
+            pretrain_path = configs['experiment']['pretrain_path']
             model.load_state_dict(torch.load(pretrain_path))
             self.logger.log(
                 "Load model parameters from {}".format(pretrain_path))
