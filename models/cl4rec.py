@@ -104,8 +104,8 @@ class CL4Rec(BaseModel):
 
         if configs['train']['ssl']:
             aug_seq1, aug_seq2 = self._cl4rec_aug(batch_seqs, batch_time_deltas)
-            seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context)
-            seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context)
+            seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context, batch_dense_static_context)
+            seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context, batch_dense_static_context)
             # Compute InfoNCE Loss (Contrastive Loss):
             # Computes the InfoNCE loss (contrastive loss) between the representations of the augmented sequences. 
             # The temperature parameter (temp) and batch size are specified.
@@ -125,26 +125,10 @@ class CL4Rec(BaseModel):
             }
         return loss + cl_loss, loss_dict
 
-    def predict(self, batch_data):
-        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context , batch_dense_static_context,  _  = batch_data
-        logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context)
-        
-        test_item_emb = self.interaction_encoder.emb_layer.token_emb(batch_last_items)
-
-        scores = torch.mul(logits, test_item_emb).sum(dim=1)  
-        return scores
-
     def full_predict(self, batch_data):
-        # The method is responsible for generating predictions (scores) for items based on the given input sequences. It uses the learned representations from the model to calculate compatibility scores between the user and each item, providing a ranking of items for recommendation. This method is commonly used during the inference phase of a recommendation system.
-        # Input Data:Similar to the cal_loss method, batch_data is expected to be a tuple containing three elements: batch_user, batch_seqs, and an ignored third element (_). These elements likely represent user identifiers, sequences of items, and some additional information.
         _, batch_seqs, _, _, batch_dynamic_context, batch_static_context, batch_dense_static_context,  _  = batch_data
-        # Sequential Output:Calls the forward method to obtain the output representation (logits) for the input sequences (batch_seqs).
         logits = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, batch_dense_static_context)
-        # Compute Logits for All Items:Computes scores by performing matrix multiplication between the sequence output (logits) and the transpose of the embedding weights for items (test_item_emb). This operation calculates the compatibility scores between the user representations and representations of all items.
-    
         test_item_emb = self.interaction_encoder.emb_layer.token_emb.weight[:self.item_num+1]
-        # test_item_emb = sasrec.emb_layer.token_emb.weight[:self.item_num + 1]
-        # Return Predicted Scores:Returns the computed scores, which represent the predicted relevance or preference scores for each item in the vocabulary for the given batch of users and sequences.
         scores = torch.matmul(logits, test_item_emb.transpose(0, 1))
         return scores
 

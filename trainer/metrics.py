@@ -63,57 +63,12 @@ class Metric(object):
         self.cm(pred_scores, true_labels)
         computed_confusion = self.cm(pred_scores, true_labels).cpu().numpy()
         im = self.plot_confusion_matrix(computed_confusion)
-            # self.writer.add_image(f"confusion_matrix/{configs['test']['data']}", im)
-            # cm_name = configs['test']['save_path']
-            # file_path = 'results_metrics/'
-            # if not os.path.exists(file_path):
-            #     os.makedirs(file_path)
-            # np.savetxt(file_path+f'cm_{cm_name}.csv', computed_confusion, delimiter=',', fmt='%d')
         return metrics_data, im
 
     def eval(self, model, test_dataloader, test=False):
         metrics_data, cm_im = self.eval_new(model, test_dataloader, test)
         return metrics_data, cm_im
-
-    # def plot_confusion_matrix(self, computed_confusion):
-    #     """
-    #     Plot confusion matrix.
-    #     """
-    #     df_cm = pd.DataFrame(
-    #             computed_confusion,
-    #             index=self._label_mapping.values(),
-    #             columns=self._label_mapping.values(),
-    #         )
-    #     fig, ax = plt.subplots(figsize=(15, 7))
-    #     fig.subplots_adjust(left=0.05, right=.65)
-    #     sn.set(font_scale=1.2)
-
-    #     # Plot the confusion matrix without a heatmap palette
-    #     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, fmt='d', ax=ax, cmap='Greens', cbar=False)
-
-    #     # Loop through the diagonal elements to add green background
-    #     for i in range(len(df_cm)):
-    #         ax.add_patch(Rectangle((i, i), 1, 1, fill=True, color='green', alpha=0.3))
-
-    #     # Loop through the texts to set text color
-    #     for text in ax.texts:
-    #         text.set_color('black')  # Set text color to black
-
-    #     ax.legend(
-    #         self._label_mapping.values(),
-    #         self._label_mapping.keys(),
-    #         handler_map={int: self.IntHandler()},
-    #         loc='upper left',
-    #         bbox_to_anchor=(1.2, 1)
-    #     )
-    #     buf = io.BytesIO()
-    #     plt.savefig(buf, format='jpeg', bbox_inches='tight')
-    #     plt.close() 
-    #     buf.seek(0)
-    #     im = Image.open(buf)
-    #     im = transforms.ToTensor()(im)
-    #     return im
-
+    
     def plot_confusion_matrix(self, computed_confusion):
         """
         Plot confusion matrix.
@@ -127,25 +82,22 @@ class Metric(object):
         fig.subplots_adjust(left=0.05, right=.65)
         sn.set(font_scale=1.2)
 
-        # Plot the confusion matrix without a heatmap palette
         sn.heatmap(df_cm, annot=True, annot_kws={"size": 14}, fmt='d', ax=ax, cmap='Greens', cbar=False)
 
-        # Loop through the elements to add green background for non-zero numbers
+        # Add green background for non-zero numbers
         for i in range(len(df_cm)):
             ax.add_patch(Rectangle((i, i), 1, 1, fill=True, color='green', alpha=0.3))
             for j in range(len(df_cm)):
                 value = df_cm.iloc[i, j]
                 if value != 0 and i !=j:
-                    # Calculate darkness of green based on the numerical value
+                    # Darkness of green based on the numerical value
                     alpha = min(0.3 + 0.7 * (value / df_cm.values.max()), 1.0)
                     ax.add_patch(Rectangle((j, i), 1, 1, fill=True, color=(1, 1, 0, alpha)))
                 elif i ==j:
                     ax.add_patch(Rectangle((i, j), 1, 1, fill=True, color=(0, 1, 0), alpha=0.5))
 
-
-        # Loop through the texts to set text color
         for text in ax.texts:
-            text.set_color('black')  # Set text color to black
+            text.set_color('black')  # text color to black
 
         ax.set_xlabel('Predicted Labels')
         ax.set_ylabel('True Labels')

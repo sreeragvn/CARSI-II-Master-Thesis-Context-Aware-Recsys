@@ -47,33 +47,37 @@ class Trainer(object):
         self.data_handler = data_handler
         self.logger = logger
         self.metric = Metric()
+    
+    # def lr_lambda(self, step):
+    #     warmup_steps = int(configs['train']['epoch'] * 0.4)
+    #     d_model = configs['model']['item_embedding_size']
+    #     return (d_model ** -0.5) * min((step + 1) ** (-0.5), (step + 1) * warmup_steps ** (-1.5))
 
     def create_optimizer(self, model):
         optim_config = configs['optimizer']
         initial_lr = optim_config['lr']
         # final_lr = optim_config['final_lr']
         # total_epochs = configs['train']['epoch']
-        # gamma = (final_lr / initial_lr) ** (1 / total_epochs)
         gamma = optim_config['gamma']
-        # warmup_steps = int(configs['train']['epoch'] * 0.4)
-        # d_model = configs['model']['item_embedding_size']
-
-        # def lr_lambda(step):
-        #     return (d_model ** -0.5) * min((step + 1) ** (-0.5), (step + 1) * warmup_steps ** (-1.5))
-
 
         if optim_config['name'] == 'adam':
-            # self.optimizer = optim.Adam(model.parameters(
-            # ), lr=initial_lr, betas=(0.9, 0.98), eps=1e-09, weight_decay=optim_config['weight_decay'])
-            self.optimizer = optim.Adam(model.parameters(
-            ), lr=initial_lr, weight_decay=optim_config['weight_decay'])
-            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=gamma, min_lr=1e-6)
+            # self.optimizer = optim.Adam(model.parameters(), 
+            #                             lr=initial_lr, 
+            #                             betas=(0.9, 0.98), 
+            #                             eps=1e-09, 
+            #                             weight_decay=optim_config['weight_decay'])
+            self.optimizer = optim.Adam(model.parameters(), 
+                                        lr=initial_lr, 
+                                        weight_decay=optim_config['weight_decay'])
+            self.scheduler = ReduceLROnPlateau(self.optimizer, 
+                                               mode='min', 
+                                               patience=5, 
+                                               factor=gamma, min_lr=1e-6)
             # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
             # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
             # self.scheduler = LambdaLR(self.optimizer, lr_lambda)
 
     def train_epoch(self, model, epoch_idx):
-        # Calls the sample_negs method on the training dataset, which might be related to negative sampling in recommendation systems.
         train_dataloader = self.data_handler.train_dataloader
         #todo val loss and train loss are different in model test run where you have both dataset the same. check this.
         # train_dataloader.dataset.sample_negs()

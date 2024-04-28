@@ -7,7 +7,7 @@ optimizer:
 
 experiment:
   model_test_run: false
-  experiment_name: focalloss witout grad acc
+  experiment_name: focalloss embsize 512
   standard_test: True
   test_run_sample_no: 100
   save_model: true

@@ -48,8 +48,12 @@ class sasrec(nn.Module):
             elif isinstance(module, nn.LayerNorm):
                 module.bias.data.zero_()
                 module.weight.data.fill_(1.0)
-            if isinstance(module, nn.Linear) and module.bias is not None:
-                module.bias.data.zero_()
+            # if isinstance(module, nn.Linear) and module.bias is not None:
+            #     module.bias.data.zero_()
+            if isinstance(module, nn.Linear):
+                nn.init.xavier_normal_(module.weight.data, gain=nn.init.calculate_gain('relu'))
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
 
     def forward(self, batch_seqs):
         mask = (batch_seqs > 0).unsqueeze(1).repeat(
