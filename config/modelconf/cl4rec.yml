@@ -6,8 +6,8 @@ optimizer:
   gamma: 0.9995
 
 experiment:
-  model_test_run: false
-  experiment_name: focalloss embsize 512
+  model_test_run: true
+  experiment_name: test run with tcn update seq len 3
   standard_test: True
   test_run_sample_no: 100
   save_model: true
@@ -20,7 +20,7 @@ experiment:
 train:
   weighted_loss_fn: true
   epoch: 5000
-  scheduler: true
+  scheduler: 0
   batch_size: 256
   ssl: false
   min_time_reorder: 0.5
@@ -48,20 +48,20 @@ data:
 
 model:
   name: cl4rec
-  context_encoder: tempcnn
+  context_encoder: tempcnn  #tempcnn
   encoder_combine: concat
-  tcn_num_channels: [80, 50, 25]
+  tcn_num_channels: [30, 20, 10]
   tcn_kernel_size: 3
-  dropout_rate_tcn: 0.1
+  dropout_rate_tcn: 0.35
   dropout_rate_fc_tcn: 0.4
   dropout_rate_sasrec: 0.3
   dropout_rate_fc_sasrec: 0.4
   dropout_rate_fc_concat: 0.4
-  dropout_rate_fc_static: 0.1
+  dropout_rate_fc_static: 0.4
   sasrec_n_layers: 2
   item_embedding_size: 64
   sasrec_n_heads: 2
-  sasrec_max_seq_len: 10
+  sasrec_max_seq_len: 30
   cl_lmd: 0.1
   cl_tau: 1
   lstm_hidden_size: 512

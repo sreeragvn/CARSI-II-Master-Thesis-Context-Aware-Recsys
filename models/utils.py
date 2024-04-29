@@ -16,7 +16,8 @@ def weights_init(m):
                 n = param.size(0)
                 param.data[n//4:n//2].fill_(1.0)
     elif isinstance(m, nn.Conv2d) or isinstance(m, nn.Conv1d):
-        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        nn.init.normal_(0, 0.01)
         # nn.init.normal_(m.weight.data, 0, 0.01)
         if m.bias is not None:
             nn.init.zeros_(m.bias)

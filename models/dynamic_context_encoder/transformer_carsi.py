@@ -4,6 +4,7 @@ from torch import nn
 from config.configurator import configs
 import torch.nn.functional as F
 from models.utils import weights_init
+from models.utils import Flatten_layers
 
 class TransformerEncoder_DynamicContext(nn.Module):
     def __init__(self):
@@ -35,7 +36,7 @@ class TransformerEncoder_DynamicContext(nn.Module):
             nn.ReLU(),
             nn.Linear(feed_forward_size, self.hidden_dim)
         )
-        self.fc_out1 = nn.Linear(self.hidden_dim, 64)
+        # self.fc_out1 = nn.Linear(self.hidden_dim, 64)
         self.apply(weights_init)
 
     def positional_encoding(self):

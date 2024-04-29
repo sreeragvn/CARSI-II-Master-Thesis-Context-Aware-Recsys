@@ -12,7 +12,7 @@ from models.base_model import BaseModel
 from models.interaction_encoder.sasrec import sasrec
 from models.utils import Flatten_layers
 from models.dynamic_context_encoder.lstm import lstm_context_encoder
-from models.dynamic_context_encoder.transformer import TransformerEncoder_DynamicContext
+from models.dynamic_context_encoder.transformer_carsi import TransformerEncoder_DynamicContext
 from models.dynamic_context_encoder.tcn_model import TCNModel
 from models.static_context_encoder.static_context_encoder import static_context_encoder
 from trainer.loss import loss_function
