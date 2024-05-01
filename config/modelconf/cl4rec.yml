@@ -6,8 +6,8 @@ optimizer:
   gamma: 0.9995
 
 experiment:
-  model_test_run: true
-  experiment_name: test run with tcn update seq len 3
+  model_test_run: false
+  experiment_name: test run withcarsii transformer
   standard_test: True
   test_run_sample_no: 100
   save_model: true
@@ -48,7 +48,7 @@ data:
 
 model:
   name: cl4rec
-  context_encoder: tempcnn  #tempcnn
+  context_encoder: transformer  #tempcnn
   encoder_combine: concat
   tcn_num_channels: [30, 20, 10]
   tcn_kernel_size: 3
@@ -61,7 +61,7 @@ model:
   sasrec_n_layers: 2
   item_embedding_size: 64
   sasrec_n_heads: 2
-  sasrec_max_seq_len: 30
+  sasrec_max_seq_len: 50
   cl_lmd: 0.1
   cl_tau: 1
   lstm_hidden_size: 512

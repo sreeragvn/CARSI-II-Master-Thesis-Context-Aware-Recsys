@@ -95,7 +95,8 @@ class TCNModel(nn.Module):
         # print(out.size())
         # print('tcn ouput', out.size())
         # out =  F.avg_pool1d(out, kernel_size=4)
-        out = out.view(x.size(0), -1)
+        # out = out.view(x.size(0), -1)
+        out = torch.flatten(out, 1) # flatten all dimensions except batch
         # print('flat tcn out size', out.size())
         out = self.fc(out)
         # print('tcn out after fc', out.size())

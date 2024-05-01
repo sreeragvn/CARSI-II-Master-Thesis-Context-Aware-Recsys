@@ -55,7 +55,7 @@ class CL4Rec(BaseModel):
             self.input_size_fc_concat = 88
         elif model_config['context_encoder'] == 'transformer':
             self.context_encoder = TransformerEncoder_DynamicContext()
-            self.input_size_fc_concat = 6400 + 2 * self.emb_size
+            self.input_size_fc_concat = 2 * self.embedding_size + 32
         elif model_config['context_encoder'] == 'tempcnn':
             self.context_encoder = TCNModel()
             self.input_size_fc_concat = 2 * self.embedding_size + 32
