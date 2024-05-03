@@ -35,7 +35,7 @@ class sasrec(nn.Module):
                                                                     feed_forward_size = self.inner_size, 
                                                                     dropout_rate = self.dropout_rate_trans) 
                                                                     for _ in range(self.n_layers)])
-        self.fc_layers = Flatten_layers(input_size =  self.emb_size, #(self.max_len) * self.emb_size, 
+        self.fc_layers = Flatten_layers(input_size =  (self.max_len) * self.emb_size, 
                                                 emb_size = self.emb_size, 
                                                 dropout_p = self.dropout_rate_fc_trans)
         self.apply(self._init_weights)
@@ -64,7 +64,7 @@ class sasrec(nn.Module):
         # print('sasrec out', x.size())
         # x =  F.avg_pool1d(x, kernel_size=2)
         # all_tokens_except_last = x[:, :-1, :]
-        x = x[:, -1, :]
+        # x = x[:, -1, :]
         # sasrec_out = x.view(x.size(0), -1)
         sasrec_out = t.flatten(x, 1) 
         # print('sasrec out flat', sasrec_out.size())

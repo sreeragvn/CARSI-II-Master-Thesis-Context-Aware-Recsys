@@ -3,6 +3,7 @@ from torch import nn
 from config.configurator import configs
 import math
 from models.utils import weights_init
+from models.attention import OA
 
 
 class static_context_encoder(nn.Module):
@@ -18,7 +19,7 @@ class static_context_encoder(nn.Module):
         self.embedding_layers.extend([nn.Embedding(num_embeddings=max_val+1, 
                                                     embedding_dim=2) 
                                                     for max_val in  vocab_sizes[3:]])# last 3 values are the non cyclical one
-        output_size = 32
+        output_size = 64
         self.linear = nn.Linear(3,3)
         self.linear2 = nn.Linear(len(vocab_sizes)*2+3,output_size)
         self.bn1 = nn.BatchNorm1d(len(vocab_sizes)*2+3) 

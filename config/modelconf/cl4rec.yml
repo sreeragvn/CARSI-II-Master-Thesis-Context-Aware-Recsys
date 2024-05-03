@@ -1,7 +1,7 @@
 optimizer:
   name: adam
   lr: 5.0e-3
-  final_lr: 1.0e-6
+  final_lr: 5.0e-4
   weight_decay: 0
   gamma: 0.9995
 
@@ -15,12 +15,12 @@ experiment:
   seed: 12
   tensorboard: true
   pretrain: false
-  pretrain_path: cl4rec-featengg-2024-04-26_19-26 focalloss witout grad acc.pth
+  pretrain_path: cl4rec-featengg-2024-05-02_17-24 test run withcarsii transformer.pth
 
 train:
   weighted_loss_fn: true
   epoch: 5000
-  scheduler: 0
+  scheduler: true
   batch_size: 256
   ssl: false
   min_time_reorder: 0.5
@@ -48,7 +48,7 @@ data:
 
 model:
   name: cl4rec
-  context_encoder: transformer  #tempcnn
+  context_encoder: tempcnn  #tempcnn
   encoder_combine: concat
   tcn_num_channels: [30, 20, 10]
   tcn_kernel_size: 3

@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from config.configurator import configs
 from models.utils import Flatten_layers
 from models.utils import weights_init
-
+from models.attention import OA
 class Chomp1d(nn.Module):
     def __init__(self, chomp_size):
         super(Chomp1d, self).__init__()
@@ -88,10 +88,12 @@ class TCNModel(nn.Module):
         #     num_input, num_channels, kernel_size=kernel_size, dropout=dropout)
         self.dropout = nn.Dropout(dropout)
         self.fc = Flatten_layers(num_channels[-1]*dynamic_context_window_size, emb_size, dropout_p=dropout_fc)
+        self.attention = OA(10)
 
     def forward(self, x):
         # x = x.permute(0, 2, 1)
         out = self.tcn(x)
+        out = self.attention(out)
         # print(out.size())
         # print('tcn ouput', out.size())
         # out =  F.avg_pool1d(out, kernel_size=4)

@@ -16,6 +16,7 @@ from models.dynamic_context_encoder.transformer_carsi import TransformerEncoder_
 from models.dynamic_context_encoder.tcn_model import TCNModel
 from models.static_context_encoder.static_context_encoder import static_context_encoder
 from trainer.loss import loss_function
+from models.attention import OA
 
 class CL4Rec(BaseModel):
     def __init__(self, data_handler):
@@ -58,11 +59,13 @@ class CL4Rec(BaseModel):
             self.input_size_fc_concat = 2 * self.embedding_size + 32
         elif model_config['context_encoder'] == 'tempcnn':
             self.context_encoder = TCNModel()
-            self.input_size_fc_concat = 2 * self.embedding_size + 32
+            self.input_size_fc_concat = 192 # 2 * self.embedding_size + 32
 
     def _encoder_correlation(self):
         if configs['model']['encoder_combine'] == 'concat':
         # FCs after concatenation layer
+            channels = configs['model']['item_embedding_size']
+            self.correlation = OA(channels)
             self.fc_layers_concat = Flatten_layers(input_size = self.input_size_fc_concat, 
                                                    emb_size = self.emb_size, 
                                                    dropout_p=self.dropout_rate_fc_concat)
@@ -83,9 +86,12 @@ class CL4Rec(BaseModel):
         context_output = self.context_encoder(batch_context)
 
         static_context = self.static_embedding(batch_static_context, batch_dense_static_context)
-        context = torch.cat((context_output, static_context), dim=1)
+        # context = torch.cat((context_output, static_context), dim=1)
         if configs['model']['encoder_combine'] == 'concat':
-            out = torch.cat((sasrec_out, context), dim=1)
+            out = torch.cat((static_context.unsqueeze(2), context_output.unsqueeze(2), sasrec_out.unsqueeze(2)), dim=2)
+            out = self.correlation(out)
+            out = torch.flatten(out, 1)
+            # out = torch.cat((sasrec_out, context), dim=1)
             # print('after concat', out.size())
             out = self.fc_layers_concat(out)
             # print('after concat flatten fc', out.size())
