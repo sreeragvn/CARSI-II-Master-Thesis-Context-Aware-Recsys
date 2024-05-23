@@ -16,7 +16,7 @@ class sasrec(nn.Module):
         data_config = configs['data']
         model_config = configs['model']
 
-        self.item_num = data_config['item_num']
+        self.item_num = data_config['item_num'] + 1
         self.emb_size = model_config['item_embedding_size']
         self.max_len = model_config['sasrec_max_seq_len']
         self.n_layers = model_config['sasrec_n_layers']

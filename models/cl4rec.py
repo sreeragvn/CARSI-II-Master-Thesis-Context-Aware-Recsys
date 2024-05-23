@@ -95,7 +95,7 @@ class CL4Rec(BaseModel):
         return out
 
     def cal_loss(self, batch_data):
-        _, batch_seqs, batch_last_items, batch_time_deltas, batch_dynamic_context, batch_static_context, batch_dense_static_context, _ = batch_data
+        _, batch_seqs, batch_last_items, _, batch_dynamic_context, batch_static_context, batch_dense_static_context, _ = batch_data
         seq_output = self.forward(batch_seqs, batch_dynamic_context, batch_static_context, batch_dense_static_context)
 
         test_item_emb = self.interaction_encoder.emb_layer.token_emb.weight
@@ -103,7 +103,10 @@ class CL4Rec(BaseModel):
         loss = self.loss_func(logits, batch_last_items)
 
         if configs['train']['ssl']:
-            aug_seq1, aug_seq2 = self._cl4rec_aug(batch_seqs, batch_time_deltas)
+            aug_seq1, aug_seq2 = self._cl4rec_aug(batch_seqs)
+            # print('done')
+            # print(aug_seq1, aug_seq2)
+            # print(aug_seq1, aug_seq2, batch_seqs)
             seq_output1 = self.forward(aug_seq1, batch_dynamic_context, batch_static_context, batch_dense_static_context)
             seq_output2 = self.forward(aug_seq2, batch_dynamic_context, batch_static_context, batch_dense_static_context)
             # Compute InfoNCE Loss (Contrastive Loss):
@@ -165,8 +168,11 @@ class CL4Rec(BaseModel):
         info_nce_loss = self.cl_loss_func(logits, labels)
         return info_nce_loss
 
-    def _cl4rec_aug(self, batch_seqs, batch_time_deltas_seqs):
+    def _cl4rec_aug(self, batch_seqs):
+        # print(batch_seqs)
         def item_crop(seq, length, eta=0.6):
+            # print('crop')
+            # print(seq, len(seq), max(seq), length)
             num_left = math.floor(length * eta)
             crop_begin = random.randint(0, length - num_left)
             croped_item_seq = np.zeros_like(seq)
@@ -174,71 +180,76 @@ class CL4Rec(BaseModel):
                 croped_item_seq[-num_left:] = seq[-(crop_begin + num_left):-crop_begin]
             else:
                 croped_item_seq[-num_left:] = seq[-(crop_begin + num_left):]
+            # print( croped_item_seq.tolist(), len(croped_item_seq.tolist()), max(croped_item_seq.tolist()), num_left)
             return croped_item_seq.tolist(), num_left
 
         def item_mask(seq, length, gamma=0.3):
+            # print('mask')
+            # print(seq, len(seq), max(seq), length)
             num_mask = math.floor(length * gamma)
+            # print(num_mask)
             mask_index = random.sample(range(length), k=num_mask)
+            # print(mask_index)
             masked_item_seq = seq[:]
             # token 0 has been used for semantic masking
             mask_index = [-i-1 for i in mask_index]
+            # print(mask_index)
+            # print(self.mask_token)
             masked_item_seq[mask_index] = self.mask_token
+            # print( self.mask_token)
+            # print(masked_item_seq.tolist(), len(masked_item_seq.tolist()), max(masked_item_seq.tolist()) ,length)
             return masked_item_seq.tolist(), length
 
-        def item_reorder(seq, length, selected_elements, beta=0.6):
-            reordered_item_seq = seq.copy()
-            random.shuffle(selected_elements)
-            for i, index in enumerate(longest_sequence):
-                reordered_item_seq[index] = selected_elements[i]
+        # def item_reorder(seq, length, beta=0.6):
+        #     print('reorder', seq, len(seq),  max(seq), length)
+        #     num_reorder = math.floor(length * beta)
+        #     reorder_begin = random.randint(0, length - num_reorder)
+        #     print(num_reorder, reorder_begin)
+        #     reordered_item_seq = seq[:]
+        #     shuffle_index = list(
+        #         range(reorder_begin, reorder_begin + num_reorder))
+        #     print(shuffle_index)
+        #     random.shuffle(shuffle_index)
+        #     shuffle_index = [-i for i in shuffle_index]
+        #     print(shuffle_index)
+        #     print(reordered_item_seq[shuffle_index])
+        #     print(reordered_item_seq[-(reorder_begin + 1 + num_reorder):-(reorder_begin+1)])
+        #     reordered_item_seq[-(reorder_begin + 1 + num_reorder):-(reorder_begin+1)] = reordered_item_seq[shuffle_index]
+        #     print(reordered_item_seq.tolist(), len(reordered_item_seq.tolist()),max(reordered_item_seq.tolist()), length)
+        #     return reordered_item_seq.tolist(), length
 
-            return reordered_item_seq, length
-        
-            # num_reorder = math.floor(length * beta)
-            # reorder_begin = random.randint(0, length - num_reorder)
-            # reordered_item_seq = seq[:]
-            # shuffle_index = list(
-            #     range(reorder_begin, reorder_begin + num_reorder))
-            # random.shuffle(shuffle_index)
-            # shuffle_index = [-i for i in shuffle_index]
-            # reordered_item_seq[-(reorder_begin + 1 + num_reorder):-(reorder_begin+1)] = reordered_item_seq[shuffle_index]
-            # return reordered_item_seq.tolist(), length
+        def item_reorder(seq, length, beta=0.6):
+            try:
+                num_reorder = math.floor(length * beta)
+                reorder_begin = random.randint(0, length - num_reorder)
+                reordered_item_seq = seq[:]
+                shuffle_index = list(range(reorder_begin, reorder_begin + num_reorder))
+                random.shuffle(shuffle_index)
+                shuffle_index = [-i for i in shuffle_index]
+                target_length = reorder_begin + 1 + num_reorder
+                if target_length > len(shuffle_index):
+                    target_length = len(shuffle_index)
+                slice_length = len(reordered_item_seq[-target_length:-(reorder_begin + 1)])
+                if slice_length != target_length:
+                    target_length = slice_length
+                reordered_item_seq[-target_length:-(reorder_begin + 1)] = [reordered_item_seq[i] for i in shuffle_index[:target_length]]
+                return reordered_item_seq.tolist(), length
 
-        # convert each batch into a list of list
+            except Exception as e:
+                # print(f"An error occurred: {e}")
+                return seq, length
+
         seqs = batch_seqs.tolist()
-        time_delta_seqs = batch_time_deltas_seqs.tolist()
-        ## a list of number of non zero elements in each sequence
         lengths = batch_seqs.count_nonzero(dim=1).tolist()
-
-        min_time_reorder = configs['train']['min_time_reorder']
 
         aug_seq1 = []
         aug_len1 = []
         aug_seq2 = []
         aug_len2 = []
-        #iterating through each sequence with in a batch
-        for seq, length, time_delta_seq in zip(seqs, lengths, time_delta_seqs):
+        for seq, length in zip(seqs, lengths):
             seq = np.asarray(seq.copy(), dtype=np.int64)
-            time_delta_seq = np.asarray(time_delta_seq.copy(), dtype=np.float64)
             if length > 1:
-                # finding if we have any interactions that happened within min_time_reorder
-                available_index = np.where((time_delta_seq != 0) & (time_delta_seq < min_time_reorder))[0].tolist()
-                interaction_equality = False
-                if len(available_index) != 0:
-                    consecutive_sequences = np.split(available_index, np.where(np.diff(available_index) != 1)[0] + 1)
-                    consecutive_sequences = [sequence.tolist() for sequence in consecutive_sequences]
-                    longest_sequence = max(consecutive_sequences, key=len, default=[])
-                    longest_sequence.insert(0, min(longest_sequence)-1)
-                    selected_elements = [seq[i] for i in longest_sequence]
-                    interaction_equality = all(x == selected_elements[0] for x in selected_elements)
-
-                if len(available_index) == 0 or interaction_equality:
-                    switch = random.sample(range(2), k=2)
-                else:
-                    switch = random.sample(range(3), k=2)
-                    if switch[0] == switch[1] == 2:
-                        coin  =  random.sample(range(2), k=1)
-                        value = random.sample(range(2), k=1)
-                        switch[coin[0]] = value[0]
+                switch = random.sample(range(3), k=2)
             else:
                 switch = [3, 3]
                 aug_seq = seq
@@ -248,7 +259,7 @@ class CL4Rec(BaseModel):
             elif switch[0] == 1:
                 aug_seq, aug_len = item_mask(seq, length)
             elif switch[0] == 2:
-                aug_seq, aug_len = item_reorder(seq, length, selected_elements)
+                aug_seq, aug_len = item_reorder(seq, length)
 
             if aug_len > 0:
                 aug_seq1.append(aug_seq)
@@ -262,7 +273,7 @@ class CL4Rec(BaseModel):
             elif switch[1] == 1:
                 aug_seq, aug_len = item_mask(seq, length)
             elif switch[1] == 2:
-                aug_seq, aug_len = item_reorder(seq, length, selected_elements)
+                aug_seq, aug_len = item_reorder(seq, length)
 
             if aug_len > 0:
                 aug_seq2.append(aug_seq)
@@ -271,6 +282,12 @@ class CL4Rec(BaseModel):
                 aug_seq2.append(seq.tolist())
                 aug_len2.append(length)
 
+        # aug_seq1 = torch.tensor(
+        #     aug_seq1, dtype=torch.long, device=batch_seqs.device)
+        # aug_seq2 = torch.tensor(
+        #     aug_seq2, dtype=torch.long, device=batch_seqs.device)
+        # return aug_seq1, aug_seq2
+        # Assuming aug_seq1 and aug_seq2 are lists of numpy.ndarrays
         aug_seq1 = torch.tensor(np.array(aug_seq1), dtype=torch.long, device=batch_seqs.device)
         aug_seq2 = torch.tensor(np.array(aug_seq2), dtype=torch.long, device=batch_seqs.device)
 
