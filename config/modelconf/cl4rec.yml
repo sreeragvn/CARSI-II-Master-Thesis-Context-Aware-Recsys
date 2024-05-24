@@ -7,21 +7,21 @@ optimizer:
 
 experiment:
   model_test_run: false
-  experiment_name: test run with tcn update seq len 3
+  experiment_name: test run with tcn update seq len 3 fewshot driver6
   standard_test: True
   test_run_sample_no: 100
   save_model: true
   reproducible: true
   seed: 12
   tensorboard: true
-  pretrain: false
-  pretrain_path: cl4rec-featengg-2024-04-26_19-26 focalloss witout grad acc.pth
+  pretrain: true
+  pretrain_path: cl4rec-cross_validation-2024-05-24_11-10 test run with tcn update seq len 3 driver6.pth
 
 train:
   weighted_loss_fn: true
-  epoch: 5000
+  epoch: 1000
   scheduler: 0
-  batch_size: 256
+  batch_size: 64
   ssl: false
   min_time_reorder: 0.5
   gradient_accumulation: false
@@ -36,13 +36,13 @@ train:
 test:
   metrics: [precision, recall, f1score, accuracy]
   k: [1, 2, 3]
-  batch_size: 1024
+  batch_size: 64
   train_eval: true
   log_loss: true
 
 data:
   type: sequential
-  name: featengg
+  name: few_shot
   seq_aug: false
   dynamic_context_window_length: 30
 
