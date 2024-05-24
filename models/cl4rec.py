@@ -63,6 +63,7 @@ class CL4Rec(BaseModel):
     def _encoder_correlation(self):
         if configs['model']['encoder_combine'] == 'concat':
         # FCs after concatenation layer
+            self.input_size_fc_concat = 256
             self.fc_layers_concat = Flatten_layers(input_size = self.input_size_fc_concat, 
                                                    emb_size = self.emb_size, 
                                                    dropout_p=self.dropout_rate_fc_concat)
@@ -82,10 +83,10 @@ class CL4Rec(BaseModel):
         sasrec_out = self.interaction_encoder(batch_seqs)
         context_output = self.context_encoder(batch_context)
 
-        static_context = self.static_embedding(batch_static_context, batch_dense_static_context)
-        context = torch.cat((context_output, static_context), dim=1)
+        # static_context = self.static_embedding(batch_static_context, batch_dense_static_context)
+        # context = torch.cat((context_output, static_context), dim=1)
         if configs['model']['encoder_combine'] == 'concat':
-            out = torch.cat((sasrec_out, context), dim=1)
+            out = torch.cat((sasrec_out, context_output), dim=1)
             # print('after concat', out.size())
             out = self.fc_layers_concat(out)
             # print('after concat flatten fc', out.size())
