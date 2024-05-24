@@ -7,14 +7,14 @@ optimizer:
 
 experiment:
   model_test_run: false
-  experiment_name: test run with tcn update seq len 3 fewshot driver6
+  experiment_name: ablation_no_transformer
   standard_test: True
   test_run_sample_no: 100
   save_model: true
   reproducible: true
   seed: 12
   tensorboard: true
-  pretrain: true
+  pretrain: false
   pretrain_path: cl4rec-cross_validation-2024-05-24_11-10 test run with tcn update seq len 3 driver6.pth
 
 train:
@@ -42,7 +42,7 @@ test:
 
 data:
   type: sequential
-  name: few_shot
+  name: featengg
   seq_aug: false
   dynamic_context_window_length: 30
 

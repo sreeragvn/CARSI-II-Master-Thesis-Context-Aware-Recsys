@@ -14,7 +14,7 @@ class DataHandlerSequential:
     def __init__(self):
         data_name = configs['data']['name']
 
-        predir = f'./datasets/sequential/{data_name}/driver_6'
+        predir = f'./datasets/sequential/{data_name}'
 
         configs['train']['parameter_class_weights_path']  = path.join(predir, 'parameters/param.pkl')
         configs['train']['parameter_label_mapping_path']  = path.join(predir, 'parameters/label_mapping.pkl')
