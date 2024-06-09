@@ -9,7 +9,11 @@ __MACOSX/
 .DS_Store
 log/
 runs/
-
+*.pdf
+*.csv
+*.xlsx
+Presentation/
+Literature review/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

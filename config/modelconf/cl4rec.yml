@@ -6,7 +6,7 @@ optimizer:
   gamma: 0.9995
 
 experiment:
-  model_test_run: false
+  model_test_run: true
   experiment_name: test run with tcn update seq len 3 fewshot driver6
   standard_test: True
   test_run_sample_no: 100
