@@ -6,22 +6,22 @@ optimizer:
   gamma: 0.9995
 
 experiment:
-  model_test_run: true
-  experiment_name: test run with tcn update seq len 3 fewshot driver6
+  model_test_run: false
+  experiment_name: carsi II model
   standard_test: True
   test_run_sample_no: 100
   save_model: true
   reproducible: true
   seed: 12
   tensorboard: true
-  pretrain: true
-  pretrain_path: cl4rec-cross_validation-2024-05-24_11-10 test run with tcn update seq len 3 driver6.pth
+  pretrain: false
+  pretrain_path: cl4rec-featengg-2024-04-26_19-26 focalloss witout grad acc.pth
 
 train:
   weighted_loss_fn: true
   epoch: 1000
-  scheduler: 0
-  batch_size: 64
+  scheduler: false
+  batch_size: 256
   ssl: false
   min_time_reorder: 0.5
   gradient_accumulation: false
@@ -34,22 +34,21 @@ train:
   focal_loss_gamma: 4
 
 test:
-  metrics: [precision, recall, f1score, accuracy]
-  k: [1, 2, 3]
-  batch_size: 64
+  metrics: [precision, recall, f1score, accuracy, AUROC]
+  k: [1, 2, 3, 4, 5]
+  batch_size: 1024
   train_eval: true
   log_loss: true
 
 data:
   type: sequential
-  name: few_shot
+  name: featengg
+  inference_data_folder: inference
   seq_aug: false
   dynamic_context_window_length: 30
 
 model:
   name: cl4rec
-  context_encoder: tempcnn  #tempcnn
-  encoder_combine: concat
   tcn_num_channels: [30, 20, 10]
   tcn_kernel_size: 3
   dropout_rate_tcn: 0.35
@@ -59,13 +58,9 @@ model:
   dropout_rate_fc_concat: 0.5
   dropout_rate_fc_static: 0.1
   sasrec_n_layers: 2
-  item_embedding_size: 128
+  item_embedding_size: 64
   sasrec_n_heads: 2
   sasrec_max_seq_len: 10
-  cl_lmd: 0.1
-  cl_tau: 1
-  lstm_hidden_size: 512
-  lstm_num_layers: 2
 
 tune:
   enable: false

@@ -21,8 +21,10 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.tensorboard import SummaryWriter
 
-configs['test']['save_path'] = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))+ str(' ') +configs['experiment']['experiment_name']
+# Set up save path for model checkpoints and TensorBoard logs
+configs['test']['save_path'] = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')) + ' ' + configs['experiment']['experiment_name']
 
+# Set up TensorBoard writer if enabled in the configuration
 if 'tensorboard' in configs['experiment'] and configs['experiment']['tensorboard']:
     timestr = configs['test']['save_path']
     writer = SummaryWriter(log_dir=f'runs/{timestr}')
@@ -31,9 +33,11 @@ else:
     writer = DisabledSummaryWriter()
 
 def init_seed():
-    if 'reproducible' in configs['experiment']:
-        if configs['experiment']['reproducible']:
-            seed = configs['experiment']['seed']
+    """
+    Initialize random seeds for reproducibility.
+    """
+    if 'reproducible' in configs['experiment'] and configs['experiment']['reproducible']:
+        seed = configs['experiment']['seed']
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
@@ -42,52 +46,46 @@ def init_seed():
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
-class Trainer(object):
+class Trainer:
+    """
+    Trainer class to handle model training, evaluation, and saving/loading checkpoints.
+    """
     def __init__(self, data_handler, logger):
         self.data_handler = data_handler
         self.logger = logger
         self.metric = Metric()
-    
-    # def lr_lambda(self, step):
-    #     warmup_steps = int(configs['train']['epoch'] * 0.4)
-    #     d_model = configs['model']['item_embedding_size']
-    #     return (d_model ** -0.5) * min((step + 1) ** (-0.5), (step + 1) * warmup_steps ** (-1.5))
 
     def create_optimizer(self, model):
+        """
+        Create optimizer and scheduler for the model.
+        
+        Args:
+            model (nn.Module): The model to optimize.
+        """
         optim_config = configs['optimizer']
         initial_lr = optim_config['lr']
-        # final_lr = optim_config['final_lr']
-        # total_epochs = configs['train']['epoch']
         gamma = optim_config['gamma']
 
         if optim_config['name'] == 'adam':
-            # self.optimizer = optim.Adam(model.parameters(), 
-            #                             lr=initial_lr, 
-            #                             betas=(0.9, 0.98), 
-            #                             eps=1e-09, 
-            #                             weight_decay=optim_config['weight_decay'])
-            self.optimizer = optim.Adam(model.parameters(), 
-                                        lr=initial_lr, 
-                                        weight_decay=optim_config['weight_decay'])
-            self.scheduler = ReduceLROnPlateau(self.optimizer, 
-                                               mode='min', 
-                                               patience=5, 
-                                               factor=gamma, min_lr=1e-6)
-            # self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[30, 60, 90, 120, 150, 180], gamma=0.1)
-            # self.scheduler = ExponentialLR(self.optimizer, gamma=gamma)
-            # self.scheduler = LambdaLR(self.optimizer, lr_lambda)
+            self.optimizer = optim.Adam(model.parameters(), lr=initial_lr, weight_decay=optim_config['weight_decay'])
+            self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=5, factor=gamma, min_lr=1e-6)
 
     def train_epoch(self, model, epoch_idx):
+        """
+        Train the model for one epoch.
+        
+        Args:
+            model (nn.Module): The model to train.
+            epoch_idx (int): The current epoch index.
+        """
         train_dataloader = self.data_handler.train_dataloader
-        #todo val loss and train loss are different in model test run where you have both dataset the same. check this.
-        # train_dataloader.dataset.sample_negs()
         loss_log_dict = {}
         ep_loss = 0
         steps = len(train_dataloader.dataset) // configs['train']['batch_size']
         model.train()
 
         for i, tem in tqdm(enumerate(train_dataloader), desc='Training Recommender', total=len(train_dataloader)):
-            if not configs['train']['gradient_accumulation']: 
+            if not configs['train']['gradient_accumulation']:
                 self.optimizer.zero_grad()
             batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
                                   else torch.stack([t.float().to(configs['device']) for t in x], dim=1), tem))
@@ -95,16 +93,10 @@ class Trainer(object):
             loss, loss_dict = model.cal_loss(batch_data)
             ep_loss += loss.item()
             loss.backward()
-            # self.optimizer.step()
             if configs['train']['gradient_accumulation'] and (i + 1) % configs['train']['accumulation_steps'] == 0:
-                # Perform gradient clipping
-                # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-
             elif not configs['train']['gradient_accumulation']:
-                # Perform gradient clipping
-                # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 self.optimizer.step()
                 
             for loss_name in loss_dict:
@@ -128,7 +120,13 @@ class Trainer(object):
             self.logger.log_loss(epoch_idx, train_loss_log_dict, save_to_log=False)
 
     def evaluate_val_loss(self, model, epoch_idx):
-
+        """
+        Evaluate the model on the validation dataset and log the loss.
+        
+        Args:
+            model (nn.Module): The model to evaluate.
+            epoch_idx (int): The current epoch index.
+        """
         test_loader = self.data_handler.test_dataloader
         loss_log_dict = {}
         ep_loss = 0
@@ -138,7 +136,7 @@ class Trainer(object):
         with torch.no_grad():
             for i, tem in enumerate(test_loader):
                 batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list) 
-                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1), tem))
+                                      else torch.stack([t.float().to(configs['device']) for t in x], dim=1), tem))
 
                 loss, loss_dict = model.cal_loss(batch_data)
                 ep_loss += loss.item()
@@ -162,6 +160,15 @@ class Trainer(object):
 
     @log_exceptions
     def train(self, model):
+        """
+        Train the model, including training epochs, validation, and testing.
+        
+        Args:
+            model (nn.Module): The model to train.
+        
+        Returns:
+            nn.Module: The trained model.
+        """
         total_parameters = model.count_parameters()
         print(f"Total number of parameters in the model: {total_parameters}")
         self.create_optimizer(model)
@@ -216,6 +223,16 @@ class Trainer(object):
 
     @log_exceptions
     def evaluate(self, model, epoch_idx=None):
+        """
+        Evaluate the model and log the evaluation results.
+        
+        Args:
+            model (nn.Module): The model to evaluate.
+            epoch_idx (int, optional): The current epoch index.
+        
+        Returns:
+            dict: Evaluation results.
+        """
         model.eval()
         if configs['test']['train_eval']:
             eval_result, cm_im = self.metric.eval(model, self.data_handler.train_dataloader)
@@ -230,7 +247,6 @@ class Trainer(object):
             for i, k in enumerate(configs['test']['k']):
                 for metric in configs['test']['metrics']:
                     writer.add_scalar(f'{metric}_top_{k}/valid', eval_result[metric][i], epoch_idx)
-            # writer.add_scalar('HR/valid', eval_result[configs['test']['metrics'][0]][0], epoch_idx)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Validation set', epoch_idx=epoch_idx)
         elif hasattr(self.data_handler, 'test_dataloader'):
             eval_result, cm_im = self.metric.eval(model, self.data_handler.test_dataloader)
@@ -238,7 +254,6 @@ class Trainer(object):
             for i, k in enumerate(configs['test']['k']):
                 for metric in configs['test']['metrics']:
                     writer.add_scalar(f'{metric}_top_{k}/test', eval_result[metric][i], epoch_idx)
-            # writer.add_scalar('HR/test', eval_result[configs['test']['metrics'][0]][0], epoch_idx)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set', epoch_idx=epoch_idx)
         else:
             raise NotImplemented
@@ -247,6 +262,15 @@ class Trainer(object):
 
     @log_exceptions
     def test(self, model):
+        """
+        Test the model and log the test results.
+        
+        Args:
+            model (nn.Module): The model to test.
+        
+        Returns:
+            dict: Test results.
+        """
         model.eval()
         
         eval_result, _ = self.metric.eval(model, self.data_handler.train_dataloader, test=True)
@@ -260,36 +284,71 @@ class Trainer(object):
         return eval_result
 
     def save_model(self, model):
+        """
+        Save the model to a checkpoint.
+        
+        Args:
+            model (nn.Module): The model to save.
+        """
         if configs['experiment']['save_model']:
             model_state_dict = model.state_dict()
             model_name = configs['model']['name']
             data_name = configs['data']['name']
             timestr = configs['test']['save_path']
             if not configs['tune']['enable']:
-                save_dir_path = './checkpoint/{}'.format(model_name)
+                save_dir_path = f'./checkpoint/{model_name}'
                 if not os.path.exists(save_dir_path):
                     os.makedirs(save_dir_path)
-                torch.save(
-                    model_state_dict, '{}/{}-{}-{}.pth'.format(save_dir_path, model_name, data_name, timestr))
-                self.logger.log("Save model parameters to {}".format(
-                    '{}/{}-{}.pth'.format(save_dir_path, model_name, timestr)))
+                torch.save(model_state_dict, f'{save_dir_path}/{model_name}-{data_name}-{timestr}.pth')
+                self.logger.log(f"Save model parameters to {save_dir_path}/{model_name}-{timestr}.pth")
             else:
-                save_dir_path = './checkpoint/{}/tune'.format(model_name)
+                save_dir_path = f'./checkpoint/{model_name}/tune'
                 if not os.path.exists(save_dir_path):
                     os.makedirs(save_dir_path)
                 now_para_str = configs['tune']['now_para_str']
-                torch.save(
-                    model_state_dict, '{}/{}-{}-{}.pth'.format(save_dir_path, model_name, data_name, now_para_str))
-                self.logger.log("Save model parameters to {}".format(
-                    '{}/{}-{}.pth'.format(save_dir_path, model_name, now_para_str)))
+                torch.save(model_state_dict, f'{save_dir_path}/{model_name}-{data_name}-{now_para_str}.pth')
+                self.logger.log(f"Save model parameters to {save_dir_path}/{model_name}-{now_para_str}.pth")
 
     def load_model(self, model):
+        """
+        Load the model from a checkpoint.
+        
+        Args:
+            model (nn.Module): The model to load.
+        
+        Returns:
+            nn.Module: The loaded model.
+        """
         if 'pretrain_path' in configs['experiment']:
             pretrain_path = configs['experiment']['pretrain_path']
-            module_path = "/".join(['checkpoint', configs['model']['name'], pretrain_path])
+            module_path = f"./checkpoint/{configs['model']['name']}/{pretrain_path}"
             model.load_state_dict(torch.load(module_path))
-            self.logger.log(
-                "Load model parameters from {}".format(module_path))
+            self.logger.log(f"Load model parameters from {module_path}")
             return model
         else:
             raise KeyError("No module_path in configs['train']")
+        
+    def inference(self, model):
+        """
+        Make predictions using the trained model in real time for a single sample.
+
+        Args:
+            model (nn.Module): The trained model.
+            input_data (list or tensor): The input data for prediction.
+
+        Returns:
+            tensor: The model's predictions.
+        """
+        input_data = self.data_handler.inference_dataloader
+        model.eval()
+        with torch.no_grad():
+            if not isinstance(input_data, list):
+                input_data = [input_data]
+            batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list)
+                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1), input_data))
+            _, _, batch_last_items, _, _, _, _, _ = batch_data
+            
+            predictions = model.full_predict(batch_data)
+        
+        return predictions
+

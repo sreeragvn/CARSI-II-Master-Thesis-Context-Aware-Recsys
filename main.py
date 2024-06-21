@@ -25,7 +25,6 @@ def main():
     trainer.test(best_model)
 
 def tune():
-    
     init_seed()
     data_handler = build_data_handler()
     data_handler.load_data()
@@ -39,7 +38,6 @@ def tune():
     tuner.grid_search(data_handler, trainer)
 
 def test():
-
     init_seed()
     data_handler = build_data_handler()
     data_handler.load_data()
@@ -54,6 +52,8 @@ def test():
 
     trainer.test(best_model)
 
+
+configs["model"]["inference"] = False
 if not configs['tune']['enable']:
     main()
 else:

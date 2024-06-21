@@ -45,6 +45,7 @@ def update_configuration(configs, args):
             configs['train']['ssl'] = False
         # model name
         configs['model']['name'] = configs['model']['name'].lower()
+        configs["model"]["inference"] = False
 
         # grid search
         if 'tune' not in configs:
