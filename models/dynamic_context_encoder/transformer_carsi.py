@@ -4,11 +4,11 @@ from torch import nn
 from config.configurator import configs
 import torch.nn.functional as F
 from models.utils import weights_init
-from models.utils import Flatten_layers
+from models.utils import FlattenLayers
 
-class TransformerEncoder_DynamicContext(nn.Module):
+class TransformerEncoderDynamicContext(nn.Module):
     def __init__(self):
-        super(TransformerEncoder_DynamicContext, self).__init__()
+        super(TransformerEncoderDynamicContext, self).__init__()
 
         data_config = configs['data']
         model_config = configs['model']

@@ -4,12 +4,12 @@ from config.configurator import configs
 import math
 from models.utils import weights_init
 
-class static_context_encoder(nn.Module):
+class StaticContextEncoder(nn.Module):
     def __init__(self):
         """
         Static context encoder to handle static contextual features using embedding layers.
         """
-        super(static_context_encoder, self).__init__()
+        super(StaticContextEncoder, self).__init__()
 
         dropout_rate_fc_static = configs['model']['dropout_rate_fc_static']
         vocab_sizes = configs['data']['static_context_max']

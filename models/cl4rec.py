@@ -8,10 +8,10 @@ import torch.nn.functional as F
 
 from config.configurator import configs
 from models.base_model import BaseModel
-from models.interaction_encoder.transformer import transformer_layer
-from models.utils import Flatten_layers
+from models.interaction_encoder.transformer import TransformerLayer
+from models.utils import FlattenLayers
 from models.dynamic_context_encoder.tcn_model import TCNModel
-from models.static_context_encoder.static_context_encoder import static_context_encoder
+from models.static_context_encoder.static_context_encoder import StaticContextEncoder
 from trainer.loss import loss_function
 
 class CL4Rec(BaseModel):
@@ -46,13 +46,13 @@ class CL4Rec(BaseModel):
         """
         Initialize the interaction encoder using transformer layers.
         """
-        self.interaction_encoder = transformer_layer()
+        self.interaction_encoder = TransformerLayer()
         
     def _static_context_encoder(self):
         """
         Initialize the static context encoder.
         """
-        self.static_embedding = static_context_encoder()
+        self.static_embedding = StaticContextEncoder()
 
     def _dynamic_context_encoder(self, model_config):
         """
@@ -68,7 +68,7 @@ class CL4Rec(BaseModel):
         """
         Initialize the fully connected layers for concatenating encoded features.
         """
-        self.fc_layers_concat = Flatten_layers(input_size=self.input_size_fc_concat, 
+        self.fc_layers_concat = FlattenLayers(input_size=self.input_size_fc_concat, 
                                                emb_size=self.emb_size, 
                                                dropout_p=self.dropout_rate_fc_concat)
 

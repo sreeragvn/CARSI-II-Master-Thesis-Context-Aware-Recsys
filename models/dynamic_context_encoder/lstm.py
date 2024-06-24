@@ -4,11 +4,11 @@ from torch import nn
 from config.configurator import configs
 import torch.nn.functional as F
 from models.utils import weights_init
-from models.utils import Flatten_layers
+from models.utils import FlattenLayers
 
-class lstm_context_encoder(nn.Module):
+class LSTMContextEncoder(nn.Module):
     def __init__(self):
-        super(lstm_context_encoder, self).__init__()
+        super(LSTMContextEncoder, self).__init__()
 
         data_config = configs['data']
         model_config = configs['model']
@@ -24,7 +24,7 @@ class lstm_context_encoder(nn.Module):
                             hidden_size=hidden_size,
                             num_layers=num_layers,
                             batch_first = True)
-        self.fc = Flatten_layers(emb_size, emb_size, dropout_p=dropout_fc)
+        self.fc = FlattenLayers(emb_size, emb_size, dropout_p=dropout_fc)
         self.fc1 = nn.Linear(hidden_size, hidden_size // 2)  # Half the dimension
         self.fc2 = nn.Linear(hidden_size // 2, emb_size)
         self.relu = nn.ReLU()

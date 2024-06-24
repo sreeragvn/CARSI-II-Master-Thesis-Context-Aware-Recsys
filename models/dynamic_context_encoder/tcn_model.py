@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn.utils import parametrizations
 import torch.nn.functional as F
 from config.configurator import configs
-from models.utils import Flatten_layers
+from models.utils import FlattenLayers
 from models.utils import weights_init
 
 class Chomp1d(nn.Module):
@@ -130,7 +130,7 @@ class TCNModel(nn.Module):
 
         self.tcn = TemporalConvNet(num_input, num_channels, kernel_size, dropout=dropout)
         self.dropout = nn.Dropout(dropout)
-        self.fc = Flatten_layers(num_channels[-1] * dynamic_context_window_size, emb_size, dropout_p=dropout_fc)
+        self.fc = FlattenLayers(num_channels[-1] * dynamic_context_window_size, emb_size, dropout_p=dropout_fc)
 
     def forward(self, x):
         """

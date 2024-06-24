@@ -1,9 +1,9 @@
 import torch.nn as nn
 
-class Flatten_layers(nn.Module):
+class FlattenLayers(nn.Module):
     def __init__(self, input_size, emb_size, dropout_p=0.4):
         """
-        Initialize the Flatten_layers module which progressively reduces the dimensionality
+        Initialize the FlattenLayers module which progressively reduces the dimensionality
         of the input feature vector to the desired embedding size.
 
         Args:
@@ -11,7 +11,7 @@ class Flatten_layers(nn.Module):
             emb_size (int): Size of the output embedding.
             dropout_p (float): Dropout probability. Default is 0.4.
         """
-        super(Flatten_layers, self).__init__()
+        super(FlattenLayers, self).__init__()
         self.emb_size = emb_size
         self.dropout_p = dropout_p
         layers = []
@@ -35,7 +35,7 @@ class Flatten_layers(nn.Module):
 
     def forward(self, x):
         """
-        Forward pass for the Flatten_layers module.
+        Forward pass for the FlattenLayers module.
 
         Args:
             x (Tensor): Input tensor.

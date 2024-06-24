@@ -3,7 +3,7 @@ import torch as t
 from torch import nn
 from config.configurator import configs
 import torch.nn.functional as F
-from models.utils import Flatten_layers
+from models.utils import FlattenLayers
 
 r"""
 SASRec is the first sequential recommender based on self-attentive mechanism.
@@ -35,7 +35,7 @@ class sasrec(nn.Module):
                                                                     feed_forward_size = self.inner_size, 
                                                                     dropout_rate = self.dropout_rate_trans) 
                                                                     for _ in range(self.n_layers)])
-        self.fc_layers = Flatten_layers(input_size = (self.max_len) * self.emb_size, 
+        self.fc_layers = FlattenLayers(input_size = (self.max_len) * self.emb_size, 
                                                 emb_size = self.emb_size, 
                                                 dropout_p = self.dropout_rate_fc_trans)
         self.apply(self._init_weights)

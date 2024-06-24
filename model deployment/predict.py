@@ -6,7 +6,7 @@ from Models import RNN, CARSI
 import sys
 
 
-class carsi_instance():
+class CarsiInstance():
     def __init__(self, model_path, model_name='carsi') -> None:
         self.model_name = model_name
         self.model_path = model_path
@@ -91,6 +91,6 @@ if __name__ == '__main__':
     sample = pd.read_json("sample.json")
 
     # Model instance
-    model = carsi_instance(model_path)
+    model = CarsiInstance(model_path)
     # Prediciton
     pred = model.predict(sample)
