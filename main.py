@@ -95,3 +95,4 @@ else:
     print("Mode unknown")
 
 
+##TODO Easiest implementation of inference method is to load both train data and inference data. otherwise you will get error of not having user_num

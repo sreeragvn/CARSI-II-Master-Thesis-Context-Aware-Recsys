@@ -299,7 +299,7 @@ class Trainer:
         # eval_result, _ = self.metric.eval(model, self.data_handler.train_dataloader, test=True)
         # self.logger.log_eval(eval_result, configs['test']['k'], data_type='Train set')
         # configs['test']['data']="test"
-        if hasattr(self.data_handler, 'inference_dataloader'):
+        if hasattr(self.data_handler, 'test_dataloader'):
             eval_result, _ = self.metric.eval(model, self.data_handler.test_dataloader, test=True)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set')
         else:

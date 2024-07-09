@@ -16,12 +16,14 @@ class DataHandlerSequential:
         Initialize the DataHandlerSequential class.
         Set up file paths and initial configuration parameters.
         """
+        data_name = configs['data']['name']
         if not configs["model"]["inference"]:
-            data_name = configs['data']['name']
+            data_name_test = data_name
         else:
-            data_name = configs['data']['inference_data_folder']
+            data_name_test = configs['data']['inference_data_folder']
 
         predir = f'./datasets/sequential/{data_name}'
+        predir_test = f'./datasets/sequential/{data_name_test}'
 
         # Set paths for parameter files
         configs['train']['parameter_class_weights_path'] = path.join(predir, 'parameters/param.pkl')
@@ -29,20 +31,20 @@ class DataHandlerSequential:
 
         # Set paths for data files
         self.trn_file = path.join(predir, 'seq/train.tsv')
-        self.val_file = path.join(predir, 'seq/test.tsv')
-        self.tst_file = path.join(predir, 'seq/test.tsv')
+        self.val_file = path.join(predir_test, 'seq/test.tsv')
+        self.tst_file = path.join(predir_test, 'seq/test.tsv')
 
         self.trn_dynamic_context_file = path.join(predir, 'dynamic_context/train.csv')
-        self.val_dynamic_context_file = path.join(predir, 'dynamic_context/test.csv')
-        self.tst_dynamic_context_file = path.join(predir, 'dynamic_context/test.csv')
+        self.val_dynamic_context_file = path.join(predir_test, 'dynamic_context/test.csv')
+        self.tst_dynamic_context_file = path.join(predir_test, 'dynamic_context/test.csv')
 
         self.trn_static_context_file = path.join(predir, 'static_context/train.csv')
-        self.val_static_context_file = path.join(predir, 'static_context/test.csv')
-        self.tst_static_context_file = path.join(predir, 'static_context/test.csv')
+        self.val_static_context_file = path.join(predir_test, 'static_context/test.csv')
+        self.tst_static_context_file = path.join(predir_test, 'static_context/test.csv')
 
         self.trn_dense_static_context_file = path.join(predir, 'dense_static_context/train.csv')
-        self.val_dense_static_context_file = path.join(predir, 'dense_static_context/test.csv')
-        self.tst_dense_static_context_file = path.join(predir, 'dense_static_context/test.csv')
+        self.val_dense_static_context_file = path.join(predir_test, 'dense_static_context/test.csv')
+        self.tst_dense_static_context_file = path.join(predir_test, 'dense_static_context/test.csv')
 
         self.max_item_id = 0
         self.max_dynamic_context_length = configs['data']['dynamic_context_window_length']
@@ -220,40 +222,40 @@ class DataHandlerSequential:
         """
         Load and preprocess all data.
         """
-        if not configs["model"]["inference"]:
-            user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
-            user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
-            dynamic_context_train = self._read_csv_dynamic_context(self.trn_dynamic_context_file)
-            dynamic_context_test = self._read_csv_dynamic_context(self.tst_dynamic_context_file)
-            static_context_train = self._read_csv_static_context(self.trn_static_context_file)
-            static_context_test = self._read_csv_static_context(self.tst_static_context_file)
-            dense_static_context_train = self._read_csv_dense_static_context(self.trn_dense_static_context_file)
-            dense_static_context_test = self._read_csv_dense_static_context(self.tst_dense_static_context_file)
-
-            if configs['experiment']['model_test_run']:
-                user_seqs_train = {key: value[:configs['experiment']['test_run_sample_no']] for key, value in user_seqs_train.items()}
-                user_seqs_test = user_seqs_train
-                dynamic_context_test = dynamic_context_train
-                static_context_test = static_context_train
-                dense_static_context_test = dense_static_context_train
-
-            self._set_statistics(user_seqs_train, user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
-
-            trn_data = SequentialDataset(user_seqs_train, dynamic_context_train, static_context_train, dense_static_context_train)
-            tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
-
-            self.test_dataloader = data.DataLoader(
-                tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
-            self.train_dataloader = data.DataLoader(
-                trn_data, batch_size=configs['train']['batch_size'], shuffle=True, num_workers=0)
         
-        else:
-            user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
-            dynamic_context_test = self._read_csv_dynamic_context(self.tst_dynamic_context_file)
-            static_context_test = self._read_csv_static_context(self.tst_static_context_file)
-            dense_static_context_test = self._read_csv_dense_static_context(self.tst_dense_static_context_file)
+        user_seqs_train = self._read_tsv_to_user_seqs(self.trn_file)
+        user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
+        dynamic_context_train = self._read_csv_dynamic_context(self.trn_dynamic_context_file)
+        dynamic_context_test = self._read_csv_dynamic_context(self.tst_dynamic_context_file)
+        static_context_train = self._read_csv_static_context(self.trn_static_context_file)
+        static_context_test = self._read_csv_static_context(self.tst_static_context_file)
+        dense_static_context_train = self._read_csv_dense_static_context(self.trn_dense_static_context_file)
+        dense_static_context_test = self._read_csv_dense_static_context(self.tst_dense_static_context_file)
 
-            inference_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
+        if configs['experiment']['model_test_run']:
+            user_seqs_train = {key: value[:configs['experiment']['test_run_sample_no']] for key, value in user_seqs_train.items()}
+            user_seqs_test = user_seqs_train
+            dynamic_context_test = dynamic_context_train
+            static_context_test = static_context_train
+            dense_static_context_test = dense_static_context_train
 
-            self.inference_dataloader = data.DataLoader(
-                inference_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
+        self._set_statistics(user_seqs_train, user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
+
+        trn_data = SequentialDataset(user_seqs_train, dynamic_context_train, static_context_train, dense_static_context_train)
+        tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
+        
+        self.test_dataloader = data.DataLoader(
+            tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
+        self.train_dataloader = data.DataLoader(
+            trn_data, batch_size=configs['train']['batch_size'], shuffle=True, num_workers=0)
+        
+        # else:
+        #     user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
+        #     dynamic_context_test = self._read_csv_dynamic_context(self.tst_dynamic_context_file)
+        #     static_context_test = self._read_csv_static_context(self.tst_static_context_file)
+        #     dense_static_context_test = self._read_csv_dense_static_context(self.tst_dense_static_context_file)
+
+        #     inference_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
+
+        #     self.inference_dataloader = data.DataLoader(
+        #         inference_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)

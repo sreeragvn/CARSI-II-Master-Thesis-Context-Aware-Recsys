@@ -49,7 +49,7 @@ data:
   dynamic_context_window_length: 30
 
 model:
-  mode: test # test or train or tune or inference
+  mode: inference # test or train or tune or inference
   name: cl4rec
   tcn_num_channels: [30, 20, 10]
   tcn_kernel_size: 3
