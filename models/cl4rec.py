@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 from config.configurator import configs
 from models.base_model import BaseModel
-from models.interaction_encoder.transformer import TransformerLayer
+from models.interaction_encoder.transformer import IntTransformerLayer
 from models.utils import FlattenLayers
 from models.dynamic_context_encoder.tcn_model import TCNModel
 from models.static_context_encoder.static_context_encoder import StaticContextEncoder
@@ -46,7 +46,7 @@ class CL4Rec(BaseModel):
         """
         Initialize the interaction encoder using transformer layers.
         """
-        self.interaction_encoder = TransformerLayer()
+        self.interaction_encoder = IntTransformerLayer()
         
     def _static_context_encoder(self):
         """

@@ -253,7 +253,7 @@ class DataHandlerSequential:
             static_context_test = self._read_csv_static_context(self.tst_static_context_file)
             dense_static_context_test = self._read_csv_dense_static_context(self.tst_dense_static_context_file)
 
-            tst_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
+            inference_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
 
-            self.test_dataloader = data.DataLoader(
-                tst_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
+            self.inference_dataloader = data.DataLoader(
+                inference_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)

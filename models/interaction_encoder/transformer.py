@@ -5,12 +5,12 @@ from config.configurator import configs
 import torch.nn.functional as F
 from models.utils import FlattenLayers
 
-class TransformerLayer(nn.Module):
+class IntTransformerLayer(nn.Module):
     def __init__(self):
         """
         Initialize the SASRec model.
         """
-        super(TransformerLayer, self).__init__()
+        super(IntTransformerLayer, self).__init__()
 
         data_config = configs['data']
         model_config = configs['model']

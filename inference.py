@@ -31,14 +31,14 @@ def inference():
 
     trainer = build_trainer(data_handler, logger)
 
-    best_model = trainer.load(model)
+    best_model = trainer.inference(model)
 
     predictions = trainer.inference(best_model)
 
     return predictions
 
 configs["model"]["inference"] = True
-inference_data_preprocessing()
+# inference_data_preprocessing()
 inference()
 
 

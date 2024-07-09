@@ -282,6 +282,29 @@ class Trainer:
         else:
             raise NotImplemented
         return eval_result
+    
+    @log_exceptions
+    def model_inference(self, model):
+        """
+        Test the model and log the test results.
+        
+        Args:
+            model (nn.Module): The model to test.
+        
+        Returns:
+            dict: Test results.
+        """
+        model.eval()
+        
+        # eval_result, _ = self.metric.eval(model, self.data_handler.train_dataloader, test=True)
+        # self.logger.log_eval(eval_result, configs['test']['k'], data_type='Train set')
+        # configs['test']['data']="test"
+        if hasattr(self.data_handler, 'inference_dataloader'):
+            eval_result, _ = self.metric.eval(model, self.data_handler.test_dataloader, test=True)
+            self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set')
+        else:
+            raise NotImplemented
+        return eval_result
 
     def save_model(self, model):
         """
@@ -309,7 +332,7 @@ class Trainer:
                 torch.save(model_state_dict, f'{save_dir_path}/{model_name}-{data_name}-{now_para_str}.pth')
                 self.logger.log(f"Save model parameters to {save_dir_path}/{model_name}-{now_para_str}.pth")
 
-    def load_model(self, model):
+    def load_model(self, model, inference_mode=False):
         """
         Load the model from a checkpoint.
         
@@ -319,36 +342,17 @@ class Trainer:
         Returns:
             nn.Module: The loaded model.
         """
-        if 'pretrain_path' in configs['experiment']:
+        if 'pretrain_path' in configs['experiment'] and inference_mode == False:
             pretrain_path = configs['experiment']['pretrain_path']
             module_path = f"./checkpoint/{configs['model']['name']}/{pretrain_path}"
             model.load_state_dict(torch.load(module_path))
             self.logger.log(f"Load model parameters from {module_path}")
             return model
+        elif 'inference_model_path' in configs['test'] and inference_mode == True:
+            inference_model_path = configs['test']['inference_model_path']
+            module_path = f"./checkpoint/{configs['model']['name']}/{inference_model_path}"
+            model.load_state_dict(torch.load(module_path))
+            self.logger.log(f"Load model parameters from {module_path}")
+            return model
         else:
             raise KeyError("No module_path in configs['train']")
-        
-    def inference(self, model):
-        """
-        Make predictions using the trained model in real time for a single sample.
-
-        Args:
-            model (nn.Module): The trained model.
-            input_data (list or tensor): The input data for prediction.
-
-        Returns:
-            tensor: The model's predictions.
-        """
-        input_data = self.data_handler.inference_dataloader
-        model.eval()
-        with torch.no_grad():
-            if not isinstance(input_data, list):
-                input_data = [input_data]
-            batch_data = list(map(lambda x: x.long().to(configs['device']) if not isinstance(x, list)
-                                  else torch.stack([t.float().to(configs['device']) for t in x], dim=1), input_data))
-            _, _, batch_last_items, _, _, _, _, _ = batch_data
-            
-            predictions = model.full_predict(batch_data)
-        
-        return predictions
-
