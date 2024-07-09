@@ -283,10 +283,11 @@ class Trainer:
             raise NotImplemented
         return eval_result
     
-    @log_exceptions
     def model_inference(self, model):
+
         """
-        Test the model and log the test results.
+        Inference method for the model - to be used for model deployment. This is similar to test method available above
+        ##TODO Merge this test method and inference method
         
         Args:
             model (nn.Module): The model to test.
@@ -295,10 +296,6 @@ class Trainer:
             dict: Test results.
         """
         model.eval()
-        
-        # eval_result, _ = self.metric.eval(model, self.data_handler.train_dataloader, test=True)
-        # self.logger.log_eval(eval_result, configs['test']['k'], data_type='Train set')
-        # configs['test']['data']="test"
         if hasattr(self.data_handler, 'test_dataloader'):
             eval_result, _ = self.metric.eval(model, self.data_handler.test_dataloader, test=True)
             self.logger.log_eval(eval_result, configs['test']['k'], data_type='Test set')

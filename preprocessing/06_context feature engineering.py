@@ -106,12 +106,16 @@ dynamic_context_to_normalize = [col for col in train_dynamic_context.columns if 
 # Apply RobustScaler to dynamic context data
 scaler_dynamic_context = RobustScaler()
 scaler_dynamic_context.fit(train_dynamic_context[dynamic_context_to_normalize])
+with open(os.path.join(parameter_path, 'dynamic_context_robust_scaler.pkl'), 'wb') as pickle_file:
+    pickle.dump(scaler_dynamic_context, pickle_file)
 train_dynamic_context[dynamic_context_to_normalize] = scaler_dynamic_context.transform(train_dynamic_context[dynamic_context_to_normalize])
 test_dynamic_context[dynamic_context_to_normalize] = scaler_dynamic_context.transform(test_dynamic_context[dynamic_context_to_normalize])
 
 # Apply RobustScaler to dense static context data
 scaler_dense_static_context = RobustScaler()
 scaler_dense_static_context.fit(train_dense_static_context[dense_static_context_var])
+with open(os.path.join(parameter_path, 'dense_static_context_robust_scaler.pkl'), 'wb') as pickle_file:
+    pickle.dump(scaler_dense_static_context, pickle_file)
 train_dense_static_context[dense_static_context_var] = scaler_dense_static_context.transform(train_dense_static_context[dense_static_context_var])
 test_dense_static_context[dense_static_context_var] = scaler_dense_static_context.transform(test_dense_static_context[dense_static_context_var])
 

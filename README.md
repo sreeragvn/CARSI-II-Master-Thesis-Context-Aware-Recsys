@@ -26,7 +26,33 @@ Our research seeks answers to several questions:
 6. Is there any improvement in model performance with a self-supervised learning approach over supervised training?
 
 ## Model deployment
-The files for deploying the model in the POC car is available in the foler [prediction_method](prediction method)
+
+To make real-time predictions with the model, follow these instructions. Please note that the `inference.py` file is no longer required; use the `main.py` file instead.
+
+### Configuration
+
+1. **Config File**: Update the configuration file [cl4rec.yml](config/modelconf/cl4rec.yml) to change the trained model used during inference. 
+
+2. **Inference Model Path**: Ensure that the `["test"]["inference_model_path"]` in the configuration file points to the model intended for inference. This model should be available in the [cl4rec](checkpoint/cl4rec) directory.
+
+3. **Data Preparation**: The data for making predictions should be placed in the [inference](datasets/sequential/inference) folder. Template files are available in this directory. Replace the data in these templates with your data, ensuring the correct order of features is maintained.
+
+    - **Interaction History**: The [interaction_history](datasets/sequential/inference/seq/test.tsv) should be mapped based on esotrace [label](datasets/sequential/featengg/parameters/label_mapping.pkl) mapping and saved in the specified format.
+    - **Preprocessing**: Refer to the [preprocessing](preprocessing) folder for the various preprocessing steps to be conducted before replacing the data in the [inference](datasets/sequential/inference) folder. All preprocessing should be completed before writing to the corresponding model input files in [inference](datasets/sequential/inference).
+
+4. **Mode Setting**: In the [cl4rec.yml](config/modelconf/cl4rec.yml) file, ensure the mode is set to `inference` under `["model"]["mode"]`. Other available modes are `train`, `test`, and `tune`.
+
+### Inference Process Flow
+
+1. **Replace Data**: Place the data you want to use for predictions in the [inference](datasets/sequential/inference) folder. If you want to make multiple predictions for different scenarios, append the data together in the appropriate format.
+
+2. **Run Main Script**: Execute the `main.py` file. Ensure that the mode is set to `inference` in the [cl4rec.yml](config/modelconf/cl4rec.yml) configuration file.
+
+    ```bash
+    python main.py
+    ```
+
+Following these steps will enable you to make real-time predictions using your trained model.
 
 ## Model architecture
 The CARSI II model architecture handles various input modalities, including time series data, sequential data, and a mix of categorical and dense scalar inputs. Emphasizing sequential modeling, the architecture aims to improve the accuracy and relevance of recommendations by capturing the dynamic nature of user interactions. This approach helps clarify typical user engagement patterns with system features, such as playing music from a phone after connecting it to the infotainment system, and prevents redundant recommendations, like suggesting an already active drive mode.
@@ -70,7 +96,9 @@ This library encompasses five primary components, each integral to the system's 
 **Model** is derived from the BasicModel class and is designed to implement diverse self-supervised recommendation algorithms suited to various scenarios. It includes several key methods:
 + `__init__()` initializes the model with user-configured hyper-parameters and trainable parameters such as user embeddings.
 + `forward()` conducts the specific forward operations of the model, like message passing and aggregation in graph-based methods.
-+ `cal_loss(batch_data)` calculates losses during training. It takes a tuple of training data as input and returns both the overall weighted loss and specific loss details for monitoring.
++ `cal_loss(batch_data)` calculates losses during training. It takes a tuple of training data as input and returns both the overall weighted loss and specific loss details for monitoring. 
+[param.pkl](datasets/sequential/featengg/parameters/param.pkl) consists of counter weights required for balancing cross entropy loss during the training process. This is no longer required as we are using focal loss
+
 + `full_predict(batch_data)` generates predictions across all ranks using test batch data, returning a prediction tensor.
 
 ### Trainer

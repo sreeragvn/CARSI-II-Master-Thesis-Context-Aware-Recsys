@@ -77,19 +77,6 @@ class DataHandlerSequential:
                 line = f.readline()
         return user_seqs
     
-    def _convert_to_int_list(self, string_list):
-        return [list(map(int, x.split())) for x in string_list]
-    
-    def _read_tsv_to_user_seqs_inference(self, tsv_file):
-        seq = pd.read_csv(tsv_file, sep="\t")
-        print(seq)
-        seq = seq[["uid", "item_seq", "item_id", "time_delta"]].to_dict(orient='list') 
-        print(seq)
-        seq['item_seq'] = self._convert_to_int_list(seq['item_seq'])
-        seq['time_delta'] = self._convert_to_int_list(seq['time_delta'])
-        print(seq)
-        return seq
-
     def _sample_context_data(self, data):
         """
         Sample a subset of context data for testing purposes.
@@ -249,13 +236,3 @@ class DataHandlerSequential:
         self.train_dataloader = data.DataLoader(
             trn_data, batch_size=configs['train']['batch_size'], shuffle=True, num_workers=0)
         
-        # else:
-        #     user_seqs_test = self._read_tsv_to_user_seqs(self.tst_file)
-        #     dynamic_context_test = self._read_csv_dynamic_context(self.tst_dynamic_context_file)
-        #     static_context_test = self._read_csv_static_context(self.tst_static_context_file)
-        #     dense_static_context_test = self._read_csv_dense_static_context(self.tst_dense_static_context_file)
-
-        #     inference_data = SequentialDataset(user_seqs_test, dynamic_context_test, static_context_test, dense_static_context_test)
-
-        #     self.inference_dataloader = data.DataLoader(
-        #         inference_data, batch_size=configs['test']['batch_size'], shuffle=False, num_workers=0)
